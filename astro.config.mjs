@@ -18,7 +18,7 @@ function getDynamicSidebar() {
   };
 
   // 제외할 폴더 및 파일
-  const exclude = ['_templates', 'index.mdx', '.obsidian'];
+  const exclude = ['index.mdx', '.obsidian'];
 
   const items = fs.readdirSync(docsPath)
     .filter(item => !exclude.includes(item))
