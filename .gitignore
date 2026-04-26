@@ -4,6 +4,9 @@ dist/
 .astro/
 
 # dependencies
+# VS Code folders
+.vscode/
+
 node_modules/
 
 # logs
