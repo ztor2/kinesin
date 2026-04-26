@@ -7,6 +7,9 @@ dist/
 # VS Code folders
 .vscode/
 
+# Obsidian folders
+**/.obsidian/
+
 node_modules/
 
 # logs

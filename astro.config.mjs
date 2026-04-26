@@ -28,6 +28,10 @@ export default defineConfig({
 					autogenerate: { directory: 'test' },
 				},
 				{
+					label: 'Kinesin 노트',
+					autogenerate: { directory: 'kinesin' },
+				},
+				{
 					label: '참고 자료',
 					autogenerate: { directory: 'reference' },
 				},
