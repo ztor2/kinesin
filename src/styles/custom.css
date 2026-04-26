@@ -1,0 +1,43 @@
+/* src/styles/custom.css */
+
+:root {
+  --sl-color-accent-low: #1e3a8a;
+  --sl-color-accent: #3b82f6;
+  --sl-color-accent-high: #93c5fd;
+}
+
+body {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+
+/* 사이트 제목 타이틀 색상 변경 (Navy) */
+.site-title {
+  color: #1e3a8a !important; /* Deep Navy 색상 */
+  font-weight: 700;
+}
+
+/* 헤더 레이아웃: 이제 검색창이 없으므로 제목과 아이콘만 배치 */
+.header {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+}
+
+/* 2. 헤더 내의 검색창 숨기기 (사이드바로 옮겼으므로) */
+.header .search-container {
+  display: none !important;
+}
+
+/* 3. 우측 아이콘 정렬 */
+.right-group {
+  display: flex !important;
+  align-items: center;
+  gap: var(--sl-nav-gap);
+}
+
+.social-icons {
+  display: flex;
+  align-items: center;
+  gap: var(--sl-nav-gap);
+}

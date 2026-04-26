@@ -1,0 +1,55 @@
+---
+import type { Props } from '@astrojs/starlight/props';
+import LanguageSelect from '@astrojs/starlight/components/LanguageSelect.astro';
+import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
+import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
+import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
+import { Image } from 'astro:assets';
+import logoSrc from '../assets/houston.webp';
+---
+
+<div class="header sl-flex">
+	<div class="title-wrapper sl-flex">
+		<a href="/" class="logo-link">
+			<Image src={logoSrc} alt="Logo" width={32} height={32} class="site-logo" />
+		</a>
+		<SiteTitle {...Astro.props} />
+	</div>
+	<div class="sl-flex">
+		<!-- Search 컴포넌트 제외 -->
+	</div>
+	<div class="sl-flex right-group">
+		<LanguageSelect {...Astro.props} />
+		<ThemeSelect {...Astro.props} />
+		<SocialIcons {...Astro.props} />
+	</div>
+</div>
+
+<style>
+	.header {
+		gap: var(--sl-nav-gap);
+		justify-content: space-between;
+		align-items: center;
+		height: 100%;
+		width: 100%;
+	}
+	.title-wrapper {
+		align-items: center;
+		gap: 0.5rem; /* 아이콘과 텍스트 사이 간격 */
+		text-decoration: none;
+		color: inherit;
+	}
+	.logo-link {
+		display: flex;
+		align-items: center;
+	}
+	.site-logo {
+		display: block;
+		height: auto;
+		width: 1.5rem; /* 텍스트 크기에 맞춰 적절히 조절 */
+	}
+	.right-group {
+		gap: var(--sl-nav-gap);
+		align-items: center;
+	}
+</style>
