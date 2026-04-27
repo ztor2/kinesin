@@ -21,6 +21,7 @@ export default defineConfig({
 			sidebar: [
 				{
 					label: '용어 사전',
+					collapsed: true, // 접혀있는 상태로 시작
 					autogenerate: { directory: 'dictionary' },
 				},
 				// 새로운 카테고리가 필요하면 여기에 추가하세요.

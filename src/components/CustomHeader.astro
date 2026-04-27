@@ -4,6 +4,7 @@ import LanguageSelect from '@astrojs/starlight/components/LanguageSelect.astro';
 import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
 import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
 import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
+import Search from '@astrojs/starlight/components/Search.astro';
 import { Image } from 'astro:assets';
 import logoSrc from '../assets/kinesin.png';
 ---
@@ -11,14 +12,14 @@ import logoSrc from '../assets/kinesin.png';
 <div class="header sl-flex">
 	<div class="title-wrapper sl-flex">
 		<a href="/" class="logo-link">
-			<Image src={logoSrc} alt="Logo" width={32} height={32} class="site-logo" />
+			<Image src={logoSrc} alt="Logo" width={64} height={64} class="site-logo" />
 		</a>
 		<SiteTitle {...Astro.props} />
 	</div>
-	<div class="sl-flex">
-		<!-- Search 컴포넌트 제외 -->
-	</div>
 	<div class="sl-flex right-group">
+		<div class="search-container">
+			<Search {...Astro.props} />
+		</div>
 		<LanguageSelect {...Astro.props} />
 		<ThemeSelect {...Astro.props} />
 		<SocialIcons {...Astro.props} />
@@ -35,9 +36,10 @@ import logoSrc from '../assets/kinesin.png';
 	}
 	.title-wrapper {
 		align-items: center;
-		gap: 0.5rem; /* 아이콘과 텍스트 사이 간격 */
+		gap: 0.5rem;
 		text-decoration: none;
 		color: inherit;
+		flex-shrink: 0;
 	}
 	.logo-link {
 		display: flex;
@@ -49,7 +51,20 @@ import logoSrc from '../assets/kinesin.png';
 		width: 1.75rem;
 	}
 	.right-group {
-		gap: var(--sl-nav-gap);
+		display: flex;
 		align-items: center;
+		gap: var(--sl-nav-gap);
+		flex-shrink: 0;
+	}
+	.search-container {
+		/* 검색창이 우측 그룹 내에서 적절한 너비를 가지도록 설정 */
+		min-width: 200px;
+	}
+
+	/* 모바일 대응: 화면이 좁아질 때 검색창 너비 조정 */
+	@media (max-width: 50rem) {
+		.search-container {
+			min-width: auto;
+		}
 	}
 </style>

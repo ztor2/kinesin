@@ -1,25 +1,6 @@
 ---
 import type { Props } from '@astrojs/starlight/props';
 import DefaultSidebar from '@astrojs/starlight/components/Sidebar.astro';
-import Search from '@astrojs/starlight/components/Search.astro';
 ---
 
-<div class="sidebar-top-search">
-  <Search {...Astro.props} />
-</div>
 <DefaultSidebar {...Astro.props} />
-
-<style>
-  .sidebar-top-search {
-    padding: 0.5rem 1rem; /* 위아래 여백을 1rem에서 0.5rem으로 축소 */
-  }
-
-  /* 사이드바 내의 검색창은 너비를 100% 사용하도록 설정 */
-  .sidebar-top-search :global(site-search) {
-    width: 100% !important;
-  }
-  .sidebar-top-search :global(button) {
-    width: 100% !important;
-    justify-content: flex-start !important;
-  }
-</style>
