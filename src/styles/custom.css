@@ -10,9 +10,9 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* 사이트 제목 타이틀 색상 변경 (Navy) */
+/* 사이트 제목 타이틀 색상 변경 (Black) */
 .site-title {
-  color: #1e3a8a !important; /* Deep Navy 색상 */
+  color: #000000 !important; /* 검은색 */
   font-weight: 700;
 }
 
