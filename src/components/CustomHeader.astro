@@ -2,7 +2,6 @@
 import type { Props } from '@astrojs/starlight/props';
 import LanguageSelect from '@astrojs/starlight/components/LanguageSelect.astro';
 import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
-import SocialIcons from '@astrojs/starlight/components/SocialIcons.astro';
 import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
 import Search from '@astrojs/starlight/components/Search.astro';
 import { Image } from 'astro:assets';
@@ -22,7 +21,6 @@ import logoSrc from '../assets/kinesin.png';
 		</div>
 		<LanguageSelect {...Astro.props} />
 		<ThemeSelect {...Astro.props} />
-		<SocialIcons {...Astro.props} />
 	</div>
 </div>
 
@@ -44,11 +42,20 @@ import logoSrc from '../assets/kinesin.png';
 	.logo-link {
 		display: flex;
 		align-items: center;
+		text-decoration: none;
+		background: transparent !important;
+		box-shadow: none !important;
 	}
 	.site-logo {
 		display: block;
 		height: auto;
 		width: 1.75rem;
+		background: transparent !important;
+		border: none !important;
+		filter: none !important;
+		box-shadow: none !important;
+		padding: 0 !important;
+		margin: 0 !important;
 	}
 	.right-group {
 		display: flex;

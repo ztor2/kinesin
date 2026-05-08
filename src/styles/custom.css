@@ -10,10 +10,12 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
-/* 사이트 제목 타이틀 색상 변경 (Black) */
+/* 사이트 제목 타이틀 색상 및 폰트 변경 */
 .site-title {
   color: #000000 !important; /* 검은색 */
   font-weight: 700;
+  font-family: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace !important;
+  letter-spacing: -0.03em; /* 기술적인 느낌을 위해 자간을 살짝 조절 */
 }
 
 /* 헤더 레이아웃 스타일 */
@@ -35,6 +37,14 @@ body {
   display: flex;
   align-items: center;
   gap: var(--sl-nav-gap);
+}
+
+.social-icons a {
+  color: #000000 !important;
+}
+
+.social-icons a:hover {
+  color: #333333 !important; /* 호버 시 약간 연한 검정색 */
 }
 
 /* 검색창 UI 버그 수정 (헤더에서도 유효) */
