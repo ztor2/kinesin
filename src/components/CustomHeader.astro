@@ -7,7 +7,6 @@ import Search from '@astrojs/starlight/components/Search.astro';
 import { Image } from 'astro:assets';
 import logoSrc from '../assets/kinesin.png';
 ---
-
 <div class="header sl-flex">
 	<div class="title-wrapper sl-flex">
 		<a href="/" class="logo-link">
@@ -26,6 +25,7 @@ import logoSrc from '../assets/kinesin.png';
 
 <style>
 	.header {
+		display: flex;
 		gap: var(--sl-nav-gap);
 		justify-content: space-between;
 		align-items: center;
@@ -33,6 +33,7 @@ import logoSrc from '../assets/kinesin.png';
 		width: 100%;
 	}
 	.title-wrapper {
+		display: flex;
 		align-items: center;
 		gap: 0.5rem;
 		text-decoration: none;
@@ -63,6 +64,7 @@ import logoSrc from '../assets/kinesin.png';
 		gap: var(--sl-nav-gap);
 		flex-shrink: 0;
 	}
+...
 	.search-container {
 		/* 검색창이 우측 그룹 내에서 적절한 너비를 가지도록 설정 */
 		min-width: 200px;

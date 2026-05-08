@@ -12,11 +12,11 @@ export default defineConfig({
 				'./src/styles/custom.css',
 			],
 			components: {
-				Sidebar: './src/components/CustomSidebar.astro',
 				Header: './src/components/CustomHeader.astro',
 			},
 			sidebar: [
 				{
+					label: 'Docs',
 					autogenerate: { directory: '' },
 				},
 			],
