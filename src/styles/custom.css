@@ -36,3 +36,26 @@ body {
 dialog[data-pagefind-ui] .pagefind-ui {
   width: 100% !important;
 }
+
+/* 하단 페이지 이동(Next/Previous) 버튼 크기 조절 */
+.pagination-links a {
+  padding: 0.5rem 1rem !important; /* 전체적인 버튼 패딩 축소 */
+  gap: 0.25rem !important;
+}
+
+/* 'Next', 'Previous' 작은 글자 크기 조절 */
+.pagination-links .link-kind {
+  font-size: 0.75rem !important;
+}
+
+/* 실제 페이지 제목(큰 글자) 크기 조절 */
+.pagination-links .link-title {
+  font-size: 1rem !important; /* 기본보다 작게 설정 */
+  font-weight: 600;
+}
+
+/* 화살표 아이콘 크기 조절 */
+.pagination-links svg {
+  width: 1rem !important;
+  height: 1rem !important;
+}

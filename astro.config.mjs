@@ -16,9 +16,17 @@ export default defineConfig({
 			},
 			sidebar: [
 				{
-					label: 'Docs',
-					autogenerate: { directory: '' },
+					label: 'Fundamentals',
+					autogenerate: { directory: 'fundamentals' },
 				},
+				{
+					label: 'Applications',
+					autogenerate: { directory: 'applications' },
+				},
+				{
+					label: 'Editorial',
+					autogenerate: { directory: 'editorial' },
+					}
 			],
 		}),
 	],
