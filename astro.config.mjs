@@ -20,8 +20,8 @@ export default defineConfig({
 					autogenerate: { directory: 'fundamentals' },
 				},
 				{
-					label: 'Applications',
-					autogenerate: { directory: 'applications' },
+					label: 'Lecture Notes',
+					autogenerate: { directory: 'lecture-notes' },
 				},
 				{
 					label: 'Editorial',
