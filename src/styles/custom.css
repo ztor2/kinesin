@@ -18,6 +18,10 @@ body {
   letter-spacing: -0.03em; /* 기술적인 느낌을 위해 자간을 살짝 조절 */
 }
 
+:root[data-theme='dark'] .site-title {
+  color: #f8fafc !important;
+}
+
 /* 검색창 UI 버그 수정 (헤더에서도 유효) */
 
 /* 1. 검색 입력창에서 텍스트와 'X' 버튼이 겹치는 현상 수정 */

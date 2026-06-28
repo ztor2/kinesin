@@ -6,11 +6,13 @@ import ThemeSelect from '@astrojs/starlight/components/ThemeSelect.astro';
 import Search from '@astrojs/starlight/components/Search.astro';
 import { Image } from 'astro:assets';
 import logoSrc from '../assets/kinesin.png';
+import darkLogoSrc from '../assets/kinesin-dark.png';
 ---
 <div class="header sl-flex">
 	<div class="title-wrapper sl-flex">
 		<a href="/" class="logo-link">
-			<Image src={logoSrc} alt="Logo" width={64} height={64} class="site-logo" />
+			<Image src={logoSrc} alt="Logo" width={64} height={64} class="site-logo site-logo--light" />
+			<Image src={darkLogoSrc} alt="Logo" width={64} height={64} class="site-logo site-logo--dark" />
 		</a>
 		<SiteTitle {...Astro.props} />
 	</div>
@@ -57,6 +59,15 @@ import logoSrc from '../assets/kinesin.png';
 		box-shadow: none !important;
 		padding: 0 !important;
 		margin: 0 !important;
+	}
+	.site-logo--dark {
+		display: none;
+	}
+	:global(html[data-theme='dark']) .site-logo--light {
+		display: none;
+	}
+	:global(html[data-theme='dark']) .site-logo--dark {
+		display: block;
 	}
 	.right-group {
 		display: flex;
