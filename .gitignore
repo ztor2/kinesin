@@ -9,6 +9,7 @@ dist/
 
 # Obsidian folders
 **/.obsidian/
+Clippings/
 
 node_modules/
 

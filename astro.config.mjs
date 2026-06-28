@@ -16,17 +16,9 @@ export default defineConfig({
 			},
 			sidebar: [
 				{
-					label: 'Fundamentals',
-					autogenerate: { directory: 'fundamentals' },
+					label: 'Study',
+					autogenerate: { directory: 'study' },
 				},
-				{
-					label: 'Lecture Notes',
-					autogenerate: { directory: 'lecture-notes' },
-				},
-				{
-					label: 'Editorial',
-					autogenerate: { directory: 'editorial' },
-					}
 			],
 		}),
 	],

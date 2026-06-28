@@ -59,3 +59,12 @@ dialog[data-pagefind-ui] .pagefind-ui {
   width: 1rem !important;
   height: 1rem !important;
 }
+
+/* PixelRAG note images */
+.sl-markdown-content img[src*="Pasted%20image%2020260628200315"],
+.sl-markdown-content img[src*="Pasted%20image%2020260628202438"],
+.sl-markdown-content img[src*="Pasted%20image%2020260628205848"] {
+  display: block;
+  max-width: 86%;
+  margin-inline: auto;
+}
