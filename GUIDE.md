@@ -80,3 +80,15 @@ export const MyComponent = () => {
   return <div className="not-content">...</div>;
 };
 ```
+
+### 4. 외부 링크를 새 탭에서 열기
+
+일반 Markdown 링크 문법을 유지하면서 외부 링크를 새 탭에서 열기 위해 `rehype-external-links`를 사용합니다.
+
+```mdx
+[RoPE 논문](https://arxiv.org/abs/2104.09864)
+```
+
+- `astro.config.mjs`의 최상위 `markdown.rehypePlugins`에 플러그인을 등록합니다. `starlight()` 옵션 내부에 넣으면 적용되지 않습니다.
+- `target: '_blank'`와 `rel: ['noopener', 'noreferrer']`를 함께 설정합니다.
+- `/study/...`나 `#제목` 같은 내부 링크에는 새 탭 설정이 적용되지 않습니다.

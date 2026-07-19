@@ -110,7 +110,6 @@ export const PRoPEComparison = () => {
   
   const isAlarm = angleLow > 1.0;
 
-  // 해결: Starlight CSS 무효화를 위해 "not-content" 유지 및 강제 Flex 인라인 스타일 적용
   return (
     <div className="font-sans not-content" style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
       <div className="text-center mb-2">

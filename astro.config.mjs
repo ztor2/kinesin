@@ -6,6 +6,9 @@ import react from '@astrojs/react';
 
 import tailwindcss from '@tailwindcss/vite';
 
+import rehypeExternalLinks from 'rehype-external-links';
+
+
 export default defineConfig({
   integrations: [starlight({
       title: 'Kinesin',
@@ -32,7 +35,17 @@ export default defineConfig({
           },
       ],
       }), react()],
-
+markdown: {
+    rehypePlugins: [
+    [
+        rehypeExternalLinks,
+        {
+        target: '_blank',
+        rel: ['noopener', 'noreferrer'],
+        },
+    ],
+    ],
+},
   vite: {
     plugins: [tailwindcss()],
   },
