@@ -1,5 +1,5 @@
 ---
-title: "RoPE(Rotary Position Embedding)"  
+title: "RoPE(Rotary Positional Encoding)"
 description: "위치 인코딩(PE)과 RoPE의 수학적 원리, 상대 위치 보존 및 통합 시각화"
 ---
 
@@ -14,7 +14,7 @@ import { PESimulator } from '../../../components/PESimulator.jsx';
 - 트랜스포머는 마침 스케일 법칙(Scaling law)이 잘 적용되는 모델이었고, LLM은 이에 따라 빠르게 발전이 진행되어 대중화되었다. <br/>
 - 하지만 LLM 대중화 이후 대화 누적, 문서 입력, 도구 사용 등으로 <strong>컨텍스트(context) 길이의 한계</strong>가 성능 향상의 병목이 되었다.
 - 기존 위치 인코딩은 장기 컨텍스트 처리 측면에서 약점이 발생했고, 장기 컨텍스트에서도 위치 정보를 안정적으로 유지할 수 있는 위치 인코딩이 필요하게 되었다. <br/>
-- 이 때 위치 정보를 기하학적으로 부여하는 <strong>회전 위치 임베딩(Rotary Position Embedding, RoPE)</strong>이 제안되어 사용되기 시작했다. <br/>
+- 이 때 위치 정보를 기하학적으로 부여하는 <strong>회전 위치 인코딩(Rotary Positional Encoding, RoPE)</strong>이 제안되어 사용되기 시작했다. <br/>
 - RoPE는 장기 컨텍스트에서도 토큰 간 상대적 위치 정보를 잘 보존하는 강점을 보였다.
 - 현재는 RoPE를 기반으로 학습되어 1M 토큰 이상의 입력을 처리할 수 있는 모델들도 널리 쓰이고 있다. <br/><br/>
 
@@ -73,7 +73,7 @@ $$
 
 <br/>
 
-### Rotary Position Embedding (RoPE)
+### Rotary Position Encoding (RoPE)
 <br/>
 
 RoPE 역시 $\sin/\cos$이 2차원 단위원의 회전각을 표현한다는 기하학적 특성에 기반한다. 
