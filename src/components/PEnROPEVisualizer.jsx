@@ -84,7 +84,7 @@ const VisualizerSection = ({ title, description, children, formula }) => (
   </div>
 );
 
-export const PEvsRoPEVisualizer = () => {
+export const PEnROPEVisualizer = () => {
   const [position, setPosition] = useState(5);
   const [clockIndex, setClockIndex] = useState(0);
   const [qVec, setQVec] = useState([0.6, 0.3]);
@@ -231,4 +231,4 @@ export const PEvsRoPEVisualizer = () => {
   );
 };
 
-export default PEvsRoPEVisualizer;
+export default PEnROPEVisualizer;

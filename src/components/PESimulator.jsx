@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 const SENTENCES = [
   { id: 'en', label: 'English', tokens: ['The', 'cat', 'sat', 'on', 'the', 'mat'] },
-  { id: 'ko', label: '한국어', tokens: ['귀여운', '고양이가', '이불', '위에', '앉아', '있다'] }
+  { id: 'ko', label: '한국어', tokens: ['인공지능', '모델의', '위치', '인코딩', '원리', '분석'] }
 ];
 
 const BASE_FREQ = 10000;
@@ -43,7 +43,7 @@ const ClockItem = ({ index, rotated, isRoPE, label, accentColor }) => {
         {label}
       </span>
       <span style={{ fontSize: '11px', color: '#64748b', marginBottom: '8px', fontFamily: 'monospace', fontWeight: '500' }}>
-        {index === 0 ? '고주파' : index === 1 ? (isRoPE ? '저주파' : '중주파') : '저주파'}
+        {index === 0 ? '고주파 (초침)' : index === 1 ? (isRoPE ? '저주파 (시침)' : '중주파 (분침)') : '저주파 (시침)'}
       </span>
 
       <svg 
@@ -52,7 +52,6 @@ const ClockItem = ({ index, rotated, isRoPE, label, accentColor }) => {
       >
         <circle cx={center} cy={center} r={radius + 3} fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" />
         
-        {/* 눈금 */}
         <line x1={center} y1={center - radius - 2} x2={center} y2={center - radius + 3} stroke="#94a3b8" strokeWidth="1.5" />
         <line x1={center + radius + 2} y1={center} x2={center + radius - 3} y2={center} stroke="#94a3b8" strokeWidth="1.5" />
         <line x1={center} y1={center + radius + 2} x2={center} y2={center + radius - 3} stroke="#94a3b8" strokeWidth="1.5" />
@@ -78,7 +77,6 @@ const ClockItem = ({ index, rotated, isRoPE, label, accentColor }) => {
         <circle cx={center} cy={center} r="2.5" fill="#0f172a" />
       </svg>
 
-      {/* 가독성 높인 좌표 텍스트 */}
       <div style={{ marginTop: '8px', textAlign: 'center', fontFamily: 'monospace', fontSize: '12px', fontWeight: '700' }}>
         {isRoPE ? (
           <span style={{ color: '#7c3aed', backgroundColor: '#f3e8ff', padding: '2px 6px', borderRadius: '4px' }}>
@@ -94,12 +92,13 @@ const ClockItem = ({ index, rotated, isRoPE, label, accentColor }) => {
   );
 };
 
-export const PositionalEncodingVisualizer = () => {
+export const PESimulator = () => {
   const [selectedSentenceIdx, setSelectedSentenceIdx] = useState(0);
-  const [position, setPosition] = useState(1);
+  const [position, setPosition] = useState(1); // Query position m
   const [viewMode, setViewMode] = useState('split'); // 'split' | 'pe' | 'rope'
 
   const sentence = SENTENCES[selectedSentenceIdx];
+  const numTokens = sentence.tokens.length;
 
   // PE: d_model = 6 (시계 3개: i=0, 1, 2)
   const peClockData = [0, 1, 2].map((i) => {
@@ -126,6 +125,60 @@ export const PositionalEncodingVisualizer = () => {
         qx * cos - qy * sin,
         qx * sin + qy * cos
       ]
+    };
+  });
+
+  // --- 정확한 이론 수식 기반의 토큰 간 상대거리 & Attention Score 계산 ---
+  // Query 위치: m (position), Key 위치: n (0 ~ N-1)
+  // RoPE 이론: (q'_m)^T k'_n = \sum q^{(i)T} R((n-m)\theta_i) k^{(i)}
+  // PE 이론: (x_m + p_m)^T (x_n + p_n) = x_m^T x_n + x_m^T p_n + p_m^T x_n + p_m^T p_n
+  const qBase = [0.8, 0.4, 0.6, 0.2]; // RoPE base q
+  const kBase = [0.7, 0.5, 0.5, 0.3]; // RoPE base k
+
+  const scoreData = sentence.tokens.map((token, n) => {
+    const dist = n - position;
+    const absDist = Math.abs(dist);
+
+    // 1. RoPE Score 계산 (d_h = 4, 2쌍)
+    // 쌍 0: theta_0 = 1.0 (고주파), 쌍 1: theta_1 = 0.1 (중저주파)
+    let ropeScoreSum = 0;
+    for (let i = 0; i < 2; i++) {
+      const theta = getAngle(1, i, 4); // theta_i
+      const relAngle = dist * theta; // (n-m)*theta_i
+      const cosR = Math.cos(relAngle);
+      const sinR = Math.sin(relAngle);
+
+      const qPair = [qBase[i * 2], qBase[i * 2 + 1]];
+      const kPair = [kBase[i * 2], kBase[i * 2 + 1]];
+
+      // q^T R((n-m)theta) k
+      const kRotated = [
+        kPair[0] * cosR - kPair[1] * sinR,
+        kPair[0] * sinR + kPair[1] * cosR
+      ];
+      ropeScoreSum += (qPair[0] * kRotated[0] + qPair[1] * kRotated[1]);
+    }
+    // 정규화 (0~1 범위 시각화용)
+    const normRoPEScore = Math.max(0.05, Math.min(1.0, (ropeScoreSum / 1.5).toFixed(2)));
+
+    // 2. Absolute PE Score 계산 (d_model = 6, 3쌍 내적)
+    // p_m^T p_n = \sum \cos((n-m)\omega_i) 의 요동치는 패턴 시각화
+    let pePosDot = 0;
+    for (let i = 0; i < 3; i++) {
+      const omega = getAngle(1, i, 6);
+      pePosDot += Math.cos(dist * omega);
+    }
+    // 내용 내적 + 위치 내적 + 교차항 요동 반영
+    const baseContentDot = dist === 0 ? 0.9 : (0.4 - 0.05 * absDist);
+    const rawPeScore = (baseContentDot + 0.3 * pePosDot) / 1.8;
+    const normPEScore = Math.max(0.05, Math.min(1.0, rawPeScore.toFixed(2)));
+
+    return {
+      n,
+      token,
+      dist,
+      peScore: normPEScore,
+      ropeScore: normRoPEScore
     };
   });
 
@@ -199,7 +252,7 @@ export const PositionalEncodingVisualizer = () => {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
-            문장 토큰 선택
+            Query 토큰 선택 (위치 m 설정)
           </span>
           <div style={{ display: 'flex', gap: '6px' }}>
             {SENTENCES.map((s, idx) => (
@@ -216,7 +269,7 @@ export const PositionalEncodingVisualizer = () => {
                   borderRadius: '6px',
                   border: 'none',
                   cursor: 'pointer',
-                  backgroundColor: selectedSentenceIdx === idx ? '#3b82f6' : '#e2e8f0',
+                  backgroundColor: selectedSentenceIdx === idx ? '#2563eb' : '#e2e8f0',
                   color: selectedSentenceIdx === idx ? '#ffffff' : '#475569'
                 }}
               >
@@ -273,12 +326,12 @@ export const PositionalEncodingVisualizer = () => {
         {/* Position Slider */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingTop: '8px', borderTop: '1px solid #e2e8f0' }}>
           <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155', whitespace: 'nowrap' }}>
-            위치 조절 (m): <strong style={{ color: '#2563eb', fontFamily: 'monospace', fontSize: '15px', marginLeft: '4px' }}>{position}</strong>
+            Query 위치 조절 (m): <strong style={{ color: '#2563eb', fontFamily: 'monospace', fontSize: '15px', marginLeft: '4px' }}>{position} ("{sentence.tokens[position]}")</strong>
           </span>
           <input
             type="range"
             min="0"
-            max={sentence.tokens.length - 1}
+            max={numTokens - 1}
             value={position}
             onChange={(e) => setPosition(Number(e.target.value))}
             style={{ width: '100%', cursor: 'pointer', accentColor: '#2563eb' }}
@@ -286,7 +339,7 @@ export const PositionalEncodingVisualizer = () => {
         </div>
       </div>
 
-      {/* 3. PE & RoPE Row Layout */}
+      {/* 3. PE & RoPE Clocks Row Layout */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
         
         {/* PE Row */}
@@ -303,14 +356,14 @@ export const PositionalEncodingVisualizer = () => {
             }}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
-              <div style={{ display: 'flex', items: 'center', gap: '8px', paddingTop: '2px' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '2px' }}>
                 <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#0369a1' }}>
                   Absolute Positional Encoding (PE)
                 </h4>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
                 <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#0369a1', fontWeight: '700', backgroundColor: '#e0f2fe', padding: '3px 10px', borderRadius: '6px', border: '1px solid #bae6fd', textAlign: 'right' }}>
-                  적용 단계: 입력 토큰 임베딩
+                  적용 단계 : 입력 토큰 임베딩
                 </span>
                 <span style={{ fontSize: '10px', fontFamily: 'monospace', color: '#0284c7', fontWeight: '600' }}>
                   (d = 6)
@@ -354,7 +407,7 @@ export const PositionalEncodingVisualizer = () => {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
                 <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#6b21a8', fontWeight: '700', backgroundColor: '#f3e8ff', padding: '3px 10px', borderRadius: '6px', border: '1px solid #e9d5ff', textAlign: 'right' }}>
-                  적용 단계 : Q/K 벡터의 단일 Attention head 범위
+                  적용 단계 : Query / Key 벡터 단일 Attention Head 범위
                 </span>
                 <span style={{ fontSize: '10px', fontFamily: 'monospace', color: '#7c3aed', fontWeight: '600' }}>
                   (d_h = 4)
@@ -378,8 +431,105 @@ export const PositionalEncodingVisualizer = () => {
         )}
 
       </div>
+
+      {/* 4. 신규 패널: 토큰 간 상대 거리 & Attention Score 패널 */}
+      <div 
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '14px',
+          backgroundColor: '#f8fafc',
+          padding: '18px',
+          borderRadius: '14px',
+          border: '1px solid #e2e8f0',
+          marginTop: '4px'
+        }}
+      >
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+          <div>
+            <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>
+              Query 토큰 '{sentence.tokens[position]}'(m={position}) ↔ Key 토큰(n) 간 Attention 점수 비교
+            </h4>
+          </div>
+        </div>
+
+        {/* Score Bar Chart List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
+          {scoreData.map((item) => {
+            const isSelf = item.n === position;
+            return (
+              <div 
+                key={item.n}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '12px',
+                  padding: '8px 12px',
+                  borderRadius: '8px',
+                  backgroundColor: isSelf ? '#ffffff' : 'transparent',
+                  border: isSelf ? '1px solid #cbd5e1' : 'none'
+                }}
+              >
+                {/* Token Label */}
+                <div style={{ minWidth: '90px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '700', color: isSelf ? '#2563eb' : '#334155' }}>
+                    n={item.n} {item.token}
+                  </span>
+                  <span style={{ fontSize: '10px', fontFamily: 'monospace', color: '#94a3b8' }}>
+                    ({item.dist > 0 ? `+${item.dist}` : item.dist})
+                  </span>
+                </div>
+
+                {/* Bars Comparison */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  {/* PE Bar */}
+                  {(viewMode === 'split' || viewMode === 'pe') && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '10px', fontWeight: '700', color: '#0284c7', width: '32px' }}>PE</span>
+                      <div style={{ flex: 1, backgroundColor: '#e0f2fe', height: '12px', borderRadius: '6px', overflow: 'hidden' }}>
+                        <div 
+                          style={{ 
+                            width: `${item.peScore * 100}%`, 
+                            backgroundColor: '#0284c7', 
+                            height: '100%',
+                            transition: 'width 0.3s ease'
+                          }} 
+                        />
+                      </div>
+                      <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: '700', color: '#0369a1', width: '36px', textAlign: 'right' }}>
+                        {item.peScore}
+                      </span>
+                    </div>
+                  )}
+
+                  {/* RoPE Bar */}
+                  {(viewMode === 'split' || viewMode === 'rope') && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span style={{ fontSize: '10px', fontWeight: '700', color: '#7c3aed', width: '32px' }}>RoPE</span>
+                      <div style={{ flex: 1, backgroundColor: '#f3e8ff', height: '12px', borderRadius: '6px', overflow: 'hidden' }}>
+                        <div 
+                          style={{ 
+                            width: `${item.ropeScore * 100}%`, 
+                            backgroundColor: '#7c3aed', 
+                            height: '100%',
+                            transition: 'width 0.3s ease'
+                          }} 
+                        />
+                      </div>
+                      <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: '700', color: '#6b21a8', width: '36px', textAlign: 'right' }}>
+                        {item.ropeScore}
+                      </span>
+                    </div>
+                  )}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
     </div>
   );
 };
 
-export default PositionalEncodingVisualizer;
+export default PESimulator;

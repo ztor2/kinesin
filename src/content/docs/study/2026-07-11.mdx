@@ -3,7 +3,7 @@ title: "RoPE(Rotary Positional Encoding)"
 description: "위치 인코딩(PE)과 RoPE의 수학적 원리, 상대 위치 보존 및 통합 시각화"
 ---
 
-import { PositionalEncodingVisualizer } from '../../../components/PositionalEncodingVisualizer.jsx';
+import { PESimulator } from '../../../components/PESimulator.jsx';
 
 ### Intro
 <br/>
@@ -18,7 +18,7 @@ import { PositionalEncodingVisualizer } from '../../../components/PositionalEnco
 - RoPE는 장기 컨텍스트에서도 토큰 간 상대적 위치 정보를 잘 보존하는 강점을 보였다.
 - 현재는 RoPE를 기반으로 학습되어 1M 토큰 이상의 입력을 처리할 수 있는 모델들도 널리 쓰이고 있다. <br/><br/>
 
-본 문서에서는 PE(Absolute PE)와 RoPE의 원리를 간단히 살펴보기로 한다.
+본 문서에서는 초기의 PE, 즉 Absolute PE와 이후 개선된 PE인 RoPE의 원리를 간단히 비교하며 살펴본다.
 
 <br/>
 
@@ -115,7 +115,7 @@ PE와 RoPE에 사용되는 수많은 2차원 평면의 원을,
 앞쪽 토큰의 
 
 <div className="not-content my-8 w-full clear-both">
-  <PositionalEncodingVisualizer client:visible />
+  <PESimulator client:visible />
 </div>
 
 <br/>
