@@ -170,7 +170,7 @@ export const PEnROPEVisualizer = () => {
 
         {/* --- RoPE Section --- */}
         <VisualizerSection
-          title="Rotary PE (RoPE)"
+          title="Rotary Position Embedding (RoPE)"
           description="위치(m)에 따라 Query/Key 벡터 q_m 자체를 직접 회전시킵니다. 아래에서 q_m 값을 바꿔보세요."
           formula={<>q'<sub>m</sub> = R(mθ)q<sub>m</sub></>}
         >
