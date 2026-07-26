@@ -1,0 +1,155 @@
+---
+title: "RoPE(Rotary Positional Encoding)"
+description: "위치 인코딩(PE)과 RoPE의 수학적 원리, 상대 위치 보존 및 통합 시각화"
+---
+
+import { PESimulator } from '../../../components/PESimulator.jsx';
+
+### Intro
+<br/>
+
+- LLM(Large Language Models) 발전의 주요 전환점 중 하나는 순서가 있는 언어 데이터를 처리하는 방식이 RNN(Recurrent Neural Network)의 순차 입력에서 트랜스포머의(Transformers)의 병렬 처리 방식으로 변화한 것이다.<br/>
+- 트랜스포머의 Self-attention은 각 단어에 위치 정보 벡터를 더하는 <strong>위치 인코딩(Positional Encoding, PE)</strong>을 사용하여 언어의 순서를 인식한다.
+<br/>
+- 트랜스포머는 마침 스케일 법칙(Scaling law)이 잘 적용되는 모델이었고, LLM은 이에 따라 빠르게 발전이 진행되어 대중화되었다. <br/>
+- 하지만 LLM 대중화 이후 대화 누적, 문서 입력, 도구 사용 등으로 <strong>컨텍스트(context) 길이의 한계</strong>가 성능 향상의 병목이 되었다.
+- 기존 위치 인코딩은 장기 컨텍스트 처리 측면에서 약점이 발생했고, 장기 컨텍스트에서도 위치 정보를 안정적으로 유지할 수 있는 위치 인코딩이 필요하게 되었다. <br/>
+- 이 때 위치 정보를 기하학적으로 부여하는 <strong>회전 위치 인코딩(Rotary Positional Encoding, RoPE)</strong>이 제안되어 사용되기 시작했다. <br/>
+- RoPE는 장기 컨텍스트에서도 토큰 간 상대적 위치 정보를 잘 보존하는 강점을 보였다.
+- 현재는 RoPE를 기반으로 학습되어 1M 토큰 이상의 입력을 처리할 수 있는 모델들도 널리 쓰이고 있다. <br/><br/>
+
+본 문서에서는 초기의 PE, 즉 Absolute PE와 이후 개선된 PE인 RoPE의 원리를 간단히 비교하며 살펴본다.
+
+<br/>
+
+### Absolute Positional Encoding (PE)
+<br/><br/>
+
+> <i>트랜스포머에 사용된 초기의 Positional Encoding을 후속 PE 연구와의 구분을 위해 Sinusoidal Positional Encoding 또는 Absolute Positional Encoding이라 부른다.</i> <br/>
+<br/>
+
+트랜스포머의 Self-Attention은 토큰을 한꺼번에 처리하므로 입력 순서를 스스로 구분하지 못한다. 
+위치 인코딩의 핵심 목적은 문맥상 인접한 토큰끼리는 높은 어텐션 점수를 부여하고, 멀리 떨어진 토큰과는 점수가 자연스럽게 낮아지도록 토큰 간의 거리를 수학적으로 표현하는 데 있다.
+초기 트랜스포머는 이를 위해 위치 벡터 $\mathbf{p}_m$을 만들어 토큰 임베딩 $\mathbf{x}_m$에 더하는 방식을 사용한다.
+$m$은 토큰의 순서를 나타내는 정수이다.
+
+<br/>
+$$
+\mathbf{h}_m = \mathbf{x}_m + \mathbf{p}_m
+$$
+<br/>
+
+위치 벡터 $\mathbf{p}_m$은 2차원 단위원(unit circle) 위의 $x$좌표와 $y$좌표를 정의하는 삼각함수 $\sin$과 $\cos$을 기반으로 계산된다.
+위치 벡터 계산 과정은 다음과 같다.
+- $d$차원의 임베딩을 2개씩 짝지어 $d/2$개의 2차원 평면으로 분할한다. 예를 들어, 6차원 토큰 임베딩이라면 2개 쌍의 평면이 3개 만들어진다. 이 때 $i$를 각 평면의 번호라 하자.
+- 각 평면마다 고유 주파수 $\omega_i$를 가진 단위원 좌표 $\mathbf{p}_m^{(i)}$를 생성한다.
+
+<br/>
+$$
+\mathbf{p}_m^{(i)} = \begin{bmatrix} \sin(m \omega_i) \\ \cos(m \omega_i) \end{bmatrix}, \qquad \omega_i = 10000^{-2i / d}
+$$
+<br/>
+
+- $\mathbf{p}_m^{(i)}$를 모두 연결하면 토큰 임베딩 차원과 동일한 $d$차원의 위치 벡터 $\mathbf{p}_m$이 얻어지며, 이를 토큰 임베딩에 더하게 된다.
+- $i$ 값이 작은 위치 벡터의 앞부분은 <strong>고주파수</strong> 영역으로, 빠르게 회전하여 주로 인접 토큰 간의 미세한 순서를 구분한다.
+- $i$ 값이 큰 위치 벡터의 뒷부분은 <strong>저주파수</strong> 영역으로, 느리게 회전하여 멀리 떨어진 토큰 간의 거리를 인지한다.
+
+<br/>
+
+위치 벡터 $\mathbf{p}_m$을 임베딩에 더한 뒤, Attention 점수를 구하기 위해 Query($m$)와 Key($n$)를 내적하면 다음과 같이 4개 항으로 전개된다.
+이 값들이 모델의 예측 과정에서 토큰 순서 정보의 역할을 하게 된다. <br/>
+
+<br/>
+$$
+(\mathbf{x}_m + \mathbf{p}_m)^\top (\mathbf{x}_n + \mathbf{p}_n) = \underbrace{\mathbf{x}_m^\top \mathbf{x}_n}_{\text{토큰 내용}} + \underbrace{\mathbf{x}_m^\top \mathbf{p}_n + \mathbf{p}_m^\top \mathbf{x}_n}_{\text{내용-위치 교차항}} + \underbrace{\mathbf{p}_m^\top \mathbf{p}_n}_{\text{절대 위치 항}}
+$$
+<br/>
+
+다만, Absolute PE는 다음과 같은 실질적인 한계를 지닌다.
+- <strong>의미 공간 왜곡 문제</strong>: 단어 고유의 의미 벡터($\mathbf{x}$)와 위치 벡터($\mathbf{p}$)가 동일한 공간에서 덧셈으로 뒤섞이며, 의미 표현이 왜곡될 가능성이 있다.
+- <strong>상대적 거리 정보 보존 문제</strong>: 두 토큰 간의 거리가 멀어짐에 따라 어텐션 점수가 자연스럽게 감소하는 성질(Distance Decay)을 수학적으로 확실히 보장하지 못한다.
+  - Absolute PE 또한 삼각함수의 덧셈 정리를 바탕으로 연산 과정에서 토큰 간의 상대적 위치 관계도 어느 정도 파악할 수 있도록 고안되어 있다. 
+  다만, LLM 대중화 이후의 초장기 컨텍스트에서는 상대 위치 정보를 충분히 보존하지 못하는 한계가 드러나게 되었다.
+
+<br/>
+
+### Rotary Position Embedding (RoPE)
+<br/>
+
+RoPE 역시 $\sin/\cos$이 2차원 단위원의 회전각을 표현한다는 기하학적 특성에 기반한다. 
+다만, Absolute PE가 입력 임베딩 단계에서 위치 벡터를 덧셈하는 것과 달리, 
+RoPE는 Attention 계산을 위해 선형 투영을 거쳐 생성된 Query와 Key 벡터 단계에서 직접 <strong>회전 행렬 곱</strong> 연산을 적용한다. <br/>
+이 Query, Key 벡터에서도 단일 Attention Head의 차원인 $d_h$를 2차원 평면으로 나누어 회전 연산을 수행한다.
+- $d$차원의 Query/Key 벡터($\mathbf{q}_m, \mathbf{k}_n$)를 2차원 평면 $d_h/2$개로 나눈다.
+- 각 2차원 평면 위에서 2D 회전 행렬 $R(m\theta_i)$를 구현한다.
+
+<br/>
+$$
+R(m\theta_i) = \begin{bmatrix} \cos(m\theta_i) & -\sin(m\theta_i) \\ \sin(m\theta_i) & \cos(m\theta_i) \end{bmatrix}
+$$
+<br/>
+
+- 각 평면의 $R(m\theta_i)$으로 구성된 $\mathcal{R}_m$ 블록 대각 행렬을 구할 수 있다.
+- 회전 연산은 벡터의 크기, 즉 단어의 의미는 최대한 보존하면서 위치 $m$에 비례해 2차원 평면 위에서 방향만 시계 바늘처럼 기울이는 연산이 된다.
+
+<br/>
+$$
+\mathbf{q}'_m = \mathcal{R}_m \mathbf{q}_m, \qquad \mathbf{k}'_n = \mathcal{R}_n \mathbf{k}_n
+$$
+<br/>
+
+위치 $m$의 Query와 위치 $n$의 Key를 회전시킨 후 내적을 수행하면, 회전 행렬의 직교성($R(\theta)^\top = R(-\theta)$)으로 인해 절대 위치 $m, n$이 상쇄되고 오직 <strong>상대 거리 $(n-m)$</strong> 회전각만 남는다.
+
+<br/>
+$$
+\begin{aligned}
+(\mathbf{q}'_m)^\top \mathbf{k}'_n &= (R(m\theta)\mathbf{q}_m)^\top (R(n\theta)\mathbf{k}_n) \\
+&= \mathbf{q}_m^\top R(-m\theta) R(n\theta) \mathbf{k}_n \\
+&= \mathbf{q}_m^\top R((n-m)\theta) \mathbf{k}_n
+\end{aligned}
+$$
+<br/>
+
+이와 같이 RoPE는 회전 연산으로 상대적 거리 $(n-m)$가 Attention 점수에 자연스럽게 반영될 수 있게 한다.
+
+<br/>
+
+### PE & RoPE Visualization
+<br/>
+
+PE와 RoPE에 사용되는 수많은 2차원 평면의 원을,
+우리가 가장 잘 아는 2차원의 평면의 원인 '시계'에 비유하여 더 직관적으로 이해해보자. <br/>
+예시 문장의 토큰들의 위치에 따라 선택하며, 위치 인코딩 및 다른 토큰들 간의 Attention 점수 변화 양상을 확인할 수 있다. <br/>
+
+<div className="not-content my-8 w-full clear-both">
+  <PESimulator client:visible />
+</div>
+
+<br/>
+고주파 시계에서 저주파 시계로 갈수록 느리게 회전하고, 토큰 간 거리가 멀어짐에 따라 Attention 점수가 자연스럽게 감소하는 것을 확인할 수 있다. <br/>
+작은 규모의 예시이므로 PE와 RoPE의 차이가 크게 드러나지는 않지만, RoPE는 상대적 거리 $(n-m)$가 내적 결과에 직접 반영되므로 장기 컨텍스트에서도 안정적인 위치 정보 보존이 가능하다.
+
+<br/>
+
+### Comparison
+<br/>
+
+PE와 RoPE의 특징 및 차이점을 정리하여 요약해보면 다음과 같다.
+
+| 구분 | Absolute PE | RoPE |
+| :--- | :--- | :--- |
+| <strong>적용 시점</strong> | 입력 토큰 임베딩 단계 | Self-Attention의 Query/Key 단계 |
+| <strong>적용 대상</strong> | 입력 토큰 임베딩 $\mathbf{x}_m$ | Head별 Query $\mathbf{q}_m$ 및 Key $\mathbf{k}_n$ |
+| <strong>차원 분할</strong> | $d/2$개의 2차원 평면 분할 | $d_h/2$개의 2차원 평면 분할 |
+| <strong>연산 방식</strong> | 단위원 위치 좌표 덧셈 ($\mathbf{x}_m + \mathbf{p}_m$) | 2차원 평면 회전 행렬 곱 ($\mathcal{R}_m \mathbf{q}_m$) |
+| <strong>Attention 내적 결과</strong> | 절대 위치 정보를 곱한 항 | 상대 거리 $(n-m)$ 회전각 정보 |
+
+<br/>
+
+---
+
+### References
+<br/>
+
+- **Attention Is All You Need (Absolute PE)** - Vaswani et al. (2017) [(Link)](https://arxiv.org/abs/1706.03762)
+- **RoFormer: Enhanced Transformer with Rotary Position Embedding (RoPE)** - Su et al. (2021) [(Link)](https://arxiv.org/abs/2104.09864)
