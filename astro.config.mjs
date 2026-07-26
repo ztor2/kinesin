@@ -7,6 +7,8 @@ import react from '@astrojs/react';
 import tailwindcss from '@tailwindcss/vite';
 
 import rehypeExternalLinks from 'rehype-external-links';
+import rehypeKatex from 'rehype-katex';
+import remarkMath from 'remark-math';
 
 
 export default defineConfig({
@@ -36,7 +38,9 @@ export default defineConfig({
       ],
       }), react()],
 markdown: {
+    remarkPlugins: [remarkMath],
     rehypePlugins: [
+    rehypeKatex,
     [
         rehypeExternalLinks,
         {

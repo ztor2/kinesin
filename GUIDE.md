@@ -92,3 +92,19 @@ export const MyComponent = () => {
 - `astro.config.mjs`의 최상위 `markdown.rehypePlugins`에 플러그인을 등록합니다. `starlight()` 옵션 내부에 넣으면 적용되지 않습니다.
 - `target: '_blank'`와 `rel: ['noopener', 'noreferrer']`를 함께 설정합니다.
 - `/study/...`나 `#제목` 같은 내부 링크에는 새 탭 설정이 적용되지 않습니다.
+
+### 5. Tooltip 컴포넌트 사용
+
+본문의 특정 용어에 짧은 부가 설명을 표시할 때 `src/components/Tooltip.astro`를 사용합니다.
+
+```mdx
+import Tooltip from '../../../components/Tooltip.astro';
+
+<Tooltip id="self-attention" text="각 토큰이 다른 토큰들과 얼마나 관련 있는지를 계산하는 방식">Self-Attention</Tooltip>은 병렬로 관계를 계산한다.
+```
+
+- `id`는 같은 문서 안에서 중복되지 않는 값을 사용합니다.
+- `text`에는 툴팁에 표시할 짧은 설명을 입력합니다.
+- 마우스 hover와 키보드 focus에서 모두 표시됩니다.
+- CSS 기반 Astro 컴포넌트이므로 `client:*` 지시어가 필요하지 않습니다.
+- 한글 조사를 공백 없이 붙이려면 `</Tooltip>은`처럼 작성합니다.

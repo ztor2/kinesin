@@ -1,0 +1,73 @@
+---
+interface Props {
+  id: string;
+  text: string;
+}
+
+const { id, text } = Astro.props;
+const tooltipId = `tooltip-${id}`;
+---
+
+<span class="tooltip-trigger" tabindex="0" aria-describedby={tooltipId}><slot /><span id={tooltipId} class="tooltip-content" role="tooltip">{text}</span></span>
+
+<style>
+  .tooltip-trigger {
+    position: relative;
+    display: inline-block;
+    color: #15803d;
+    font-weight: 600;
+    text-decoration: underline dotted;
+    text-underline-offset: 0.2em;
+    cursor: default;
+  }
+
+  .tooltip-content {
+    position: absolute;
+    left: 50%;
+    bottom: calc(100% + 0.55rem);
+    z-index: 30;
+    width: max-content;
+    max-width: min(18rem, 80vw);
+    padding: 0.5rem 0.65rem;
+    border: 1px solid #d1d5db;
+    border-radius: 0.4rem;
+    color: #f8fafc;
+    background: #1f2937;
+    font-size: 0.8rem;
+    font-weight: 400;
+    line-height: 1.45;
+    text-align: left;
+    box-shadow: 0 4px 12px rgb(0 0 0 / 20%);
+    opacity: 0;
+    visibility: hidden;
+    transform: translate(-50%, 0.25rem);
+    transition:
+      opacity 120ms ease,
+      transform 120ms ease,
+      visibility 120ms;
+    pointer-events: none;
+  }
+
+  .tooltip-trigger:hover .tooltip-content,
+  .tooltip-trigger:focus-visible .tooltip-content {
+    opacity: 1;
+    visibility: visible;
+    transform: translate(-50%, 0);
+  }
+
+  .tooltip-trigger:focus-visible {
+    border-radius: 0.2rem;
+    outline: 2px solid #22c55e;
+    outline-offset: 0.15rem;
+  }
+
+  :global(:root[data-theme='dark']) .tooltip-trigger {
+    color: #4ade80;
+  }
+
+  :global(:root[data-theme='dark']) .tooltip-content {
+    border-color: #475569;
+    color: #f8fafc;
+    background: #0f172a;
+  }
+</style>
