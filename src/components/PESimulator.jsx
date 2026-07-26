@@ -464,17 +464,24 @@ export const PESimulator = () => {
                   display: 'flex',
                   alignItems: 'center',
                   gap: '12px',
-                  padding: '8px 12px',
-                  borderRadius: '8px',
-                  backgroundColor: isSelf ? '#ffffff' : 'transparent',
-                  border: isSelf ? '1px solid #cbd5e1' : 'none'
+                  padding: '10px 14px',
+                  borderRadius: '10px',
+                  backgroundColor: isSelf ? '#f8fafc' : 'transparent',
+                  border: isSelf ? '2px solid #6366f1' : '1px solid transparent',
+                  boxShadow: isSelf ? '0 2px 8px rgba(99, 102, 241, 0.1)' : 'none',
+                  transition: 'all 0.2s ease'
                 }}
               >
                 {/* Token Label */}
-                <div style={{ minWidth: '80px', display: 'flex', alignItems: 'center' }}>
-                  <span style={{ fontSize: '12px', fontWeight: '700', color: isSelf ? '#2563eb' : '#334155' }}>
-                    n={item.n} {item.token}
+                <div style={{ minWidth: '85px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                  <span style={{ fontSize: '15px', fontWeight: '800', color: isSelf ? '#4338ca' : '#0f172a' }}>
+                    {item.token}
                   </span>
+                  {isSelf && (
+                    <span style={{ fontSize: '10px', fontWeight: '700', color: '#6366f1', backgroundColor: '#e0e7ff', padding: '1px 5px', borderRadius: '4px' }}>
+                      Query
+                    </span>
+                  )}
                 </div>
 
                 {/* Bars Comparison */}
