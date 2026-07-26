@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 
 const SENTENCES = [
   { id: 'en', label: 'English', tokens: ['The', 'cat', 'sat', 'on', 'the', 'mat'] },
-  { id: 'ko', label: '한국어', tokens: ['인공지능', '모델의', '위치', '인코딩', '원리', '분석'] }
+  { id: 'ko', label: '한국어', tokens: ['귀여운', '고양이가', '이불', '위에', '앉아', '있다'] }
 ];
 
 const BASE_FREQ = 10000;
@@ -212,9 +212,9 @@ export const PESimulator = () => {
       >
         <div style={{ display: 'flex', gap: '6px', backgroundColor: '#f1f5f9', padding: '4px', borderRadius: '8px' }}>
           {[
-            { id: 'split', label: '병렬 비교' },
-            { id: 'pe', label: 'PE 만 보기' },
-            { id: 'rope', label: 'RoPE 만 보기' }
+            { id: 'split', label: 'PE & RoPE' },
+            { id: 'pe', label: 'PE Only' },
+            { id: 'rope', label: 'RoPE Only' }
           ].map((mode) => (
             <button
               key={mode.id}
@@ -471,12 +471,9 @@ export const PESimulator = () => {
                 }}
               >
                 {/* Token Label */}
-                <div style={{ minWidth: '90px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ minWidth: '80px', display: 'flex', alignItems: 'center' }}>
                   <span style={{ fontSize: '12px', fontWeight: '700', color: isSelf ? '#2563eb' : '#334155' }}>
                     n={item.n} {item.token}
-                  </span>
-                  <span style={{ fontSize: '10px', fontFamily: 'monospace', color: '#94a3b8' }}>
-                    ({item.dist > 0 ? `+${item.dist}` : item.dist})
                   </span>
                 </div>
 
