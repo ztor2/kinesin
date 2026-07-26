@@ -23,9 +23,14 @@ import { PESimulator } from '../../../components/PESimulator.jsx';
 <br/>
 
 ### Absolute Positional Encoding (PE)
+<br/><br/>
+
+> <i>트랜스포머에 사용된 초기의 Positional Encoding을 후속 PE 연구와의 구분을 위해 Sinusoidal Positional Encoding 또는 Absolute Positional Encoding이라 부른다.</i> <br/>
 <br/>
 
-트랜스포머의 Self-Attention은 토큰을 한꺼번에 처리하므로 입력 순서를 스스로 구분하지 못한다. 초기 트랜스포머는 위치 벡터 $\mathbf{p}_m$을 만들어 토큰 임베딩 $\mathbf{x}_m$에 더하는 방식을 사용한다.
+트랜스포머의 Self-Attention은 토큰을 한꺼번에 처리하므로 입력 순서를 스스로 구분하지 못한다. 
+위치 인코딩의 핵심 목적은 문맥상 인접한 토큰끼리는 높은 어텐션 점수를 부여하고, 멀리 떨어진 토큰과는 점수가 자연스럽게 낮아지도록 토큰 간의 거리를 수학적으로 표현하는 데 있다.
+초기 트랜스포머는 이를 위해 위치 벡터 $\mathbf{p}_m$을 만들어 토큰 임베딩 $\mathbf{x}_m$에 더하는 방식을 사용한다.
 $m$은 토큰의 순서를 나타내는 정수이다.
 
 <br/>
@@ -61,8 +66,10 @@ $$
 <br/>
 
 다만, Absolute PE는 다음과 같은 실질적인 한계를 지닌다.
-- <strong>의미 공간 왜곡과 교차항 문제</strong>: 단어 고유의 의미 벡터($\mathbf{x}$)와 위치 벡터($\mathbf{p}$)가 동일한 공간에서 덧셈으로 뒤섞이고, 내적 계산 시 원치 않는 내용-위치 교차항 영향이 발생해 의미 표현이 일부 왜곡될 수 있다.
-- <strong>상대적 거리에 따른 감쇄(Distance Decay) 부재</strong>: 내적 결과에 절대 위치 $m, n$의 개별 좌표만 남을 뿐 상대 위치가 직접 분리되지 않으며, 두 토큰 간의 거리 $|m-n|$가 멀어짐에 따라 어텐션 점수가 자연스럽게 감소하는 성질을 수학적으로 단조 보장하지 못한다.
+- <strong>의미 공간 왜곡 문제</strong>: 단어 고유의 의미 벡터($\mathbf{x}$)와 위치 벡터($\mathbf{p}$)가 동일한 공간에서 덧셈으로 뒤섞이며, 의미 표현이 왜곡될 가능성이 있다.
+- <strong>상대적 거리 정보 보존 문제</strong>: 두 토큰 간의 거리가 멀어짐에 따라 어텐션 점수가 자연스럽게 감소하는 성질(Distance Decay)을 수학적으로 확실히 보장하지 못한다.
+  - Absolute PE 또한 삼각함수의 덧셈 정리를 바탕으로 연산 과정에서 토큰 간의 상대적 위치 관계도 어느 정도 파악할 수 있도록 고안되어 있다. 
+  다만, LLM 대중화 이후의 초장기 컨텍스트에서는 상대 위치 정보를 충분히 보존하지 못하는 한계가 드러나게 되었다.
 
 <br/>
 
@@ -112,15 +119,19 @@ $$
 
 PE와 RoPE에 사용되는 수많은 2차원 평면의 원을,
 우리가 가장 잘 아는 2차원의 평면의 원인 '시계'에 비유하여 더 직관적으로 이해해보자. <br/>
-앞쪽 토큰의 
+예시 문장의 토큰들의 위치에 따라 선택하며, 위치 인코딩 및 다른 토큰들 간의 Attention 점수 변화 양상을 확인할 수 있다. <br/>
 
 <div className="not-content my-8 w-full clear-both">
   <PESimulator client:visible />
 </div>
 
 <br/>
+고주파 시계에서 저주파 시계로 갈수록 느리게 회전하고, 토큰 간 거리가 멀어짐에 따라 Attention 점수가 자연스럽게 감소하는 것을 확인할 수 있다. <br/>
+작은 규모의 예시이므로 PE와 RoPE의 차이가 크게 드러나지는 않지만, RoPE는 상대적 거리 $(n-m)$가 내적 결과에 직접 반영되므로 장기 컨텍스트에서도 안정적인 위치 정보 보존이 가능하다.
 
-### PE와 RoPE 비교
+<br/>
+
+### Comparison
 <br/>
 
 PE와 RoPE의 특징 및 차이점을 정리하여 요약해보면 다음과 같다.
@@ -132,4 +143,13 @@ PE와 RoPE의 특징 및 차이점을 정리하여 요약해보면 다음과 같
 | <strong>차원 분할</strong> | $d/2$개의 2차원 평면 분할 | $d_h/2$개의 2차원 평면 분할 |
 | <strong>연산 방식</strong> | 단위원 위치 좌표 덧셈 ($\mathbf{x}_m + \mathbf{p}_m$) | 2차원 평면 회전 행렬 곱 ($\mathcal{R}_m \mathbf{q}_m$) |
 | <strong>Attention 내적 결과</strong> | 절대 위치 정보를 곱한 항 | 상대 거리 $(n-m)$ 회전각 정보 |
-| <strong>주요 특징</strong> | 절대 위치 좌표 부여 | 의미(크기) 보존 + 상대 위치 계산 용이 |
+
+<br/>
+
+---
+
+### References
+<br/>
+
+- **Attention Is All You Need (Absolute PE)** - Vaswani et al. (2017) [(Link)](https://arxiv.org/abs/1706.03762)
+- **RoFormer: Enhanced Transformer with Rotary Position Embedding (RoPE)** - Su et al. (2021) [(Link)](https://arxiv.org/abs/2104.09864)

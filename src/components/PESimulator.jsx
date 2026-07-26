@@ -43,7 +43,7 @@ const ClockItem = ({ index, rotated, isRoPE, label, accentColor }) => {
         {label}
       </span>
       <span style={{ fontSize: '11px', color: '#64748b', marginBottom: '8px', fontFamily: 'monospace', fontWeight: '500' }}>
-        {index === 0 ? '고주파 (초침)' : index === 1 ? (isRoPE ? '저주파 (시침)' : '중주파 (분침)') : '저주파 (시침)'}
+        {index === 0 ? '고주파' : index === 1 ? (isRoPE ? '저주파' : '중주파') : '저주파'}
       </span>
 
       <svg 
@@ -200,11 +200,11 @@ export const PESimulator = () => {
         boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
       }}
     >
-      {/* 1. Header View Switcher */}
+      {/* 1. Header View Switcher (중앙 정렬) */}
       <div 
         style={{
           display: 'flex',
-          justify: 'flex-end',
+          justifyContent: 'center',
           alignItems: 'center',
           borderBottom: '1px solid #f1f5f9',
           paddingBottom: '12px'
