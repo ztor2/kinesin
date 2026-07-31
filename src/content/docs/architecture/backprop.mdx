@@ -3,7 +3,12 @@ title: "Backpropagation"
 description: "Explaining of Backpropagation in Deep Neural Networks"
 ---
 
+import BackpropSimulator from '../../../components/BackpropSimulator.jsx';
+
 ### Intro
+<br/>
+
+> <i><strong>역전파(Backpropagation)</strong>는 연쇄 법칙(Chain rule)을 활용해 신경망의 수많은 파라미터들에 대한 학습을 가능하게 함으로써 딥러닝의 시대를 열었다.</i>
 <br/>
 
 - 심층 신경망(Deep Neural Networks, DNN) 학습의 본질적 목표는 수많은 파라미터(가중치)를 갱신하여 예측값과 실제 정답 간의 오차를 최소화하는 것이다.<br/>
@@ -12,7 +17,7 @@ description: "Explaining of Backpropagation in Deep Neural Networks"
 - 이를 극복하기 위해 다층 합성함수의 미분 원리인 <strong>연쇄 법칙(Chain Rule)</strong>을 도입하여, 출력층에서 입력층 방향으로 오차 민감도를 역방향 전파하며 기울기를 산출하는 <strong>역전파(Backpropagation)</strong> 알고리즘이 정립되었다.<br/>
 - 오늘날 수조 개의 파라미터를 지닌 거대 언어 모델(LLM) 역시 이 역전파 알고리즘을 기반으로 최적화 및 학습이 이루어진다.<br/><br/>
 
-본 문서에서는 순전파(Forward Pass)와 손실 산출, 역전파를 통한 기울기 도출의 수학적 과정, 그리고 비선형 활성화 함수가 가지는 필수적 역할을 분석한다.
+본 문서에서는 순전파(Forward Pass)와 손실 산출, 역전파를 통한 기울기 도출의 수학적 과정, 그리고 역전파 연쇄 법칙의 직관을 집중적으로 다룬다.
 
 <br/>
 
@@ -59,7 +64,7 @@ $$
 
 위 수식에서 각 항은 다음과 같은 물리적 의미를 지닌다.
 - $\frac{\partial L}{\partial \mathbf{h}_l}$ : 상위 층(출력층 방향)에서 현재 층으로 누적되어 전달된 <strong>전역 오차 신호(Global Error Signal)</strong>.
-- $\frac{\partial \mathbf{h}_l}{\partial \mathbf{z}_l}$ : 현재 층 활성화 함수의 국소적 변화율(Local Gradient).
+- $\frac{\partial \mathbf{h}_l}{\partial \mathbf{z}_l}$ : 현재 층 활성화 함수의 국소적 변화율(Local Gradient, $f'(\mathbf{z}_l)$).
 - $\frac{\partial \mathbf{z}_l}{\partial W_l}$ : 순전파 시 입력되었던 이전 층의 데이터 $\mathbf{h}_{l-1}$. 즉, 과거 입력값의 크기가 가중치의 책임 정도(기울기)를 결정하는 요인으로 작용한다.
 
 역전파 알고리즘은 출력층에서부터 시작하여 이 연쇄 곱셈을 수행한다. 이미 계산된 상위 층의 오차 신호를 하위 층이 <strong>재사용</strong>하기 때문에, 순방향 연산을 반복할 필요 없이 단 한 번의 역방향 패스만으로 모든 파라미터의 기울기를 효율적으로 동시에 산출할 수 있다. 
@@ -71,38 +76,18 @@ $$
 W_l^{(new)} = W_l^{(old)} - \eta \frac{\partial L}{\partial W_l}
 $$
 <br/>
-
-### Differentiability of Non-linear Activation
+e
 <br/>
 
-선형 연산만 중첩될 경우 신경망은 단일 선형 변환식으로 축소되므로, 다차원 공간의 복잡한 패턴 분리를 위해서는 반드시 비선형 활성화 함수가 요구된다. 
-역전파 연산이 입력층까지 중단 없이 수행되기 위해서는, 네트워크를 구성하는 비선형 함수가 수학적으로 <strong>미분 가능(Differentiable)</strong>해야 한다. 
-
-- 초기 딥러닝에서 주로 사용된 Sigmoid는 미분 가능하나 양 극단에서 기울기가 0에 수렴하는 기울기 소실(Vanishing Gradient) 문제가 존재했다.
-- 현대 모델에 표준적으로 도입되는 ReLU($\max(0, x)$)나 최신 LLM의 SwiGLU 등은 연산이 단순하면서도 대부분의 영역에서 일정한 기울기를 유지한다.
-- 이들 함수는 뾰족한 점(Kink)이나 특정 비활성 구간을 제외하면 완벽히 미분 가능하여, 역전파 과정에서 연쇄 법칙의 고리를 잇는 핵심 매개체로 작동한다.
-
-<br/>
-
-### Boundary of Backpropagation in LLMs
-<br/>
-
-LLM 역시 수백억 개의 파라미터와 비선형 함수가 결합된 거대한 단일 합성함수이다. 다만, 최적화가 적용되는 영역과 그렇지 않은 영역을 구조적으로 명확히 구분해야 한다.
-
-- <strong>순수 함수 및 역전파 영역</strong>: 입력 토큰이 트랜스포머의 다중 레이어를 거쳐 어휘 사전(Vocabulary) 전체에 대한 '확률 분포(Logits)'를 산출하는 단계까지는 연속적이고 미분 가능한 영역이다. 학습(Training) 시에는 샘플링을 거치지 않고, 이 확률 분포 자체와 실제 정답 간의 손실을 계산하여 역전파를 수행한다.
-- <strong>샘플링 후처리 영역</strong>: 도출된 확률 분포를 기반으로 난수를 발생시켜 단 하나의 단어를 확정하는 행위(Top-k, Top-p 등)는 이산적 선택이 개입된 확률적 샘플링이다. 이는 수학적 미분이 불가능하므로 역전파 시스템 외곽에 위치하는 후처리(Post-processing)로 분류된다.
-
-<br/>
-
-### Backpropagation Visualization
+### Backpropagation Simulator
 <br/>
 
 수식으로 전개된 역전파의 체인 룰과 가중치 업데이트 과정을 시각적으로 직관화하기 위해 아래 시뮬레이터를 활용할 수 있다. <br/>
-초기 입력값과 목표 정답(Target)을 설정한 뒤 순전파(Forward) 버튼을 눌러 손실(Loss)을 확인하고, 역전파(Backward) 버튼을 통해 오차 신호가 뒤에서부터 앞으로 어떻게 곱해지며 가중치를 변경하는지 관찰해 보자.
+입력값($x$)과 목표 정답($y$)을 설정한 뒤 **Forward Pass**를 통해 손실(Loss)을 확인하고, **Backward Pass**를 통해 오차 신호가 뒤에서부터 연쇄 법칙으로 곱해지며 가중치를 변경하는 과정을 직접 관찰해 보자.
 
-{/* <div className="not-content my-8 w-full clear-both">
-<BackpropSimulator client:visible />
-</div> */}
+<div className="not-content my-8 w-full clear-both">
+  <BackpropSimulator client:visible />
+</div>
 
 <br/>
 
@@ -128,3 +113,4 @@ LLM 역시 수백억 개의 파라미터와 비선형 함수가 결합된 거대
 
 - **Learning representations by back-propagating errors** - Rumelhart et al. (1986) [(Link)](https://www.nature.com/articles/323533a0)
 - **Deep Learning** - LeCun, Bengio, & Hinton (2015) [(Link)](https://www.nature.com/articles/nature14539)
+- **Activation Functions in Deep Learning** - [Activation Functions](./activations.mdx)
