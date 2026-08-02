@@ -223,8 +223,8 @@ export const BackpropSimulator = () => {
               boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
             }}
           >
-            <span>파라미터 및 학습 설정</span>
-            <span style={{ fontSize: '10px', color: '#64748b' }}>{showSettings ? '▲ 접기' : '▼ 펼치기'}</span>
+            <span>학습 파라미터 설정</span>
+            <span style={{ fontSize: '10px', color: '#64748b' }}>{showSettings ? '▲' : '▼'}</span>
           </button>
 
           <div style={{ display: 'flex', gap: '8px' }}>
@@ -325,7 +325,7 @@ export const BackpropSimulator = () => {
         <div style={{ display: 'flex', gap: '8px', backgroundColor: '#f1f5f9', padding: '5px', borderRadius: '12px', flexWrap: 'wrap' }}>
           {[
             { id: 1, label: '1. 순전파 (Forward)', activeBg: 'linear-gradient(135deg, #0284c7, #0369a1)', shadow: 'rgba(2, 132, 199, 0.35)' },
-            { id: 2, label: '2. 오차 산출 (Loss)', activeBg: 'linear-gradient(135deg, #e11d48, #be123c)', shadow: 'rgba(225, 29, 72, 0.35)' },
+            { id: 2, label: '2. 오차 산출', activeBg: 'linear-gradient(135deg, #e11d48, #be123c)', shadow: 'rgba(225, 29, 72, 0.35)' },
             { id: 3, label: '3. 역전파 (Backward)', activeBg: 'linear-gradient(135deg, #d97706, #b45309)', shadow: 'rgba(217, 119, 6, 0.35)' },
             { id: 4, label: '4. 가중치 갱신', activeBg: 'linear-gradient(135deg, #059669, #047857)', shadow: 'rgba(5, 150, 105, 0.35)' }
           ].map((t) => {
@@ -374,13 +374,25 @@ export const BackpropSimulator = () => {
                   from { stroke-dashoffset: 28; }
                   to { stroke-dashoffset: 0; }
                 }
+                @keyframes lossDashFlow {
+                  from { stroke-dashoffset: 0; }
+                  to { stroke-dashoffset: -20; }
+                }
                 @keyframes pulseGlow {
                   0% { filter: drop-shadow(0 0 0px rgba(124, 58, 237, 0)); }
                   50% { filter: drop-shadow(0 0 14px rgba(124, 58, 237, 0.95)); }
                   100% { filter: drop-shadow(0 0 0px rgba(124, 58, 237, 0)); }
                 }
+                @keyframes emeraldPulseGlow {
+                  0% { filter: drop-shadow(0 0 0px rgba(16, 185, 129, 0)); }
+                  50% { filter: drop-shadow(0 0 14px rgba(16, 185, 129, 0.95)); }
+                  100% { filter: drop-shadow(0 0 0px rgba(16, 185, 129, 0)); }
+                }
                 .active-pulsing-node {
                   animation: pulseGlow 1.2s ease-in-out infinite;
+                }
+                .step4-green-pulse {
+                  animation: emeraldPulseGlow 1.2s ease-in-out infinite;
                 }
               `}</style>
             </defs>
@@ -396,8 +408,8 @@ export const BackpropSimulator = () => {
               markerStart={step === 3 ? 'url(#arrow-orange)' : undefined}
             />
 
-            {/* 가중치 W1 KaTeX 뱃지 */}
-            <g transform="translate(195, 75)" className={activeTerm.highlight === 'w1' ? 'active-pulsing-node' : ''}>
+            {/* 가중치 W1 KaTeX 뱃지 (Step 4 선택 시 에메랄드 녹색 반짝임) */}
+            <g transform="translate(195, 75)" className={step === 4 ? 'step4-green-pulse' : activeTerm.highlight === 'w1' ? 'active-pulsing-node' : ''}>
               <rect 
                 x="-55" y="-15" width="110" height="28" rx="6" 
                 fill={step === 4 ? '#d1fae5' : activeTerm.highlight === 'w1' ? '#f5f3ff' : '#ffffff'} 
@@ -431,8 +443,8 @@ export const BackpropSimulator = () => {
               markerStart={step === 3 ? 'url(#arrow-orange)' : undefined}
             />
 
-            {/* 가중치 W2 KaTeX 뱃지 */}
-            <g transform="translate(405, 75)" className={activeTerm.highlight === 'w2' ? 'active-pulsing-node' : ''}>
+            {/* 가중치 W2 KaTeX 뱃지 (Step 4 선택 시 에메랄드 녹색 반짝임) */}
+            <g transform="translate(405, 75)" className={step === 4 ? 'step4-green-pulse' : activeTerm.highlight === 'w2' ? 'active-pulsing-node' : ''}>
               <rect 
                 x="-55" y="-15" width="110" height="28" rx="6" 
                 fill={step === 4 ? '#d1fae5' : activeTerm.highlight === 'w2' ? '#fef3c7' : '#ffffff'} 
@@ -455,8 +467,14 @@ export const BackpropSimulator = () => {
               </foreignObject>
             </g>
 
-            {/* Loss 수평선 */}
-            <line x1="510" y1="120" x2="670" y2="120" stroke={step === 2 ? '#e11d48' : '#cbd5e1'} strokeWidth="3" strokeDasharray="5 5" />
+            {/* Loss 수평선 (Step 2 선택 시 장미색 흐름 애니메이션 적용) */}
+            <line 
+              x1="510" y1="120" x2="670" y2="120" 
+              stroke={step === 2 ? '#e11d48' : '#cbd5e1'} 
+              strokeWidth={step === 2 ? '3.5' : '2.5'} 
+              strokeDasharray={step === 2 ? '6 4' : '5 5'}
+              style={{ animation: step === 2 ? 'lossDashFlow 0.6s linear infinite' : 'none' }}
+            />
 
             {/* 노드 1: x (Cyan & Slate 테마) */}
             <g transform="translate(90, 120)">
@@ -539,7 +557,7 @@ export const BackpropSimulator = () => {
         {step === 1 && (
           <div style={{ backgroundColor: '#f0f9ff', padding: '18px', borderRadius: '14px', border: '1.5px solid #bae6fd', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 12px -2px rgba(2,132,199,0.08)' }}>
             <span style={{ fontSize: '14px', fontWeight: '800', color: '#0369a1' }}>
-              1. 순전파 층별 연산 과정
+              1. 순전파 (Forward)
             </span>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
               <div style={{ backgroundColor: '#ffffff', padding: '12px 16px', borderRadius: '10px', border: '1px solid #bae6fd', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
@@ -565,7 +583,7 @@ export const BackpropSimulator = () => {
         {step === 2 && (
           <div style={{ backgroundColor: '#fff1f2', padding: '18px', borderRadius: '14px', border: '1.5px solid #fecdd3', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 12px -2px rgba(225,29,72,0.08)' }}>
             <span style={{ fontSize: '14px', fontWeight: '800', color: '#be123c' }}>
-              2. 오차 및 오차 민감도
+              2. 오차 산출 (Loss)
             </span>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
               <div style={{ backgroundColor: '#ffffff', padding: '12px 16px', borderRadius: '10px', border: '1px solid #fecdd3', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
@@ -585,7 +603,7 @@ export const BackpropSimulator = () => {
         {step === 3 && (
           <div style={{ backgroundColor: '#fffbeb', padding: '18px', borderRadius: '14px', border: '1.5px solid #fde68a', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 12px -2px rgba(217,119,6,0.08)' }}>
             <span style={{ fontSize: '14px', fontWeight: '800', color: '#b45309' }}>
-              3. 역전파 오차 전달 요약
+              3. 역전파 (Backward)
             </span>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
               <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #fde68a', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
