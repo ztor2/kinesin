@@ -612,51 +612,43 @@ export const BackpropSimulator = () => {
         )}
       </div>
 
-      {/* 5. W₁ 연쇄 법칙 상세 과정 */}
+      {/* 5. W₁ 연쇄 법칙 상세 과정 (How Chain Rule Works) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#f8fafc', padding: '18px', borderRadius: '14px', border: '1px solid #cbd5e1' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
           <span style={{ fontSize: '14px', fontWeight: '800', color: '#3730a3' }}>
-            연쇄 법칙을 사용한 <MathView math="W_1 " style={{ fontSize: '12px' }} /> 기울기 계산 과정
+            연쇄 법칙을 사용한 <MathView math="W_1" style={{ fontSize: '13px' }} /> 기울기 계산 예시
           </span>
         </div>
 
-        {/* 요약 연산식 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', backgroundColor: '#eef2ff', padding: '12px 14px', borderRadius: '10px', border: '1px solid #c7d2fe' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
-          </div>
-          
-          <div style={{ fontSize: '12.5px', color: '#312e81', overflowX: 'auto', padding: '4px 0', display: 'flex', alignItems: 'center', gap: '4px' }}>
-            <MathView math={`\\frac{\\partial L}{\\partial W_1} = (${dL_dyHat.toFixed(4)}) \\times (${dyHat_dz2.toFixed(4)}) \\times (${w2.toFixed(2)}) \\times (${dh1_dz1.toFixed(4)}) \\times (${x.toFixed(2)}) = `} style={{ fontSize: '12px' }} />
-            <span style={{ color: '#4338ca', fontWeight: '800', fontSize: '13px', fontFamily: 'monospace' }}>{dL_dw1.toFixed(4)}</span>
-          </div>
-        </div>
-
-        {/* W1 체인 룰 분수 수식 버튼 바 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#ffffff', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0', alignItems: 'center' }}>
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontSize: '12.5px', fontWeight: '800', color: '#4f46e5' }}>
-            <MathView math="\frac{\partial L}{\partial W_1} =" style={{ fontSize: '12px' }} />
+        {/* 수치 연산식과 미분 항 클릭 버튼이 통합된 단일 카드 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#ffffff', padding: '16px', borderRadius: '12px', border: '1px solid #c7d2fe', alignItems: 'center' }}>
+          {/* 실제 수치를 곱해 결과값을 도출하는 통합 연산식 */}
+          <div style={{ fontSize: '13px', color: '#312e81', overflowX: 'auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: '#eef2ff', padding: '10px 14px', borderRadius: '8px', border: '1px solid #c7d2fe' }}>
+            <MathView math={`\\frac{\\partial L}{\\partial W_1} = (${dL_dyHat.toFixed(4)}) \\times (${dyHat_dz2.toFixed(4)}) \\times (${w2.toFixed(2)}) \\times (${dh1_dz1.toFixed(4)}) \\times (${x.toFixed(2)}) = `} style={{ fontSize: '13px' }} />
+            <span style={{ color: '#4338ca', fontWeight: '800', fontSize: '14px', fontFamily: 'monospace' }}>{dL_dw1.toFixed(4)}</span>
           </div>
 
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', width: '100%' }}>
+          {/* 소제목 삭제된 미분 항 버튼 목록 (수식 버튼만 또렷하게 배치) */}
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap', width: '100%' }}>
             {[
-              { key: 'dL_dyHat', sub: '1.출력오차' },
-              { key: 'dyHat_dz2', sub: '2.출력활성화' },
-              { key: 'dz2_dh1', sub: '3.상위가중치' },
-              { key: 'dh1_dz1', sub: '4.은닉활성화' },
-              { key: 'dz1_dw1', sub: '5.입력신호' }
+              { key: 'dL_dyHat' },
+              { key: 'dyHat_dz2' },
+              { key: 'dz2_dh1' },
+              { key: 'dh1_dz1' },
+              { key: 'dz1_dw1' }
             ].map((item, idx) => {
               const info = chainRuleTerms[item.key];
               const isSelected = activeTermKey === item.key;
               return (
                 <React.Fragment key={item.key}>
-                  {idx > 0 && <span style={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '13px' }}>×</span>}
+                  {idx > 0 && <span style={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '15px' }}>×</span>}
                   <button
                     onClick={() => setActiveTermKey(item.key)}
                     style={{
                       display: 'flex',
-                      flexDirection: 'column',
                       alignItems: 'center',
-                      padding: '6px 12px',
+                      justifyContent: 'center',
+                      padding: '8px 16px',
                       borderRadius: '8px',
                       border: isSelected ? '2px solid #4f46e5' : '1px solid #cbd5e1',
                       backgroundColor: isSelected ? '#e0e7ff' : '#f8fafc',
@@ -667,10 +659,7 @@ export const BackpropSimulator = () => {
                       transition: 'all 0.15s ease'
                     }}
                   >
-                    <MathView math={info.symbol} style={{ fontSize: '14px' }} />
-                    <span style={{ fontSize: '10px', fontWeight: '700', color: isSelected ? '#4338ca' : '#64748b', marginTop: '2px' }}>
-                      {item.sub}
-                    </span>
+                    <MathView math={info.symbol} style={{ fontSize: '15px' }} />
                   </button>
                 </React.Fragment>
               );
@@ -684,9 +673,6 @@ export const BackpropSimulator = () => {
             <span style={{ fontWeight: '800', color: '#3730a3' }}>{activeTerm.name}</span>
             <MathView math={`\\left( ${activeTerm.symbol} \\right) = `} style={{ fontSize: '13px' }} />
             <MathView math={activeTerm.calcFormulaMath} style={{ fontSize: '13px' }} />
-            <span style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: '800', color: '#4338ca', backgroundColor: '#eef2ff', padding: '2px 6px', borderRadius: '6px', border: '1px solid #c7d2fe', marginLeft: 'auto' }}>
-              = {activeTerm.value.toFixed(4)}
-            </span>
           </div>
 
           <div style={{ padding: '10px 12px', backgroundColor: '#f0fdf4', borderRadius: '6px', border: '1px solid #bbf7d0' }}>
