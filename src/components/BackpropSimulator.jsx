@@ -1,10 +1,17 @@
 import React, { useState } from 'react';
+import katex from 'katex';
 
 // Sigmoid 활성화 함수 및 국소 미분 정의 (backprop.mdx 문서 설명과 100% 일치)
 const sigmoid = (z) => 1 / (1 + Math.exp(-Math.max(-20, Math.min(20, z))));
 const sigmoidDf = (z) => {
   const s = sigmoid(z);
   return s * (1 - s);
+};
+
+// KaTeX 수학 수식 렌더링 헬퍼 컴포넌트 (가독성 상향을 위한 폰트 크기 확대)
+const MathView = ({ math, style }) => {
+  const html = katex.renderToString(math, { throwOnError: false });
+  return <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: '1.12em', ...style }} dangerouslySetInnerHTML={{ __html: html }} />;
 };
 
 // SVG Arrow Right Icon Component
@@ -63,56 +70,80 @@ export const BackpropSimulator = () => {
   // 체인 룰 개별 미분 항 정보 맵
   const chainRuleTerms = {
     dL_dyHat: {
-      symbol: '∂L / ∂ŷ',
+      symbol: '\\frac{\\partial L}{\\partial \\hat{y}}',
       name: '출력 오차 민감도',
-      calcFormula: `ŷ - y = ${yHat.toFixed(4)} - ${target.toFixed(2)}`,
+      calcFormulaMath: `\\hat{y} - y = ${yHat.toFixed(4)} - ${target.toFixed(2)}`,
       value: dL_dyHat,
-      mathReason: '손실 함수 L = 1/2*(ŷ - y)²를 ŷ에 대해 미분하면, 2차항 계수 1/2과 2가 상쇄되어 단순 오차 차이 (ŷ - y)만 깔끔하게 남습니다.',
+      mathReasonNode: (
+        <span>
+          손실 함수 <MathView math="L = \frac{1}{2}(\hat{y} - y)^2" />를 <MathView math="\hat{y}" />에 대해 미분하면, 2차항 계수 <MathView math="\frac{1}{2}" />과 2가 상쇄되어 단순 오차 차이 <MathView math="(\hat{y} - y)" />만 남습니다.
+        </span>
+      ),
       description: '최종 예측값(ŷ)과 목표 정답(y) 간의 오차 차이입니다. 역전파가 시작되는 맨 첫 번째 출발점 오차 신호입니다.',
       highlight: 'loss'
     },
     dyHat_dz2: {
-      symbol: '∂ŷ / ∂z₂',
+      symbol: '\\frac{\\partial \\hat{y}}{\\partial z_2}',
       name: '출력층 Sigmoid 기울기',
-      calcFormula: `Sigmoid'(z₂) = ${dyHat_dz2.toFixed(4)}`,
+      calcFormulaMath: `\\sigma'(z_2) = ${dyHat_dz2.toFixed(4)}`,
       value: dyHat_dz2,
-      mathReason: '출력 활성화 식 ŷ = Sigmoid(z₂)를 미분하면 Sigmoid(z₂)*(1 - Sigmoid(z₂))가 됩니다. 입력 z₂ 위치에서의 비선형 변화율(기울기)입니다.',
+      mathReasonNode: (
+        <span>
+          출력 활성화 식 <MathView math="\hat{y} = \sigma(z_2)" />를 미분하면 <MathView math="\sigma(z_2)(1 - \sigma(z_2))" />가 됩니다. 입력 <MathView math="z_2" /> 위치에서의 비선형 변화율(기울기)입니다.
+        </span>
+      ),
       description: '출력층 비선형 활성화 함수(Sigmoid)의 국소 변화율입니다. 오차 신호가 출력 노드를 통과할 때 곱해지는 감쇄/증폭율입니다.',
       highlight: 'yHat'
     },
     dz2_dw2: {
-      symbol: '∂z₂ / ∂W₂',
-      name: 'W₂ 기여도 입력값',
-      calcFormula: `h₁ = ${h1.toFixed(4)}`,
+      symbol: '\\frac{\\partial z_2}{\\partial W_2}',
+      name: 'W₂ 책임 입력값',
+      calcFormulaMath: `h_1 = ${h1.toFixed(4)}`,
       value: h1,
-      mathReason: '선형 결합 식 z₂ = W₂*h₁ + b₂를 W₂에 대해 편미분하면, W₂에 곱해져 있던 계수인 은닉층 입력값 h₁만 그대로 남습니다 (∂z₂/∂W₂ = h₁).',
+      mathReasonNode: (
+        <span>
+          선형 결합 식 <MathView math="z_2 = W_2 h_1 + b_2" />를 <MathView math="W_2" />에 대해 편미분하면, <MathView math="W_2" />에 곱해져 있던 계수인 은닉층 입력값 <MathView math="h_1" />만 그대로 남습니다 (<MathView math="\frac{\partial z_2}{\partial W_2} = h_1" />).
+        </span>
+      ),
       description: '순전파 시 은닉층 h₁에서 들어온 활성화 값입니다. 과거 입력값이 클수록 가중치 W₂가 지는 오차 책임(기울기)이 커집니다.',
       highlight: 'w2'
     },
     dz2_dh1: {
-      symbol: '∂z₂ / ∂h₁',
+      symbol: '\\frac{\\partial z_2}{\\partial h_1}',
       name: '상위 가중치 전파율',
-      calcFormula: `W₂ = ${w2.toFixed(4)}`,
+      calcFormulaMath: `W_2 = ${w2.toFixed(4)}`,
       value: w2,
-      mathReason: '선형 결합 식 z₂ = W₂*h₁ + b₂를 이전 층 출력 h₁에 대해 편미분하면 계수인 상위 가중치 W₂만 남게 됩니다 (∂z₂/∂h₁ = W₂).',
+      mathReasonNode: (
+        <span>
+          선형 결합 식 <MathView math="z_2 = W_2 h_1 + b_2" />를 이전 층 출력 <MathView math="h_1" />에 대해 편미분하면 계수인 상위 가중치 <MathView math="W_2" />만 남게 됩니다 (<MathView math="\frac{\partial z_2}{\partial h_1} = W_2" />).
+        </span>
+      ),
       description: '하위 층(h₁)으로 오차가 역전파될 때 곱해지는 상위 층 가중치 W₂입니다. 가중치 크기에 비례해 오차 신호가 전달됩니다.',
       highlight: 'w2'
     },
     dh1_dz1: {
-      symbol: '∂h₁ / ∂z₁',
+      symbol: '\\frac{\\partial h_1}{\\partial z_1}',
       name: '은닉층 Sigmoid 기울기',
-      calcFormula: `Sigmoid'(z₁) = ${dh1_dz1.toFixed(4)}`,
+      calcFormulaMath: `\\sigma'(z_1) = ${dh1_dz1.toFixed(4)}`,
       value: dh1_dz1,
-      mathReason: '은닉층 활성화 식 h₁ = Sigmoid(z₁)를 z₁에 대해 미분한 Sigmoid(z₁)*(1 - Sigmoid(z₁))입니다. 은닉층 노드에서의 국소 기울기입니다.',
+      mathReasonNode: (
+        <span>
+          은닉층 활성화 식 <MathView math="h_1 = \sigma(z_1)" />를 <MathView math="z_1" />에 대해 미분한 <MathView math="\sigma(z_1)(1 - \sigma(z_1))" />입니다. 은닉층 노드에서의 국소 기울기입니다.
+        </span>
+      ),
       description: '은닉층 1 활성화 함수(Sigmoid)의 국소 변화율입니다. 상위 오차 신호(δ₂)와 W₂가 곱해진 후 이 미분값이 다시 연쇄 곱셈됩니다.',
       highlight: 'h1'
     },
     dz1_dw1: {
-      symbol: '∂z₁ / ∂W₁',
-      name: 'W₁ 기여도 입력값',
-      calcFormula: `x = ${x.toFixed(2)}`,
+      symbol: '\\frac{\\partial z_1}{\\partial W_1}',
+      name: 'W₁ 책임 입력값',
+      calcFormulaMath: `x = ${x.toFixed(2)}`,
       value: x,
-      mathReason: '선형 결합 식 z₁ = W₁*x + b₁을 가중치 W₁에 대해 편미분하면, W₁에 곱해져 있던 계수인 최초 입력값 x만 그대로 남게 됩니다 (∂z₁/∂W₁ = x).',
+      mathReasonNode: (
+        <span>
+          선형 결합 식 <MathView math="z_1 = W_1 x + b_1" />을 가중치 <MathView math="W_1" />에 대해 편미분하면, <MathView math="W_1" />에 곱해져 있던 계수인 최초 입력값 <MathView math="x" />만 그대로 남게 됩니다 (<MathView math="\frac{\partial z_1}{\partial W_1} = x" />).
+        </span>
+      ),
       description: '신경망의 최초 입력 데이터(x)입니다. 입력값 크기가 가중치 W₁의 최종 기울기(∇W₁) 크기를 결정짓는 주요 요인입니다.',
       highlight: 'w1'
     }
@@ -174,7 +205,7 @@ export const BackpropSimulator = () => {
             transition: 'all 0.15s ease'
           }}
         >
-          🔄 초기화
+          초기화
         </button>
 
         <button 
@@ -283,7 +314,7 @@ export const BackpropSimulator = () => {
         </div>
       </div>
 
-      {/* 4. SVG 신경망 그래프 시각화 (선택된 미분 항 강조 연동) */}
+      {/* 4. SVG 신경망 그래프 시각화 */}
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#f8fafc', padding: '20px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
         <div style={{ width: '100%', overflowX: 'auto', display: 'flex', justifyContent: 'center' }}>
           <svg viewBox="0 0 600 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', minWidth: '320px' }}>
@@ -413,35 +444,32 @@ export const BackpropSimulator = () => {
         </div>
       </div>
 
-      {/* 5. ⭐ 대화형 Chain Rule 수식 버튼 & 인터랙티브 탐색기 (NEW) */}
+      {/* 5. 대화형 Chain Rule 수식 버튼 & 인터랙티브 탐색기 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', backgroundColor: '#f8fafc', padding: '18px', borderRadius: '14px', border: '1px solid #cbd5e1' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-          <span style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>
-            How Chain Rule Works
-          </span>
+            <span style={{ fontSize: '15px', fontWeight: '800', color: '#3730a3' }}>
+               Chain Rule을 이용한 <MathView math="W_1" style={{ fontSize: '11px' }} /> 의 손실  <MathView math="L" style={{ fontSize: '11px' }}/>에 대한 기울기 계산 과정
+            </span>
         </div>
 
-        {/* 1) W1 연쇄 곱셈 전체 과정 및 최종 결과 요약 상자 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#eef2ff', padding: '12px 16px', borderRadius: '10px', border: '1px solid #c7d2fe' }}>
+        {/* 1) W1 연쇄 곱셈 전체 과정 및 최종 결과 요약 상자 (KaTeX 적용) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#eef2ff', padding: '14px 16px', borderRadius: '10px', border: '1px solid #c7d2fe' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
-            <span style={{ fontSize: '13px', fontWeight: '800', color: '#3730a3' }}>
-              🎯 W₁ 오차 기울기(∇W₁) 연쇄 곱셈 전체 수치 과정
-            </span>
-            <span style={{ fontFamily: 'monospace', fontSize: '14px', fontWeight: '800', color: '#4338ca', backgroundColor: '#ffffff', padding: '3px 10px', borderRadius: '6px', border: '1px solid #c7d2fe' }}>
-              ∇W₁ = {dL_dw1.toFixed(4)}
-            </span>
           </div>
           
-          <div style={{ fontFamily: 'monospace', fontSize: '12px', color: '#312e81', overflowX: 'auto', padding: '4px 0', lineHeight: '1.6' }}>
-            <span style={{ color: '#6366f1', fontWeight: '700' }}>∂L / ∂W₁</span> = 
-            &nbsp;({dL_dyHat.toFixed(4)}) × ({dyHat_dz2.toFixed(4)}) × ({w2.toFixed(2)}) × ({dh1_dz1.toFixed(4)}) × ({x.toFixed(2)})
-            &nbsp;= <span style={{ color: '#4338ca', fontWeight: '800' }}>{dL_dw1.toFixed(4)}</span>
+          <div style={{ fontSize: '13px', color: '#312e81', overflowX: 'auto', padding: '6px 0', lineHeight: '1.7', display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <MathView math={`\\frac{\\partial L}{\\partial W_1} = (${dL_dyHat.toFixed(4)}) \\times (${dyHat_dz2.toFixed(4)}) \\times (${w2.toFixed(2)}) \\times (${dh1_dz1.toFixed(4)}) \\times (${x.toFixed(2)}) = `} />
+            <span style={{ color: '#4338ca', fontWeight: '800', fontSize: '14px', fontFamily: 'monospace' }}>{dL_dw1.toFixed(4)}</span>
           </div>
         </div>
 
-        {/* 2) W1 체인 룰 분수 수식 버튼 바 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#ffffff', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontFamily: 'monospace' }}>
+        {/* 2) W1 체인 룰 분수 수식 버튼 바*/}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', backgroundColor: '#ffffff', padding: '16px', borderRadius: '10px', border: '1px solid #e2e8f0', alignItems: 'center' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', fontSize: '13.5px', fontWeight: '800', color: '#4f46e5' }}>
+            <MathView math="\frac{\partial L}{\partial W_1} =" />
+          </div>
+
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap', width: '100%' }}>
             {[
               { key: 'dL_dyHat', sub: '1.출력오차' },
               { key: 'dyHat_dz2', sub: '2.출력활성화' },
@@ -453,27 +481,26 @@ export const BackpropSimulator = () => {
               const isSelected = activeTermKey === item.key;
               return (
                 <React.Fragment key={item.key}>
-                  {idx > 0 && <span style={{ color: '#94a3b8', fontWeight: 'bold' }}>×</span>}
+                  {idx > 0 && <span style={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '15px' }}>×</span>}
                   <button
                     onClick={() => setActiveTermKey(item.key)}
                     style={{
                       display: 'flex',
                       flexDirection: 'column',
                       alignItems: 'center',
-                      padding: '6px 12px',
+                      padding: '7px 16px',
                       borderRadius: '8px',
                       border: isSelected ? '2px solid #4f46e5' : '1px solid #cbd5e1',
                       backgroundColor: isSelected ? '#e0e7ff' : '#f8fafc',
                       color: isSelected ? '#3730a3' : '#334155',
                       fontWeight: '800',
-                      fontSize: '13px',
                       cursor: 'pointer',
                       boxShadow: isSelected ? '0 2px 6px rgba(79, 70, 229, 0.25)' : 'none',
                       transition: 'all 0.15s ease'
                     }}
                   >
-                    <span>{info.symbol}</span>
-                    <span style={{ fontSize: '10px', fontWeight: '600', color: isSelected ? '#4338ca' : '#64748b', marginTop: '2px' }}>
+                    <MathView math={info.symbol} style={{ fontSize: '15px' }} />
+                    <span style={{ fontSize: '10.5px', fontWeight: '700', color: isSelected ? '#4338ca' : '#64748b', marginTop: '3px' }}>
                       {item.sub}
                     </span>
                   </button>
@@ -483,35 +510,31 @@ export const BackpropSimulator = () => {
           </div>
         </div>
 
-        {/* 선택된 항 상세 설명 & 녹색 유도 원리 팝업 카드 */}
-        <div style={{ padding: '16px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1.5px solid #c7d2fe', display: 'flex', flexDirection: 'column', gap: '8px', boxShadow: '0 2px 6px rgba(0,0,0,0.03)' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
-            <span style={{ fontSize: '14px', fontWeight: '800', color: '#3730a3' }}>
-              {activeTerm.name} &nbsp; ({activeTerm.symbol})
-            </span>
-            <span style={{ fontFamily: 'monospace', fontSize: '14px', fontWeight: '800', color: '#4338ca', backgroundColor: '#eef2ff', padding: '3px 10px', borderRadius: '6px', border: '1px solid #c7d2fe' }}>
+        {/* 3) 선택된 항 상세 설명 */}
+        <div style={{ padding: '16px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1.5px solid #c7d2fe', display: 'flex', flexDirection: 'column', gap: '10px', boxShadow: '0 2px 6px rgba(0,0,0,0.03)' }}>
+          <div style={{ fontSize: '13.5px', fontWeight: '700', color: '#1e1b4b', backgroundColor: '#f8fafc', padding: '10px 14px', borderRadius: '8px', border: '1px solid #cbd5e1', display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+            <span style={{ fontWeight: '800', color: '#3730a3', marginRight: '4px' }}>🔍 {activeTerm.name}</span>
+            <MathView math={`\\left( ${activeTerm.symbol} \\right) = `} />
+            <MathView math={activeTerm.calcFormulaMath} />
+            <span style={{ fontFamily: 'monospace', fontSize: '13.5px', fontWeight: '800', color: '#4338ca', backgroundColor: '#eef2ff', padding: '2px 8px', borderRadius: '6px', border: '1px solid #c7d2fe', marginLeft: 'auto' }}>
               = {activeTerm.value.toFixed(4)}
             </span>
           </div>
 
-          <div style={{ fontFamily: 'monospace', fontSize: '12.5px', fontWeight: '700', color: '#1e1b4b', backgroundColor: '#f8fafc', padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0' }}>
-            연산식: {activeTerm.calcFormula}
+          {/* 수식 유도 카드*/}
+          <div style={{ padding: '12px 14px', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#15803d', display: 'block', marginBottom: '4px' }}>
+              수식 유도
+            </span>
+            <div style={{ fontSize: '13px', color: '#166534', lineHeight: '1.6' }}>
+              {activeTerm.mathReasonNode}
+            </div>
           </div>
 
-          {/* 💚 💡 왜 이 수식/값이 유도되는가? (녹색 유도 원리 박스) */}
-          <div style={{ marginTop: '2px', padding: '10px 12px', backgroundColor: '#f0fdf4', borderRadius: '8px', border: '1px solid #bbf7d0' }}>
-            <span style={{ fontSize: '13px', fontWeight: '800', color: '#15803d', display: 'block', marginBottom: '3px' }}>
-              How this value is derived
-            </span>
-            <span style={{ fontSize: '13px', color: '#166534', lineHeight: '1.5', display: 'block' }}>
-              {activeTerm.mathReason}
-            </span>
-          </div>
-
-          {/* 📘 개념적 역전파 역할 */}
-          <div style={{ marginTop: '2px', padding: '10px 12px', backgroundColor: '#eef2ff', borderRadius: '8px', border: '1px solid #c7d2fe' }}>
-            <span style={{ fontSize: '13px', fontWeight: '800', color: '#3730a3', display: 'block', marginBottom: '3px' }}>
-              Conceptual Role
+          {/* 개념 설명 카드*/}
+          <div style={{ padding: '12px 14px', backgroundColor: '#eef2ff', borderRadius: '8px', border: '1px solid #c7d2fe' }}>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#3730a3', display: 'block', marginBottom: '4px' }}>
+              개념
             </span>
             <span style={{ fontSize: '13px', color: '#312e81', lineHeight: '1.5', display: 'block' }}>
               {activeTerm.description}
@@ -520,10 +543,10 @@ export const BackpropSimulator = () => {
         </div>
       </div>
 
-      {/* 6. 역전파 오차 전달 파이프라인 (기존 카딩 유지) */}
+      {/* 6. 역전파 오차 전달 파이프라인*/}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <span style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>
-          역전파 기울기 계산 요약
+          역전파 기울기 최종 계산 요약
         </span>
 
         <div 
@@ -547,7 +570,7 @@ export const BackpropSimulator = () => {
             }}
           >
             <span style={{ fontSize: '12px', fontWeight: '800', color: '#ef4444', marginBottom: '4px' }}>1. 출력층 기울기 (δ₂)</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#64748b' }}>(ŷ - y) × Sigmoid'(z₂)</span>
+            <MathView math="\delta_2 = (\hat{y} - y) \cdot \sigma'(z_2)" style={{ fontSize: '12px', color: '#64748b' }} />
             <span style={{ fontFamily: 'monospace', fontWeight: '800', fontSize: '14px', color: '#0f172a', marginTop: '6px' }}>
               δ₂ = {delta2.toFixed(4)}
             </span>
@@ -566,10 +589,10 @@ export const BackpropSimulator = () => {
               alignItems: 'center'
             }}
           >
-            <span style={{ fontSize: '12px', fontWeight: '800', color: '#ea580c', marginBottom: '4px' }}>2. W₂ 기울기 (∇W₂)</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#c2410c' }}>δ₂ × h₁</span>
-            <span style={{ fontFamily: 'monospace', fontWeight: '800', fontSize: '14px', color: '#9a3412', marginTop: '6px' }}>
-              ∇W₂ = {dL_dw2.toFixed(4)}
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#ea580c', marginBottom: '4px' }}>2. W₂ 기울기 (<MathView math="\frac{\partial L}{\partial W_2}" style={{ fontSize: '12px' }} />)</span>
+            <MathView math="\frac{\partial L}{\partial W_2} = \delta_2 \cdot h_1" style={{ fontSize: '12px', color: '#c2410c' }} />
+            <span style={{ fontFamily: 'monospace', fontWeight: '800', fontSize: '13.5px', color: '#9a3412', marginTop: '6px' }}>
+              <MathView math={`\\nabla_{W_2} L = ${dL_dw2.toFixed(4)}`} />
             </span>
           </div>
 
@@ -586,16 +609,16 @@ export const BackpropSimulator = () => {
               alignItems: 'center'
             }}
           >
-            <span style={{ fontSize: '12px', fontWeight: '800', color: '#9333ea', marginBottom: '4px' }}>3. W₁ 기울기 (∇W₁)</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#7e22ce' }}>(δ₂ × W₂) × Sigmoid'(z₁) × x</span>
-            <span style={{ fontFamily: 'monospace', fontWeight: '800', fontSize: '14px', color: '#6b21a8', marginTop: '6px' }}>
-              ∇W₁ = {dL_dw1.toFixed(4)}
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#9333ea', marginBottom: '4px' }}>3. W₁ 기울기 (<MathView math="\frac{\partial L}{\partial W_1}" style={{ fontSize: '12px' }} />)</span>
+            <MathView math="\frac{\partial L}{\partial W_1} = (\delta_2 \cdot W_2) \cdot \sigma'(z_1) \cdot x" style={{ fontSize: '12px', color: '#7e22ce' }} />
+            <span style={{ fontFamily: 'monospace', fontWeight: '800', fontSize: '13.5px', color: '#6b21a8', marginTop: '6px' }}>
+              <MathView math={`\\nabla_{W_1} L = ${dL_dw1.toFixed(4)}`} />
             </span>
           </div>
         </div>
       </div>
 
-      {/* 7. 1회 학습 가중치 변화 4열 미니 카드 (붉은색 -> 초록색 화살표 표현) */}
+      {/* 7. 1회 학습 가중치 변화*/}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <span style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>
           1회 학습 파라미터 변화

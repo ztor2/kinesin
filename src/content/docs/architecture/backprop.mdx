@@ -26,14 +26,14 @@ import BackpropSimulator from '../../../components/BackpropSimulator.jsx';
 > <i>순전파(Forward Pass)는 입력 데이터가 다수의 은닉층을 차례로 통과하며 최종 예측값을 도출하는 일련의 합성함수 연산 과정</i> <br/>
 <br/>
 
-순전파 단계에서 특정 층(Layer) $l$의 출력 $\mathbf{h}_l$은 이전 층의 출력 $\mathbf{h}_{l-1}$에 가중치 행렬 $W_l$을 곱하고 편향 $b_l$을 더하는 선형 변환 후, 비선형 활성화 함수(예: <i>ReLU, Sigmoid, SwiGLU</i>) $f()$를 통과하여 계산된다. 
+순전파 단계에서 특정 층(Layer) $l$의 출력 $\mathbf{h}_l$은 이전 층의 출력 $\mathbf{h}_{l-1}$에 가중치 행렬 $W_l$을 곱하고 편향 $b_l$을 더하는 선형 변환 후, 비선형 활성화 함수(예: <i>ReLU, Sigmoid, SwiGLU</i>) $h()$를 통과하여 계산된다. 
 
 <br/>
 $$
 \mathbf{z}_l = W_l \mathbf{h}_{l-1} + b_l
 $$
 $$
-\mathbf{h}_l = f(\mathbf{z}_l)
+\mathbf{h}_l = h(\mathbf{z}_l)
 $$
 <br/>
 
@@ -63,7 +63,7 @@ $$
 
 위 수식에서 각 항은 다음과 같은 물리적 의미를 지닌다.
 - $\frac{\partial L}{\partial \mathbf{h}_l}$ : 상위 층(출력층 방향)에서 현재 층으로 누적되어 전달된 <strong>전역 오차 신호(Global Error Signal)</strong>.
-- $\frac{\partial \mathbf{h}_l}{\partial \mathbf{z}_l}$ : 현재 층 활성화 함수의 국소적 변화율(Local Gradient, $f'(\mathbf{z}_l)$).
+- $\frac{\partial \mathbf{h}_l}{\partial \mathbf{z}_l}$ : 현재 층 활성화 함수의 국소적 변화율(Local Gradient, $h'(\mathbf{z}_l)$).
 - $\frac{\partial \mathbf{z}_l}{\partial W_l}$ : 순전파 시 입력되었던 이전 층의 데이터 $\mathbf{h}_{l-1}$. 즉, 과거 입력값의 크기가 가중치의 책임 정도(기울기)를 결정하는 요인으로 작용한다.
 
 역전파 알고리즘은 출력층에서부터 시작하여 이 연쇄 곱셈을 수행한다. 이미 계산된 상위 층의 오차 신호를 하위 층이 <strong>재사용</strong>하기 때문에, 순방향 연산을 반복할 필요 없이 단 한 번의 역방향 패스만으로 모든 파라미터의 기울기를 효율적으로 동시에 산출할 수 있다. 
@@ -99,7 +99,7 @@ $$
 <br/>
 
 $$
-f(z) = \sigma(z) = \frac{1}{1 + e^{-z}} \quad \implies \quad f'(z) = \sigma(z)(1 - \sigma(z))
+h(z) = \sigma(z) = \frac{1}{1 + e^{-z}} \quad \implies \quad h'(z) = \sigma(z)(1 - \sigma(z))
 $$
 <br/>
 
