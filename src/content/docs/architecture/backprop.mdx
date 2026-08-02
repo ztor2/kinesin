@@ -26,7 +26,7 @@ import BackpropSimulator from '../../../components/BackpropSimulator.jsx';
 > <i>순전파(Forward Pass)는 입력 데이터가 다수의 은닉층을 차례로 통과하며 최종 예측값을 도출하는 일련의 합성함수 연산 과정</i> <br/>
 <br/>
 
-순전파 단계에서 특정 층(Layer) $l$의 출력 $\mathbf{h}_l$은 이전 층의 출력 $\mathbf{h}_{l-1}$에 가중치 행렬 $W_l$을 곱하고 편향 $b_l$을 더하는 선형 변환 후, 비선형 활성화 함수(예: <i>ReLU, Sigmoid, SwiGLU</i>) $f$를 통과하여 계산된다. 
+순전파 단계에서 특정 층(Layer) $l$의 출력 $\mathbf{h}_l$은 이전 층의 출력 $\mathbf{h}_{l-1}$에 가중치 행렬 $W_l$을 곱하고 편향 $b_l$을 더하는 선형 변환 후, 비선형 활성화 함수(예: <i>ReLU, Sigmoid, SwiGLU</i>) $f()$를 통과하여 계산된다. 
 
 <br/>
 $$
@@ -109,27 +109,8 @@ $$
 
 <br/>
 
-### Comparison Summary
-<br/>
-
-순전파와 역전파의 주요 연산 특성을 요약하면 다음과 같다.
-
-| 구분 | Forward Pass (순전파) | Backward Pass (역전파) |
-| :--- | :--- | :--- |
-| <strong>연산 방향</strong> | 입력층 $\rightarrow$ 출력층 | 출력층 $\rightarrow$ 입력층 |
-| <strong>주요 목적</strong> | 예측값 도출 및 손실(Loss) 산출 | 각 파라미터의 오차 민감도(기울기) 산출 |
-| <strong>수학적 원리</strong> | 선형 변환 및 비선형 활성화 함수 | 미적분학의 연쇄 법칙 (Chain Rule) |
-| <strong>입력값의 역할</strong> | 다음 층으로 전달될 특징 추출 | 역방향 기울기 크기를 결정짓는 증폭기 |
-| <strong>출력 결과물</strong> | 최종 예측 벡터 및 오차 스칼라 값 | 모든 가중치에 대한 기울기(Gradient) 텐서 |
-
-<br/>
-
----
-
 ### References
 <br/>
 
 - <strong>Learning representations by back-propagating errors</strong> - Rumelhart et al. (1986) [(Link)](https://www.nature.com/articles/323533a0)
 - <strong>Deep Learning</strong> - LeCun, Bengio, & Hinton (2015) [(Link)](https://www.nature.com/articles/nature14539)
-- <strong>Activation Functions</strong> - [Activation Functions Guide](../draft/activations.mdx)
-- <strong>Cross-Entropy Loss in LLMs</strong> - [Cross-Entropy Guide](../draft/cross-entropy.mdx)

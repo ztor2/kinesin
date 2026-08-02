@@ -7,6 +7,14 @@ const sigmoidDf = (z) => {
   return s * (1 - s);
 };
 
+// SVG Arrow Right Icon Component
+const ArrowRightIcon = () => (
+  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#4338ca" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+    <line x1="5" y1="12" x2="19" y2="12"></line>
+    <polyline points="12 5 19 12 12 19"></polyline>
+  </svg>
+);
+
 export const BackpropSimulator = () => {
   // 파라미터 상태
   const [x, setX] = useState(0.8);
@@ -19,6 +27,9 @@ export const BackpropSimulator = () => {
 
   // 현재 Step (1: 순전파, 2: 손실계산, 3: 역전파, 4: 가중치갱신)
   const [step, setStep] = useState(1);
+
+  // 선택된 체인 룰 미분 항 Key
+  const [activeTermKey, setActiveTermKey] = useState('dL_dyHat');
 
   // --- 1. Forward Pass 연산 (MSE Loss + Sigmoid 활성화 적용) ---
   const z1 = w1 * x + b1;
@@ -49,17 +60,59 @@ export const BackpropSimulator = () => {
   const w2_next = w2 - lr * dL_dw2;
   const b2_next = b2 - lr * dL_db2;
 
-  // 무작위 난수 생성
-  const handleRandomize = () => {
-    const randomVal = (min, max) => Number((Math.random() * (max - min) + min).toFixed(2));
-    setX(randomVal(0.3, 0.9));
-    setTarget(randomVal(0.6, 1.0));
-    setW1(randomVal(-0.8, 0.8));
-    setB1(randomVal(-0.2, 0.2));
-    setW2(randomVal(-0.8, 0.8));
-    setB2(randomVal(-0.2, 0.2));
-    setStep(1);
+  // 체인 룰 개별 미분 항 정보 맵
+  const chainRuleTerms = {
+    dL_dyHat: {
+      symbol: '∂L / ∂ŷ',
+      name: '출력 오차 민감도',
+      calcFormula: `ŷ - y = ${yHat.toFixed(4)} - ${target.toFixed(2)}`,
+      value: dL_dyHat,
+      description: '최종 예측값(ŷ)과 목표 정답(y) 간의 오차 차이입니다. 역전파가 시작되는 맨 첫 번째 출발점 오차 신호입니다.',
+      highlight: 'loss'
+    },
+    dyHat_dz2: {
+      symbol: '∂ŷ / ∂z₂',
+      name: '출력층 Sigmoid 기울기',
+      calcFormula: `Sigmoid'(z₂) = ${dyHat_dz2.toFixed(4)}`,
+      value: dyHat_dz2,
+      description: '출력층 비선형 활성화 함수(Sigmoid)의 국소 변화율입니다. 오차 신호가 출력 노드를 통과할 때 곱해지는 감쇄/증폭율입니다.',
+      highlight: 'yHat'
+    },
+    dz2_dw2: {
+      symbol: '∂z₂ / ∂W₂',
+      name: 'W₂ 책임 입력값',
+      calcFormula: `h₁ = ${h1.toFixed(4)}`,
+      value: h1,
+      description: '순전파 시 은닉층 h₁에서 들어온 활성화 값입니다. 과거 입력값이 클수록 가중치 W₂가 지는 오차 책임(기울기)이 커집니다.',
+      highlight: 'w2'
+    },
+    dz2_dh1: {
+      symbol: '∂z₂ / ∂h₁',
+      name: '상위 가중치 전파율',
+      calcFormula: `W₂ = ${w2.toFixed(4)}`,
+      value: w2,
+      description: '하위 층(h₁)으로 오차가 역전파될 때 곱해지는 상위 층 가중치 W₂입니다. 가중치 크기에 비례해 오차 신호가 전달됩니다.',
+      highlight: 'w2'
+    },
+    dh1_dz1: {
+      symbol: '∂h₁ / ∂z₁',
+      name: '은닉층 Sigmoid 기울기',
+      calcFormula: `Sigmoid'(z₁) = ${dh1_dz1.toFixed(4)}`,
+      value: dh1_dz1,
+      description: '은닉층 1 활성화 함수(Sigmoid)의 국소 변화율입니다. 상위 오차 신호(δ₂)와 W₂가 곱해진 후 이 미분값이 다시 연쇄 곱셈됩니다.',
+      highlight: 'h1'
+    },
+    dz1_dw1: {
+      symbol: '∂z₁ / ∂W₁',
+      name: 'W₁ 책임 입력값',
+      calcFormula: `x = ${x.toFixed(2)}`,
+      value: x,
+      description: '신경망의 최초 입력 데이터(x)입니다. 입력값 크기가 가중치 W₁의 최종 기울기(∇W₁) 크기를 결정짓는 주요 요인입니다.',
+      highlight: 'w1'
+    }
   };
+
+  const activeTerm = chainRuleTerms[activeTermKey];
 
   // 1회 학습 실행
   const handleRunFullStep = () => {
@@ -99,38 +152,32 @@ export const BackpropSimulator = () => {
         boxShadow: '0 4px 16px rgba(0, 0, 0, 0.06)'
       }}
     >
-      {/* 1. 상단 타이틀 & 헤더 (중앙 정렬) */}
-
-      {/* 2. 인터랙티브 제어 버튼 그룹 (인라인 스타일로 Starlight 전역 CSS 완벽 오버라이드) */}
-      <div style={{ display: 'flex', justifySelf: 'center', justifyContent: 'center', alignItems: 'center', gap: '12px', flexWrap: 'wrap' }}>
-        <button
-          onClick={handleRandomize}
+      {/* 1. 상단 컨트롤 패널 (우측 정렬: 초기화 -> 1회 학습 실행) */}
+      <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center', gap: '10px', flexWrap: 'wrap', width: '100%' }}>
+        <button 
+          onClick={handleReset}
           style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '6px',
-            padding: '8px 16px',
+            padding: '8px 14px',
             fontSize: '13px',
-            fontWeight: '700',
+            fontWeight: '600',
             borderRadius: '8px',
             border: '1px solid #cbd5e1',
-            backgroundColor: '#f8fafc',
-            color: '#334155',
+            backgroundColor: '#ffffff',
+            color: '#475569',
             cursor: 'pointer',
-            boxShadow: '0 1px 2px rgba(0, 0, 0, 0.05)',
             transition: 'all 0.15s ease'
           }}
         >
-          <span>무작위 파라미터</span>
+          🔄 초기화
         </button>
 
-        <button
+        <button 
           onClick={handleRunFullStep}
           style={{
             display: 'flex',
             alignItems: 'center',
             gap: '6px',
-            padding: '9px 20px',
+            padding: '8px 18px',
             fontSize: '13px',
             fontWeight: '700',
             borderRadius: '8px',
@@ -145,26 +192,9 @@ export const BackpropSimulator = () => {
           <span>▶</span>
           <span>1회 학습 실행</span>
         </button>
-
-        <button
-          onClick={handleReset}
-          style={{
-            padding: '8px 14px',
-            fontSize: '13px',
-            fontWeight: '600',
-            borderRadius: '8px',
-            border: '1px solid #e2e8f0',
-            backgroundColor: '#ffffff',
-            color: '#64748b',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease'
-          }}
-        >
-          초기화
-        </button>
       </div>
 
-      {/* 3. 컨트롤 슬라이더 대형 컨테이너 카드 */}
+      {/* 2. 입력 슬라이더 패널 */}
       <div 
         style={{
           display: 'grid',
@@ -181,8 +211,9 @@ export const BackpropSimulator = () => {
             <span>입력값 (x)</span>
             <span style={{ fontFamily: 'monospace', color: '#4f46e5' }}>{x.toFixed(2)}</span>
           </div>
-          <input
-            type="range" min="0.1" max="1.0" step="0.05" value={x}
+          <input 
+            type="range" min="0.1" max="1.0" step="0.05" 
+            value={x} 
             onChange={(e) => { setX(Number(e.target.value)); setStep(1); }}
             style={{ width: '100%', cursor: 'pointer' }}
           />
@@ -193,8 +224,9 @@ export const BackpropSimulator = () => {
             <span>목표 정답 (y)</span>
             <span style={{ fontFamily: 'monospace', color: '#4f46e5' }}>{target.toFixed(2)}</span>
           </div>
-          <input
-            type="range" min="0.1" max="1.0" step="0.05" value={target}
+          <input 
+            type="range" min="0.1" max="1.0" step="0.05" 
+            value={target} 
             onChange={(e) => { setTarget(Number(e.target.value)); setStep(1); }}
             style={{ width: '100%', cursor: 'pointer' }}
           />
@@ -205,15 +237,16 @@ export const BackpropSimulator = () => {
             <span>학습률 (η)</span>
             <span style={{ fontFamily: 'monospace', color: '#4f46e5' }}>{lr.toFixed(1)}</span>
           </div>
-          <input
-            type="range" min="0.1" max="1.5" step="0.1" value={lr}
+          <input 
+            type="range" min="0.1" max="1.5" step="0.1" 
+            value={lr} 
             onChange={(e) => setLr(Number(e.target.value))}
             style={{ width: '100%', cursor: 'pointer' }}
           />
         </div>
       </div>
 
-      {/* 4. 4단계 Step 네비게이션 탭 (PESimulator 뷰 스위처 템플릿 양식 적용) */}
+      {/* 3. Step 탭 버튼 */}
       <div style={{ display: 'flex', justifyContent: 'center' }}>
         <div style={{ display: 'flex', gap: '6px', backgroundColor: '#f1f5f9', padding: '4px', borderRadius: '10px', flexWrap: 'wrap' }}>
           {[
@@ -221,10 +254,10 @@ export const BackpropSimulator = () => {
             { id: 2, label: '2. 오차 산출 (Loss)' },
             { id: 3, label: '3. 역전파 (Backward)' },
             { id: 4, label: '4. 가중치 갱신' }
-          ].map((tab) => (
+          ].map((t) => (
             <button
-              key={tab.id}
-              onClick={() => setStep(tab.id)}
+              key={t.id}
+              onClick={() => setStep(t.id)}
               style={{
                 padding: '7px 14px',
                 fontSize: '13px',
@@ -232,30 +265,20 @@ export const BackpropSimulator = () => {
                 borderRadius: '7px',
                 border: 'none',
                 cursor: 'pointer',
-                backgroundColor: step === tab.id ? '#ffffff' : 'transparent',
-                color: step === tab.id ? '#0f172a' : '#64748b',
-                boxShadow: step === tab.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
+                backgroundColor: step === t.id ? '#ffffff' : 'transparent',
+                color: step === t.id ? '#0f172a' : '#64748b',
+                boxShadow: step === t.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
                 transition: 'all 0.15s ease'
               }}
             >
-              {tab.label}
+              {t.label}
             </button>
           ))}
         </div>
       </div>
 
-      {/* 5. 메인 신경망 SVG 시각화 카드 (도형 및 폰트 크기 대폭 확대) */}
-      <div 
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          alignItems: 'center',
-          backgroundColor: '#f8fafc',
-          padding: '20px',
-          borderRadius: '14px',
-          border: '1px solid #e2e8f0'
-        }}
-      >
+      {/* 4. SVG 신경망 그래프 시각화 (선택된 미분 항 강조 연동) */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#f8fafc', padding: '20px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
         <div style={{ width: '100%', overflowX: 'auto', display: 'flex', justifyContent: 'center' }}>
           <svg viewBox="0 0 600 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', minWidth: '320px' }}>
             <defs>
@@ -267,46 +290,54 @@ export const BackpropSimulator = () => {
               </marker>
             </defs>
 
-            {/* 연결선 W1 */}
-            <line
-              x1="80" y1="100" x2="250" y2="100"
-              stroke={step === 3 ? '#ea580c' : step >= 1 ? '#4f46e5' : '#cbd5e1'}
-              strokeWidth={step === 3 ? "4" : "3"}
-              markerEnd={step === 3 ? undefined : "url(#arrow-blue)"}
-              markerStart={step === 3 ? "url(#arrow-orange)" : undefined}
+            {/* W1 연결선 */}
+            <line 
+              x1="80" y1="100" x2="250" y2="100" 
+              stroke={activeTerm.highlight === 'w1' ? '#9333ea' : step === 3 ? '#ea580c' : step >= 1 ? '#4f46e5' : '#cbd5e1'} 
+              strokeWidth={activeTerm.highlight === 'w1' ? '5' : step === 3 ? '4' : '3'}
+              markerEnd={step === 3 ? undefined : 'url(#arrow-blue)'}
+              markerStart={step === 3 ? 'url(#arrow-orange)' : undefined}
             />
-            {/* W1 가중치 뱃지 (크기 및 글자 확대) */}
+
+            {/* 가중치 W1 뱃지 */}
             <g transform="translate(165, 78)">
-              <rect x="-46" y="-13" width="92" height="22" rx="5" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" />
-              <text textAnchor="middle" y="3" fontSize="13" fontFamily="monospace" fontWeight="bold" fill="#1e293b">
+              <rect 
+                x="-46" y="-13" width="92" height="22" rx="5" 
+                fill={activeTerm.highlight === 'w1' ? '#f3e8ff' : '#ffffff'} 
+                stroke={activeTerm.highlight === 'w1' ? '#9333ea' : '#cbd5e1'} 
+                strokeWidth={activeTerm.highlight === 'w1' ? '2.5' : '1.5'} 
+              />
+              <text textAnchor="middle" y="3" fontSize="13" fontFamily="monospace" fontWeight="bold" fill={activeTerm.highlight === 'w1' ? '#6b21a8' : '#1e293b'}>
                 W₁ = {w1.toFixed(2)}
               </text>
             </g>
 
-            {/* 연결선 W2 */}
-            <line
-              x1="250" y1="100" x2="420" y2="100"
-              stroke={step === 3 ? '#ea580c' : step >= 1 ? '#4f46e5' : '#cbd5e1'}
-              strokeWidth={step === 3 ? "4" : "3"}
-              markerEnd={step === 3 ? undefined : "url(#arrow-blue)"}
-              markerStart={step === 3 ? "url(#arrow-orange)" : undefined}
+            {/* W2 연결선 */}
+            <line 
+              x1="250" y1="100" x2="420" y2="100" 
+              stroke={activeTerm.highlight === 'w2' ? '#ea580c' : step === 3 ? '#ea580c' : step >= 1 ? '#4f46e5' : '#cbd5e1'} 
+              strokeWidth={activeTerm.highlight === 'w2' ? '5' : step === 3 ? '4' : '3'}
+              markerEnd={step === 3 ? undefined : 'url(#arrow-blue)'}
+              markerStart={step === 3 ? 'url(#arrow-orange)' : undefined}
             />
-            {/* W2 가중치 뱃지 (크기 및 글자 확대) */}
+
+            {/* 가중치 W2 뱃지 */}
             <g transform="translate(335, 78)">
-              <rect x="-46" y="-13" width="92" height="22" rx="5" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" />
-              <text textAnchor="middle" y="3" fontSize="13" fontFamily="monospace" fontWeight="bold" fill="#1e293b">
+              <rect 
+                x="-46" y="-13" width="92" height="22" rx="5" 
+                fill={activeTerm.highlight === 'w2' ? '#ffedd5' : '#ffffff'} 
+                stroke={activeTerm.highlight === 'w2' ? '#ea580c' : '#cbd5e1'} 
+                strokeWidth={activeTerm.highlight === 'w2' ? '2.5' : '1.5'} 
+              />
+              <text textAnchor="middle" y="3" fontSize="13" fontFamily="monospace" fontWeight="bold" fill={activeTerm.highlight === 'w2' ? '#9a3412' : '#1e293b'}>
                 W₂ = {w2.toFixed(2)}
               </text>
             </g>
 
-            {/* 연결선 Loss */}
-            <line
-              x1="420" y1="100" x2="540" y2="100"
-              stroke={step >= 2 ? '#ef4444' : '#cbd5e1'}
-              strokeWidth="2.5" strokeDasharray="4 4"
-            />
+            {/* Loss 수평선 */}
+            <line x1="420" y1="100" x2="540" y2="100" stroke={step >= 2 ? '#ef4444' : '#cbd5e1'} strokeWidth="2.5" strokeDasharray="4 4" />
 
-            {/* 노드 1: x (반지름 r=28 로 확대) */}
+            {/* 노드 1: x */}
             <g transform="translate(80, 100)">
               <circle r="28" fill="#ffffff" stroke="#4f46e5" strokeWidth="3" />
               <text textAnchor="middle" y="5" fontSize="16" fontWeight="800" fill="#3730a3">x</text>
@@ -315,9 +346,14 @@ export const BackpropSimulator = () => {
               </text>
             </g>
 
-            {/* 노드 2: h1 (반지름 r=30 으로 확대) */}
+            {/* 노드 2: h1 (은닉층) */}
             <g transform="translate(250, 100)">
-              <circle r="30" fill="#ffffff" stroke={step === 3 ? '#ea580c' : '#4f46e5'} strokeWidth="3" />
+              <circle 
+                r="30" 
+                fill={activeTerm.highlight === 'h1' ? '#f3e8ff' : '#ffffff'} 
+                stroke={activeTerm.highlight === 'h1' ? '#9333ea' : step === 3 ? '#ea580c' : '#4f46e5'} 
+                strokeWidth={activeTerm.highlight === 'h1' ? '4' : '3'} 
+              />
               <text textAnchor="middle" y="5" fontSize="16" fontWeight="800" fill="#1f2937">h₁</text>
               <text textAnchor="middle" y="-38" fontSize="12" fontWeight="800" fill="#6366f1">
                 Sigmoid
@@ -327,9 +363,14 @@ export const BackpropSimulator = () => {
               </text>
             </g>
 
-            {/* 노드 3: yHat (반지름 r=30 으로 확대) */}
+            {/* 노드 3: yHat (예측값 노드) */}
             <g transform="translate(420, 100)">
-              <circle r="30" fill="#ffffff" stroke={step === 3 ? '#ea580c' : '#4f46e5'} strokeWidth="3" />
+              <circle 
+                r="30" 
+                fill={activeTerm.highlight === 'yHat' ? '#e0f2fe' : '#ffffff'} 
+                stroke={activeTerm.highlight === 'yHat' ? '#0284c7' : step === 3 ? '#ea580c' : '#4f46e5'} 
+                strokeWidth={activeTerm.highlight === 'yHat' ? '4' : '3'} 
+              />
               <text textAnchor="middle" y="5" fontSize="16" fontWeight="800" fill="#1f2937">ŷ</text>
               <text textAnchor="middle" y="-38" fontSize="12" fontWeight="800" fill="#0284c7">
                 예측값
@@ -339,9 +380,14 @@ export const BackpropSimulator = () => {
               </text>
             </g>
 
-            {/* 노드 4: Loss (사각형 크기 확대) */}
+            {/* 노드 4: Loss 노드 */}
             <g transform="translate(540, 100)">
-              <rect x="-28" y="-22" width="56" height="44" rx="8" fill="#fef2f2" stroke="#ef4444" strokeWidth="2.5" />
+              <rect 
+                x="-28" y="-22" width="56" height="44" rx="8" 
+                fill={activeTerm.highlight === 'loss' ? '#fee2e2' : '#fef2f2'} 
+                stroke={activeTerm.highlight === 'loss' ? '#b91c1c' : '#ef4444'} 
+                strokeWidth={activeTerm.highlight === 'loss' ? '3.5' : '2.5'} 
+              />
               <text textAnchor="middle" y="4" fontSize="13" fontWeight="800" fill="#991b1b">Loss</text>
               <text textAnchor="middle" y="44" fontSize="13" fontFamily="monospace" fontWeight="bold" fill="#dc2626">
                 {step >= 2 ? `L = ${loss.toFixed(4)}` : 'L = ?'}
@@ -361,10 +407,85 @@ export const BackpropSimulator = () => {
         </div>
       </div>
 
-      {/* 6. 하단 1: 역전파 오차 전달 파이프라인 (글자 및 영역 가시성 확대) */}
+      {/* 5. ⭐ 대화형 Chain Rule 수식 버튼 & 인터랙티브 탐색기 (NEW) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', backgroundColor: '#f8fafc', padding: '18px', borderRadius: '14px', border: '1px solid #cbd5e1' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+          <span style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>
+            How Chain Rule Works
+          </span>
+        </div>
+
+        {/* W1 체인 룰 분수 수식 버튼 바 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', backgroundColor: '#ffffff', padding: '14px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
+          <span style={{ fontSize: '13px', fontWeight: '800', color: '#4f46e5' }}>
+            [ W₁ 기울기 연쇄 법칙 수식 ] &nbsp; ∂L / ∂W₁ =
+          </span>
+
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap', fontFamily: 'monospace' }}>
+            {[
+              { key: 'dL_dyHat', sub: '출력 오차' },
+              { key: 'dyHat_dz2', sub: '출력 활성화' },
+              { key: 'dz2_dh1', sub: '상위 가중치' },
+              { key: 'dh1_dz1', sub: '은닉 활성화' },
+              { key: 'dz1_dw1', sub: '입력 신호' }
+            ].map((item, idx) => {
+              const info = chainRuleTerms[item.key];
+              const isSelected = activeTermKey === item.key;
+              return (
+                <React.Fragment key={item.key}>
+                  {idx > 0 && <span style={{ color: '#94a3b8', fontWeight: 'bold' }}>×</span>}
+                  <button
+                    onClick={() => setActiveTermKey(item.key)}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      padding: '6px 12px',
+                      borderRadius: '8px',
+                      border: isSelected ? '2px solid #4f46e5' : '1px solid #cbd5e1',
+                      backgroundColor: isSelected ? '#eeef4420' : '#f8fafc',
+                      color: isSelected ? '#3730a3' : '#334155',
+                      fontWeight: '800',
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      boxShadow: isSelected ? '0 2px 6px rgba(79, 70, 229, 0.2)' : 'none',
+                      transition: 'all 0.15s ease'
+                    }}
+                  >
+                    <span>{info.symbol}</span>
+                    <span style={{ fontSize: '10px', fontWeight: '600', color: isSelected ? '#4338ca' : '#64748b', marginTop: '2px' }}>
+                      {item.sub}
+                    </span>
+                  </button>
+                </React.Fragment>
+              );
+            })}
+          </div>
+        </div>
+
+        {/* 선택된 항 상세 설명 팝업 카드 */}
+        <div style={{ padding: '14px 16px', backgroundColor: '#eef2ff', borderRadius: '10px', border: '1px solid #c7d2fe', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '14px', fontWeight: '800', color: '#3730a3' }}>
+              🔍 {activeTerm.title} ({activeTerm.symbol})
+            </span>
+            <span style={{ fontFamily: 'monospace', fontSize: '14px', fontWeight: '800', color: '#4338ca', backgroundColor: '#ffffff', padding: '2px 8px', borderRadius: '6px', border: '1px solid #c7d2fe' }}>
+              = {activeTerm.value.toFixed(4)}
+            </span>
+          </div>
+          <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: '700', color: '#1e1b4b' }}>
+            계산식: {activeTerm.calcFormula}
+          </span>
+          <span style={{ fontSize: '13px', color: '#312e81', lineHeight: '1.45', marginTop: '2px' }}>
+            {activeTerm.description}
+          </span>
+        </div>
+      </div>
+
+      {/* 6. 역전파 오차 전달 파이프라인 (기존 카딩 유지) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <span style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>
-          역전파 기울기 계산
+          역전파 기울기 최종 계산 요약
         </span>
 
         <div 
@@ -436,7 +557,7 @@ export const BackpropSimulator = () => {
         </div>
       </div>
 
-      {/* 7. 하단 2: 1회 학습 가중치 변화 4열 카드 (글자 및 영역 확대) */}
+      {/* 7. 1회 학습 가중치 변화 4열 미니 카드 (붉은색 -> 초록색 화살표 표현) */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <span style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>
           1회 학습 파라미터 변화
@@ -445,32 +566,44 @@ export const BackpropSimulator = () => {
         <div 
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
             gap: '12px'
           }}
         >
-          <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-            <span style={{ fontSize: '12px', fontWeight: '800', color: '#4f46e5', display: 'block', marginBottom: '2px' }}>W₁</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#94a3b8', textDecoration: 'line-through' }}>{w1.toFixed(3)}</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '14px', fontWeight: '800', color: '#16a34a', display: 'block', marginTop: '2px' }}>{w1_next.toFixed(3)}</span>
+          <div style={{ padding: '12px 10px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <span style={{ fontSize: '13px', fontWeight: '800', color: '#4f46e5', display: 'block', marginBottom: '4px' }}>W₁</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '13px', fontWeight: '700' }}>
+              <span style={{ color: '#ef4444', fontWeight: '700' }}>{w1.toFixed(3)}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#e0e7ff', flexShrink: 0 }}><ArrowRightIcon /></span>
+              <span style={{ color: '#16a34a', fontWeight: '800' }}>{w1_next.toFixed(3)}</span>
+            </div>
           </div>
 
-          <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-            <span style={{ fontSize: '12px', fontWeight: '800', color: '#4f46e5', display: 'block', marginBottom: '2px' }}>b₁</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#94a3b8', textDecoration: 'line-through' }}>{b1.toFixed(3)}</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '14px', fontWeight: '800', color: '#16a34a', display: 'block', marginTop: '2px' }}>{b1_next.toFixed(3)}</span>
+          <div style={{ padding: '12px 10px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <span style={{ fontSize: '13px', fontWeight: '800', color: '#4f46e5', display: 'block', marginBottom: '4px' }}>b₁</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '13px', fontWeight: '700' }}>
+              <span style={{ color: '#ef4444', fontWeight: '700' }}>{b1.toFixed(3)}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#e0e7ff', flexShrink: 0 }}><ArrowRightIcon /></span>
+              <span style={{ color: '#16a34a', fontWeight: '800' }}>{b1_next.toFixed(3)}</span>
+            </div>
           </div>
 
-          <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-            <span style={{ fontSize: '12px', fontWeight: '800', color: '#4f46e5', display: 'block', marginBottom: '2px' }}>W₂</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#94a3b8', textDecoration: 'line-through' }}>{w2.toFixed(3)}</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '14px', fontWeight: '800', color: '#16a34a', display: 'block', marginTop: '2px' }}>{w2_next.toFixed(3)}</span>
+          <div style={{ padding: '12px 10px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <span style={{ fontSize: '13px', fontWeight: '800', color: '#4f46e5', display: 'block', marginBottom: '4px' }}>W₂</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '13px', fontWeight: '700' }}>
+              <span style={{ color: '#ef4444', fontWeight: '700' }}>{w2.toFixed(3)}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#e0e7ff', flexShrink: 0 }}><ArrowRightIcon /></span>
+              <span style={{ color: '#16a34a', fontWeight: '800' }}>{w2_next.toFixed(3)}</span>
+            </div>
           </div>
 
-          <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-            <span style={{ fontSize: '12px', fontWeight: '800', color: '#4f46e5', display: 'block', marginBottom: '2px' }}>b₂</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#94a3b8', textDecoration: 'line-through' }}>{b2.toFixed(3)}</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '14px', fontWeight: '800', color: '#16a34a', display: 'block', marginTop: '2px' }}>{b2_next.toFixed(3)}</span>
+          <div style={{ padding: '12px 10px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <span style={{ fontSize: '13px', fontWeight: '800', color: '#4f46e5', display: 'block', marginBottom: '4px' }}>b₂</span>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '13px', fontWeight: '700' }}>
+              <span style={{ color: '#ef4444', fontWeight: '700' }}>{b2.toFixed(3)}</span>
+              <span style={{ display: 'inline-flex', alignItems: 'center', justifyContent: 'center', width: '22px', height: '22px', borderRadius: '50%', backgroundColor: '#e0e7ff', flexShrink: 0 }}><ArrowRightIcon /></span>
+              <span style={{ color: '#16a34a', fontWeight: '800' }}>{b2_next.toFixed(3)}</span>
+            </div>
           </div>
         </div>
       </div>
