@@ -231,11 +231,11 @@ export const BackpropSimulator = () => {
         </button>
       </div>
 
-      {/* 2. 입력 슬라이더 패널 */}
+      {/* 2. 입력 & 편향 & 학습률 슬라이더 패널 */}
       <div 
         style={{
           display: 'grid',
-          gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))',
+          gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
           gap: '12px',
           backgroundColor: '#f8fafc',
           padding: '16px',
@@ -245,7 +245,7 @@ export const BackpropSimulator = () => {
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: '700', color: '#334155' }}>
-            <span>입력값 (x)</span>
+            <span>입력 (x)</span>
             <span style={{ fontFamily: 'monospace', color: '#4f46e5' }}>{x.toFixed(2)}</span>
           </div>
           <input 
@@ -258,13 +258,39 @@ export const BackpropSimulator = () => {
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: '700', color: '#334155' }}>
-            <span>목표 정답 (y)</span>
+            <span>정답 (y)</span>
             <span style={{ fontFamily: 'monospace', color: '#4f46e5' }}>{target.toFixed(2)}</span>
           </div>
           <input 
             type="range" min="0.1" max="1.0" step="0.05" 
             value={target} 
             onChange={(e) => { setTarget(Number(e.target.value)); setStep(1); }}
+            style={{ width: '100%', cursor: 'pointer' }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: '700', color: '#334155' }}>
+            <span>편향 (b₁)</span>
+            <span style={{ fontFamily: 'monospace', color: '#4f46e5' }}>{b1.toFixed(2)}</span>
+          </div>
+          <input 
+            type="range" min="-1.0" max="1.0" step="0.05" 
+            value={b1} 
+            onChange={(e) => { setB1(Number(e.target.value)); setStep(1); }}
+            style={{ width: '100%', cursor: 'pointer' }}
+          />
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', fontWeight: '700', color: '#334155' }}>
+            <span>편향 (b₂)</span>
+            <span style={{ fontFamily: 'monospace', color: '#4f46e5' }}>{b2.toFixed(2)}</span>
+          </div>
+          <input 
+            type="range" min="-1.0" max="1.0" step="0.05" 
+            value={b2} 
+            onChange={(e) => { setB2(Number(e.target.value)); setStep(1); }}
             style={{ width: '100%', cursor: 'pointer' }}
           />
         </div>
@@ -314,32 +340,32 @@ export const BackpropSimulator = () => {
         </div>
       </div>
 
-      {/* 4. SVG 신경망 그래프 시각화 */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#f8fafc', padding: '20px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+      {/* 4. SVG 신경망 그래프 시각화 (시원하고 깔끔한 대형 노드 캔버스) */}
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#f8fafc', padding: '22px', borderRadius: '16px', border: '1px solid #cbd5e1', gap: '16px' }}>
         <div style={{ width: '100%', overflowX: 'auto', display: 'flex', justifyContent: 'center' }}>
-          <svg viewBox="0 0 600 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', minWidth: '320px' }}>
+          <svg viewBox="0 0 660 210" style={{ width: '100%', maxWidth: '660px', height: 'auto', minWidth: '340px' }}>
             <defs>
-              <marker id="arrow-blue" viewBox="0 0 10 10" refX="28" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <marker id="arrow-blue" viewBox="0 0 10 10" refX="35" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#4f46e5" />
               </marker>
-              <marker id="arrow-orange" viewBox="0 0 10 10" refX="28" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <marker id="arrow-orange" viewBox="0 0 10 10" refX="35" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#ea580c" />
               </marker>
             </defs>
 
             {/* W1 연결선 */}
             <line 
-              x1="80" y1="100" x2="250" y2="100" 
+              x1="80" y1="100" x2="270" y2="100" 
               stroke={activeTerm.highlight === 'w1' ? '#9333ea' : step === 3 ? '#ea580c' : step >= 1 ? '#4f46e5' : '#cbd5e1'} 
               strokeWidth={activeTerm.highlight === 'w1' ? '5' : step === 3 ? '4' : '3'}
               markerEnd={step === 3 ? undefined : 'url(#arrow-blue)'}
               markerStart={step === 3 ? 'url(#arrow-orange)' : undefined}
             />
 
-            {/* 가중치 W1 뱃지 */}
-            <g transform="translate(165, 78)">
+            {/* 가중치 W1 뱃지 (연결선 상단) */}
+            <g transform="translate(175, 75)">
               <rect 
-                x="-46" y="-13" width="92" height="22" rx="5" 
+                x="-46" y="-13" width="92" height="23" rx="5" 
                 fill={activeTerm.highlight === 'w1' ? '#f3e8ff' : '#ffffff'} 
                 stroke={activeTerm.highlight === 'w1' ? '#9333ea' : '#cbd5e1'} 
                 strokeWidth={activeTerm.highlight === 'w1' ? '2.5' : '1.5'} 
@@ -349,19 +375,27 @@ export const BackpropSimulator = () => {
               </text>
             </g>
 
+            {/* z1 선형 변환 신호 뱃지 (연결선 하단) */}
+            <g transform="translate(175, 125)">
+              <rect x="-42" y="-11" width="84" height="20" rx="4" fill="#eef2ff" stroke="#c7d2fe" strokeWidth="1" />
+              <text textAnchor="middle" y="3" fontSize="13" fontFamily="monospace" fontWeight="700" fill="#3730a3">
+                z₁ = {z1.toFixed(3)}
+              </text>
+            </g>
+
             {/* W2 연결선 */}
             <line 
-              x1="250" y1="100" x2="420" y2="100" 
+              x1="270" y1="100" x2="460" y2="100" 
               stroke={activeTerm.highlight === 'w2' ? '#ea580c' : step === 3 ? '#ea580c' : step >= 1 ? '#4f46e5' : '#cbd5e1'} 
               strokeWidth={activeTerm.highlight === 'w2' ? '5' : step === 3 ? '4' : '3'}
               markerEnd={step === 3 ? undefined : 'url(#arrow-blue)'}
               markerStart={step === 3 ? 'url(#arrow-orange)' : undefined}
             />
 
-            {/* 가중치 W2 뱃지 */}
-            <g transform="translate(335, 78)">
+            {/* 가중치 W2 뱃지 (연결선 상단) */}
+            <g transform="translate(365, 75)">
               <rect 
-                x="-46" y="-13" width="92" height="22" rx="5" 
+                x="-46" y="-13" width="92" height="23" rx="5" 
                 fill={activeTerm.highlight === 'w2' ? '#ffedd5' : '#ffffff'} 
                 stroke={activeTerm.highlight === 'w2' ? '#ea580c' : '#cbd5e1'} 
                 strokeWidth={activeTerm.highlight === 'w2' ? '2.5' : '1.5'} 
@@ -371,73 +405,111 @@ export const BackpropSimulator = () => {
               </text>
             </g>
 
-            {/* Loss 수평선 */}
-            <line x1="420" y1="100" x2="540" y2="100" stroke={step >= 2 ? '#ef4444' : '#cbd5e1'} strokeWidth="2.5" strokeDasharray="4 4" />
-
-            {/* 노드 1: x */}
-            <g transform="translate(80, 100)">
-              <circle r="28" fill="#ffffff" stroke="#4f46e5" strokeWidth="3" />
-              <text textAnchor="middle" y="5" fontSize="16" fontWeight="800" fill="#3730a3">x</text>
-              <text textAnchor="middle" y="44" fontSize="13" fontFamily="monospace" fontWeight="700" fill="#4f46e5">
-                입력: {x.toFixed(2)}
+            {/* z2 선형 변환 신호 뱃지 (연결선 하단) */}
+            <g transform="translate(365, 125)">
+              <rect x="-42" y="-11" width="84" height="20" rx="4" fill="#eef2ff" stroke="#c7d2fe" strokeWidth="1" />
+              <text textAnchor="middle" y="3" fontSize="13" fontFamily="monospace" fontWeight="700" fill="#3730a3">
+                z₂ = {z2.toFixed(3)}
               </text>
             </g>
 
-            {/* 노드 2: h1 (은닉층) */}
-            <g transform="translate(250, 100)">
+            {/* Loss 수평선 */}
+            <line x1="460" y1="100" x2="590" y2="100" stroke={step >= 2 ? '#ef4444' : '#cbd5e1'} strokeWidth="2.5" strokeDasharray="4 4" />
+
+            {/* 노드 1: x (입력 노드, 대형 r=36) */}
+            <g transform="translate(80, 100)">
+              <circle r="36" fill="#ffffff" stroke="#4f46e5" strokeWidth="3" />
+              <text textAnchor="middle" y="6" fontSize="18" fontWeight="800" fill="#3730a3">x</text>
+              <text textAnchor="middle" y="-45" fontSize="12" fontWeight="700" fill="#64748b">입력층</text>
+              <text textAnchor="middle" y="55" fontSize="13" fontFamily="monospace" fontWeight="700" fill="#4f46e5">
+                {x.toFixed(2)}
+              </text>
+            </g>
+
+            {/* 노드 2: h1 (은닉층 노드, 대형 r=36) */}
+            <g transform="translate(270, 100)">
               <circle 
-                r="30" 
+                r="36" 
                 fill={activeTerm.highlight === 'h1' ? '#f3e8ff' : '#ffffff'} 
                 stroke={activeTerm.highlight === 'h1' ? '#9333ea' : step === 3 ? '#ea580c' : '#4f46e5'} 
-                strokeWidth={activeTerm.highlight === 'h1' ? '4' : '3'} 
+                strokeWidth={activeTerm.highlight === 'h1' ? '4.5' : '3'} 
               />
-              <text textAnchor="middle" y="5" fontSize="16" fontWeight="800" fill="#1f2937">h₁</text>
-              <text textAnchor="middle" y="-38" fontSize="12" fontWeight="800" fill="#6366f1">
-                Sigmoid
-              </text>
-              <text textAnchor="middle" y="46" fontSize="13" fontFamily="monospace" fontWeight="700" fill="#4f46e5">
-                {step >= 1 ? `h₁ = ${h1.toFixed(3)}` : 'h₁ = ?'}
+              <text textAnchor="middle" y="6" fontSize="18" fontWeight="800" fill="#1f2937">h₁</text>
+              <text textAnchor="middle" y="-45" fontSize="12" fontWeight="700" fill="#6366f1">은닉층</text>
+              <text textAnchor="middle" y="55" fontSize="13" fontFamily="monospace" fontWeight="700" fill="#4f46e5">
+                {step >= 1 ? h1.toFixed(3) : '?'}
               </text>
             </g>
 
-            {/* 노드 3: yHat (예측값 노드) */}
-            <g transform="translate(420, 100)">
+            {/* 노드 3: yHat (예측 노드, 대형 r=36) */}
+            <g transform="translate(460, 100)">
               <circle 
-                r="30" 
+                r="36" 
                 fill={activeTerm.highlight === 'yHat' ? '#e0f2fe' : '#ffffff'} 
                 stroke={activeTerm.highlight === 'yHat' ? '#0284c7' : step === 3 ? '#ea580c' : '#4f46e5'} 
-                strokeWidth={activeTerm.highlight === 'yHat' ? '4' : '3'} 
+                strokeWidth={activeTerm.highlight === 'yHat' ? '4.5' : '3'} 
               />
-              <text textAnchor="middle" y="5" fontSize="16" fontWeight="800" fill="#1f2937">ŷ</text>
-              <text textAnchor="middle" y="-38" fontSize="12" fontWeight="800" fill="#0284c7">
-                예측값
-              </text>
-              <text textAnchor="middle" y="46" fontSize="13" fontFamily="monospace" fontWeight="700" fill="#0284c7">
-                {step >= 1 ? `ŷ = ${yHat.toFixed(3)}` : 'ŷ = ?'}
+              <text textAnchor="middle" y="6" fontSize="18" fontWeight="800" fill="#1f2937">ŷ</text>
+              <text textAnchor="middle" y="-45" fontSize="12" fontWeight="700" fill="#0284c7">출력층</text>
+              <text textAnchor="middle" y="55" fontSize="13" fontFamily="monospace" fontWeight="700" fill="#0284c7">
+                {step >= 1 ? yHat.toFixed(3) : '?'}
               </text>
             </g>
 
             {/* 노드 4: Loss 노드 */}
-            <g transform="translate(540, 100)">
+            <g transform="translate(590, 100)">
               <rect 
-                x="-28" y="-22" width="56" height="44" rx="8" 
+                x="-32" y="-25" width="64" height="50" rx="10" 
                 fill={activeTerm.highlight === 'loss' ? '#fee2e2' : '#fef2f2'} 
                 stroke={activeTerm.highlight === 'loss' ? '#b91c1c' : '#ef4444'} 
                 strokeWidth={activeTerm.highlight === 'loss' ? '3.5' : '2.5'} 
               />
-              <text textAnchor="middle" y="4" fontSize="13" fontWeight="800" fill="#991b1b">Loss</text>
-              <text textAnchor="middle" y="44" fontSize="13" fontFamily="monospace" fontWeight="bold" fill="#dc2626">
-                {step >= 2 ? `L = ${loss.toFixed(4)}` : 'L = ?'}
-              </text>
-              <text textAnchor="middle" y="-30" fontSize="12" fontWeight="bold" fill="#991b1b">
+              <text textAnchor="middle" y="4" fontSize="14" fontWeight="800" fill="#991b1b">Loss</text>
+              <text textAnchor="middle" y="-33" fontSize="12" fontWeight="bold" fill="#991b1b">
                 y = {target.toFixed(2)}
+              </text>
+              <text textAnchor="middle" y="52" fontSize="13" fontFamily="monospace" fontWeight="bold" fill="#dc2626">
+                {step >= 2 ? loss.toFixed(4) : '?'}
               </text>
             </g>
           </svg>
         </div>
 
-        <div style={{ marginTop: '12px', fontSize: '15px', fontWeight: '700', color: '#334155', textAlign: 'center' }}>
-          {step === 1 && <span>1. 순전파 (Forward Pass): Sigmoid 활성화 연산을 거쳐 ŷ = {yHat.toFixed(3)} 도출</span>}
+        {/* 💡 층별 연산 상세 흐름보드 Sub-panel (SVG 직관성 강화) */}
+        <div style={{ width: '100%', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '10px', marginTop: '4px' }}>
+          <div style={{ backgroundColor: '#ffffff', padding: '10px 14px', borderRadius: '10px', border: '1px solid #e0e7ff', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#4338ca' }}>1. 은닉층 1 연산 흐름</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#334155' }}>
+              z₁ = W₁x + b₁ = <strong>{z1.toFixed(3)}</strong>
+            </span>
+            <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#4338ca', fontWeight: '700' }}>
+              h₁ = σ(z₁) = <strong>{h1.toFixed(3)}</strong>
+            </span>
+          </div>
+
+          <div style={{ backgroundColor: '#ffffff', padding: '10px 14px', borderRadius: '10px', border: '1px solid #e0e7ff', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#0284c7' }}>2. 출력층 ŷ 연산 흐름</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#334155' }}>
+              z₂ = W₂h₁ + b₂ = <strong>{z2.toFixed(3)}</strong>
+            </span>
+            <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#0284c7', fontWeight: '700' }}>
+              ŷ = σ(z₂) = <strong>{yHat.toFixed(3)}</strong>
+            </span>
+          </div>
+
+          <div style={{ backgroundColor: '#ffffff', padding: '10px 14px', borderRadius: '10px', border: '1px solid #fee2e2', display: 'flex', flexDirection: 'column', gap: '3px' }}>
+            <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#b91c1c' }}>3. 손실 오차 연산</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#334155' }}>
+              L = ½(ŷ - y)²
+            </span>
+            <span style={{ fontFamily: 'monospace', fontSize: '12px', color: '#dc2626', fontWeight: '700' }}>
+              L = <strong>{loss.toFixed(4)}</strong>
+            </span>
+          </div>
+        </div>
+
+        <div style={{ marginTop: '4px', fontSize: '14.5px', fontWeight: '700', color: '#334155', textAlign: 'center' }}>
+          {step === 1 && <span>1. 순전파 (Forward Pass): 선형변환(z₁, z₂) 후 Sigmoid 활성화로 ŷ = {yHat.toFixed(3)} 도출</span>}
           {step === 2 && <span>2. 오차 산출 (Loss): 정답 y = {target.toFixed(2)}와 오차 손실 L = {loss.toFixed(4)} 측정</span>}
           {step === 3 && <span>3. 역전파 (Backward Pass): 연쇄 법칙으로 오차 신호(Gradient)를 뒤에서 앞으로 전달</span>}
           {step === 4 && <span>4. 가중치 갱신 (Weight Update): 경사하강법으로 W₁, b₁, W₂, b₂ 파라미터 업데이트</span>}
