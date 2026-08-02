@@ -1,11 +1,10 @@
 import React, { useState } from 'react';
 
-// SwiGLU (SiLU / Swish) 활성화 함수 및 미분 정의
+// Sigmoid 활성화 함수 및 국소 미분 정의 (backprop.mdx 문서 설명과 100% 일치)
 const sigmoid = (z) => 1 / (1 + Math.exp(-Math.max(-20, Math.min(20, z))));
-const swigluFn = (z) => z * sigmoid(z);
-const swigluDf = (z) => {
+const sigmoidDf = (z) => {
   const s = sigmoid(z);
-  return s + z * s * (1 - s);
+  return s * (1 - s);
 };
 
 export const BackpropSimulator = () => {
@@ -21,23 +20,24 @@ export const BackpropSimulator = () => {
   // 현재 Step (1: 순전파, 2: 손실계산, 3: 역전파, 4: 가중치갱신)
   const [step, setStep] = useState(1);
 
-  // --- 1. Forward Pass 연산 ---
+  // --- 1. Forward Pass 연산 (MSE Loss + Sigmoid 활성화 적용) ---
   const z1 = w1 * x + b1;
-  const h1 = swigluFn(z1);
+  const h1 = sigmoid(z1);
   const z2 = w2 * h1 + b2;
-  const yHat = swigluFn(z2);
+  const yHat = sigmoid(z2);
   const loss = 0.5 * Math.pow(yHat - target, 2);
 
   // --- 2. Backward Pass (Chain Rule) 연산 ---
+  // MSE 손실의 ŷ 편미분: (ŷ - y)
   const dL_dyHat = yHat - target;
-  const dyHat_dz2 = swigluDf(z2);
+  const dyHat_dz2 = sigmoidDf(z2);
   const delta2 = dL_dyHat * dyHat_dz2;
 
   const dL_dw2 = delta2 * h1;
   const dL_db2 = delta2;
 
   const dL_dh1 = delta2 * w2;
-  const dh1_dz1 = swigluDf(z1);
+  const dh1_dz1 = sigmoidDf(z1);
   const delta1 = dL_dh1 * dh1_dz1;
 
   const dL_dw1 = delta1 * x;
@@ -244,138 +244,140 @@ export const BackpropSimulator = () => {
         </div>
       </div>
 
-      {/* 5. 메인 신경망 SVG 시각화 카드 */}
+      {/* 5. 메인 신경망 SVG 시각화 카드 (도형 및 폰트 크기 대폭 확대) */}
       <div 
         style={{
           display: 'flex',
           flexDirection: 'column',
           alignItems: 'center',
           backgroundColor: '#f8fafc',
-          padding: '16px',
-          borderRadius: '12px',
+          padding: '20px',
+          borderRadius: '14px',
           border: '1px solid #e2e8f0'
         }}
       >
         <div style={{ width: '100%', overflowX: 'auto', display: 'flex', justifyContent: 'center' }}>
-          <svg viewBox="0 0 600 170" style={{ width: '100%', maxWidth: '600px', height: 'auto', minWidth: '300px' }}>
+          <svg viewBox="0 0 600 200" style={{ width: '100%', maxWidth: '600px', height: 'auto', minWidth: '320px' }}>
             <defs>
-              <marker id="arrow-blue" viewBox="0 0 10 10" refX="22" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <marker id="arrow-blue" viewBox="0 0 10 10" refX="28" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#4f46e5" />
               </marker>
-              <marker id="arrow-orange" viewBox="0 0 10 10" refX="22" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+              <marker id="arrow-orange" viewBox="0 0 10 10" refX="28" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#ea580c" />
               </marker>
             </defs>
 
             {/* 연결선 W1 */}
             <line
-              x1="80" y1="85" x2="250" y2="85"
+              x1="80" y1="100" x2="250" y2="100"
               stroke={step === 3 ? '#ea580c' : step >= 1 ? '#4f46e5' : '#cbd5e1'}
-              strokeWidth={step === 3 ? "3.5" : "2.5"}
+              strokeWidth={step === 3 ? "4" : "3"}
               markerEnd={step === 3 ? undefined : "url(#arrow-blue)"}
               markerStart={step === 3 ? "url(#arrow-orange)" : undefined}
             />
-            <g transform="translate(165, 68)">
-              <rect x="-38" y="-11" width="76" height="18" rx="4" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1" />
-              <text textAnchor="middle" y="2" fontSize="11" fontFamily="monospace" fontWeight="bold" fill="#374151">
+            {/* W1 가중치 뱃지 (크기 및 글자 확대) */}
+            <g transform="translate(165, 78)">
+              <rect x="-46" y="-13" width="92" height="22" rx="5" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" />
+              <text textAnchor="middle" y="3" fontSize="13" fontFamily="monospace" fontWeight="bold" fill="#1e293b">
                 W₁ = {w1.toFixed(2)}
               </text>
             </g>
 
             {/* 연결선 W2 */}
             <line
-              x1="250" y1="85" x2="420" y2="85"
+              x1="250" y1="100" x2="420" y2="100"
               stroke={step === 3 ? '#ea580c' : step >= 1 ? '#4f46e5' : '#cbd5e1'}
-              strokeWidth={step === 3 ? "3.5" : "2.5"}
+              strokeWidth={step === 3 ? "4" : "3"}
               markerEnd={step === 3 ? undefined : "url(#arrow-blue)"}
               markerStart={step === 3 ? "url(#arrow-orange)" : undefined}
             />
-            <g transform="translate(335, 68)">
-              <rect x="-38" y="-11" width="76" height="18" rx="4" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1" />
-              <text textAnchor="middle" y="2" fontSize="11" fontFamily="monospace" fontWeight="bold" fill="#374151">
+            {/* W2 가중치 뱃지 (크기 및 글자 확대) */}
+            <g transform="translate(335, 78)">
+              <rect x="-46" y="-13" width="92" height="22" rx="5" fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" />
+              <text textAnchor="middle" y="3" fontSize="13" fontFamily="monospace" fontWeight="bold" fill="#1e293b">
                 W₂ = {w2.toFixed(2)}
               </text>
             </g>
 
             {/* 연결선 Loss */}
             <line
-              x1="420" y1="85" x2="540" y2="85"
+              x1="420" y1="100" x2="540" y2="100"
               stroke={step >= 2 ? '#ef4444' : '#cbd5e1'}
-              strokeWidth="2" strokeDasharray="3 3"
+              strokeWidth="2.5" strokeDasharray="4 4"
             />
 
-            {/* 노드 1: x */}
-            <g transform="translate(80, 85)">
-              <circle r="22" fill="#ffffff" stroke="#4f46e5" strokeWidth="2.5" />
-              <text textAnchor="middle" y="4" fontSize="13" fontWeight="bold" fill="#3730a3">x</text>
-              <text textAnchor="middle" y="38" fontSize="11" fontFamily="monospace" fontWeight="600" fill="#4f46e5">
+            {/* 노드 1: x (반지름 r=28 로 확대) */}
+            <g transform="translate(80, 100)">
+              <circle r="28" fill="#ffffff" stroke="#4f46e5" strokeWidth="3" />
+              <text textAnchor="middle" y="5" fontSize="16" fontWeight="800" fill="#3730a3">x</text>
+              <text textAnchor="middle" y="44" fontSize="13" fontFamily="monospace" fontWeight="700" fill="#4f46e5">
                 입력: {x.toFixed(2)}
               </text>
             </g>
 
-            {/* 노드 2: h1 */}
-            <g transform="translate(250, 85)">
-              <circle r="24" fill="#ffffff" stroke={step === 3 ? '#ea580c' : '#4f46e5'} strokeWidth="2.5" />
-              <text textAnchor="middle" y="4" fontSize="13" fontWeight="bold" fill="#1f2937">h₁</text>
-              <text textAnchor="middle" y="-32" fontSize="10" fontWeight="bold" fill="#6366f1">
-                SwiGLU
+            {/* 노드 2: h1 (반지름 r=30 으로 확대) */}
+            <g transform="translate(250, 100)">
+              <circle r="30" fill="#ffffff" stroke={step === 3 ? '#ea580c' : '#4f46e5'} strokeWidth="3" />
+              <text textAnchor="middle" y="5" fontSize="16" fontWeight="800" fill="#1f2937">h₁</text>
+              <text textAnchor="middle" y="-38" fontSize="12" fontWeight="800" fill="#6366f1">
+                Sigmoid
               </text>
-              <text textAnchor="middle" y="40" fontSize="11" fontFamily="monospace" fontWeight="600" fill="#4f46e5">
+              <text textAnchor="middle" y="46" fontSize="13" fontFamily="monospace" fontWeight="700" fill="#4f46e5">
                 {step >= 1 ? `h₁ = ${h1.toFixed(3)}` : 'h₁ = ?'}
               </text>
             </g>
 
-            {/* 노드 3: yHat */}
-            <g transform="translate(420, 85)">
-              <circle r="24" fill="#ffffff" stroke={step === 3 ? '#ea580c' : '#4f46e5'} strokeWidth="2.5" />
-              <text textAnchor="middle" y="4" fontSize="13" fontWeight="bold" fill="#1f2937">ŷ</text>
-              <text textAnchor="middle" y="-32" fontSize="10" fontWeight="bold" fill="#0284c7">
+            {/* 노드 3: yHat (반지름 r=30 으로 확대) */}
+            <g transform="translate(420, 100)">
+              <circle r="30" fill="#ffffff" stroke={step === 3 ? '#ea580c' : '#4f46e5'} strokeWidth="3" />
+              <text textAnchor="middle" y="5" fontSize="16" fontWeight="800" fill="#1f2937">ŷ</text>
+              <text textAnchor="middle" y="-38" fontSize="12" fontWeight="800" fill="#0284c7">
                 예측값
               </text>
-              <text textAnchor="middle" y="40" fontSize="11" fontFamily="monospace" fontWeight="600" fill="#0284c7">
+              <text textAnchor="middle" y="46" fontSize="13" fontFamily="monospace" fontWeight="700" fill="#0284c7">
                 {step >= 1 ? `ŷ = ${yHat.toFixed(3)}` : 'ŷ = ?'}
               </text>
             </g>
 
-            {/* 노드 4: Loss */}
-            <g transform="translate(540, 85)">
-              <rect x="-22" y="-18" width="44" height="36" rx="6" fill="#fef2f2" stroke="#ef4444" strokeWidth="2" />
-              <text textAnchor="middle" y="4" fontSize="11" fontWeight="bold" fill="#991b1b">Loss</text>
-              <text textAnchor="middle" y="38" fontSize="11" fontFamily="monospace" fontWeight="bold" fill="#dc2626">
+            {/* 노드 4: Loss (사각형 크기 확대) */}
+            <g transform="translate(540, 100)">
+              <rect x="-28" y="-22" width="56" height="44" rx="8" fill="#fef2f2" stroke="#ef4444" strokeWidth="2.5" />
+              <text textAnchor="middle" y="4" fontSize="13" fontWeight="800" fill="#991b1b">Loss</text>
+              <text textAnchor="middle" y="44" fontSize="13" fontFamily="monospace" fontWeight="bold" fill="#dc2626">
                 {step >= 2 ? `L = ${loss.toFixed(4)}` : 'L = ?'}
               </text>
-              <text textAnchor="middle" y="-26" fontSize="10" fill="#991b1b">
+              <text textAnchor="middle" y="-30" fontSize="12" fontWeight="bold" fill="#991b1b">
                 y = {target.toFixed(2)}
               </text>
             </g>
           </svg>
         </div>
 
-        <div style={{ marginTop: '10px', fontSize: '14px', fontWeight: '600', color: '#475569', textAlign: 'center' }}>
-          {step === 1 && <span>1. 순전파 (Forward Pass): SwiGLU 활성화 연산을 거쳐 ŷ = {yHat.toFixed(3)} 도출</span>}
+        <div style={{ marginTop: '12px', fontSize: '15px', fontWeight: '700', color: '#334155', textAlign: 'center' }}>
+          {step === 1 && <span>1. 순전파 (Forward Pass): Sigmoid 활성화 연산을 거쳐 ŷ = {yHat.toFixed(3)} 도출</span>}
           {step === 2 && <span>2. 오차 산출 (Loss): 정답 y = {target.toFixed(2)}와 오차 손실 L = {loss.toFixed(4)} 측정</span>}
           {step === 3 && <span>3. 역전파 (Backward Pass): 연쇄 법칙으로 오차 신호(Gradient)를 뒤에서 앞으로 전달</span>}
           {step === 4 && <span>4. 가중치 갱신 (Weight Update): 경사하강법으로 W₁, b₁, W₂, b₂ 파라미터 업데이트</span>}
         </div>
       </div>
 
-      {/* 6. 하단 1: 역전파 오차 전달 파이프라인 카딩 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <span style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>
+      {/* 6. 하단 1: 역전파 오차 전달 파이프라인 (글자 및 영역 가시성 확대) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <span style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>
           역전파 기울기 계산
         </span>
 
         <div 
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))',
-            gap: '12px'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
+            gap: '14px'
           }}
         >
           {/* Step 1 */}
           <div 
             style={{
-              padding: '12px',
+              padding: '14px',
               borderRadius: '10px',
               backgroundColor: '#ffffff',
               border: '1px solid #e2e8f0',
@@ -385,9 +387,9 @@ export const BackpropSimulator = () => {
               alignItems: 'center'
             }}
           >
-            <span style={{ fontSize: '11px', fontWeight: '700', color: '#ef4444', marginBottom: '4px' }}>1. 출력층 기울기 (δ₂)</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '10px', color: '#64748b' }}>(ŷ - y) × SwiGLU'(z₂)</span>
-            <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '13px', color: '#0f172a', marginTop: '6px' }}>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#ef4444', marginBottom: '4px' }}>1. 출력층 기울기 (δ₂)</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#64748b' }}>(ŷ - y) × Sigmoid'(z₂)</span>
+            <span style={{ fontFamily: 'monospace', fontWeight: '800', fontSize: '14px', color: '#0f172a', marginTop: '6px' }}>
               δ₂ = {delta2.toFixed(4)}
             </span>
           </div>
@@ -395,7 +397,7 @@ export const BackpropSimulator = () => {
           {/* Step 2 */}
           <div 
             style={{
-              padding: '12px',
+              padding: '14px',
               borderRadius: '10px',
               backgroundColor: '#fff7ed',
               border: '1px solid #ffedd5',
@@ -405,9 +407,9 @@ export const BackpropSimulator = () => {
               alignItems: 'center'
             }}
           >
-            <span style={{ fontSize: '11px', fontWeight: '700', color: '#ea580c', marginBottom: '4px' }}>2. W₂ 기울기 (∇W₂)</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '10px', color: '#c2410c' }}>δ₂ × h₁</span>
-            <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '13px', color: '#9a3412', marginTop: '6px' }}>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#ea580c', marginBottom: '4px' }}>2. W₂ 기울기 (∇W₂)</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#c2410c' }}>δ₂ × h₁</span>
+            <span style={{ fontFamily: 'monospace', fontWeight: '800', fontSize: '14px', color: '#9a3412', marginTop: '6px' }}>
               ∇W₂ = {dL_dw2.toFixed(4)}
             </span>
           </div>
@@ -415,7 +417,7 @@ export const BackpropSimulator = () => {
           {/* Step 3 */}
           <div 
             style={{
-              padding: '12px',
+              padding: '14px',
               borderRadius: '10px',
               backgroundColor: '#faf5ff',
               border: '1px solid #f3e8ff',
@@ -425,50 +427,50 @@ export const BackpropSimulator = () => {
               alignItems: 'center'
             }}
           >
-            <span style={{ fontSize: '11px', fontWeight: '700', color: '#9333ea', marginBottom: '4px' }}>3. W₁ 기울기 (∇W₁)</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '10px', color: '#7e22ce' }}>(δ₂ × W₂) × SwiGLU'(z₁) × x</span>
-            <span style={{ fontFamily: 'monospace', fontWeight: '700', fontSize: '13px', color: '#6b21a8', marginTop: '6px' }}>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#9333ea', marginBottom: '4px' }}>3. W₁ 기울기 (∇W₁)</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#7e22ce' }}>(δ₂ × W₂) × Sigmoid'(z₁) × x</span>
+            <span style={{ fontFamily: 'monospace', fontWeight: '800', fontSize: '14px', color: '#6b21a8', marginTop: '6px' }}>
               ∇W₁ = {dL_dw1.toFixed(4)}
             </span>
           </div>
         </div>
       </div>
 
-      {/* 7. 하단 2: 1회 학습 가중치 변화 4열 카드 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-        <span style={{ fontSize: '14px', fontWeight: '700', color: '#1e293b' }}>
-          📊 1회 학습 파라미터 변화 (Before ➔ After)
+      {/* 7. 하단 2: 1회 학습 가중치 변화 4열 카드 (글자 및 영역 확대) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <span style={{ fontSize: '15px', fontWeight: '800', color: '#0f172a' }}>
+          1회 학습 파라미터 변화
         </span>
 
         <div 
           style={{
             display: 'grid',
-            gridTemplateColumns: 'repeat(auto-fit, minmax(110px, 1fr))',
-            gap: '10px'
+            gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
+            gap: '12px'
           }}
         >
-          <div style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-            <span style={{ fontSize: '11px', fontWeight: '700', color: '#4f46e5', display: 'block', marginBottom: '2px' }}>W₁</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '10px', color: '#94a3b8', textDecoration: 'line-through' }}>{w1.toFixed(3)}</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: '700', color: '#16a34a', display: 'block', marginTop: '2px' }}>{w1_next.toFixed(3)}</span>
+          <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#4f46e5', display: 'block', marginBottom: '2px' }}>W₁</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#94a3b8', textDecoration: 'line-through' }}>{w1.toFixed(3)}</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '14px', fontWeight: '800', color: '#16a34a', display: 'block', marginTop: '2px' }}>{w1_next.toFixed(3)}</span>
           </div>
 
-          <div style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-            <span style={{ fontSize: '11px', fontWeight: '700', color: '#4f46e5', display: 'block', marginBottom: '2px' }}>b₁</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '10px', color: '#94a3b8', textDecoration: 'line-through' }}>{b1.toFixed(3)}</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: '700', color: '#16a34a', display: 'block', marginTop: '2px' }}>{b1_next.toFixed(3)}</span>
+          <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#4f46e5', display: 'block', marginBottom: '2px' }}>b₁</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#94a3b8', textDecoration: 'line-through' }}>{b1.toFixed(3)}</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '14px', fontWeight: '800', color: '#16a34a', display: 'block', marginTop: '2px' }}>{b1_next.toFixed(3)}</span>
           </div>
 
-          <div style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-            <span style={{ fontSize: '11px', fontWeight: '700', color: '#4f46e5', display: 'block', marginBottom: '2px' }}>W₂</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '10px', color: '#94a3b8', textDecoration: 'line-through' }}>{w2.toFixed(3)}</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: '700', color: '#16a34a', display: 'block', marginTop: '2px' }}>{w2_next.toFixed(3)}</span>
+          <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#4f46e5', display: 'block', marginBottom: '2px' }}>W₂</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#94a3b8', textDecoration: 'line-through' }}>{w2.toFixed(3)}</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '14px', fontWeight: '800', color: '#16a34a', display: 'block', marginTop: '2px' }}>{w2_next.toFixed(3)}</span>
           </div>
 
-          <div style={{ padding: '10px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', textAlign: 'center' }}>
-            <span style={{ fontSize: '11px', fontWeight: '700', color: '#4f46e5', display: 'block', marginBottom: '2px' }}>b₂</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '10px', color: '#94a3b8', textDecoration: 'line-through' }}>{b2.toFixed(3)}</span>
-            <span style={{ fontFamily: 'monospace', fontSize: '13px', fontWeight: '700', color: '#16a34a', display: 'block', marginTop: '2px' }}>{b2_next.toFixed(3)}</span>
+          <div style={{ padding: '12px', borderRadius: '8px', backgroundColor: '#ffffff', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <span style={{ fontSize: '12px', fontWeight: '800', color: '#4f46e5', display: 'block', marginBottom: '2px' }}>b₂</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '11px', color: '#94a3b8', textDecoration: 'line-through' }}>{b2.toFixed(3)}</span>
+            <span style={{ fontFamily: 'monospace', fontSize: '14px', fontWeight: '800', color: '#16a34a', display: 'block', marginTop: '2px' }}>{b2_next.toFixed(3)}</span>
           </div>
         </div>
       </div>

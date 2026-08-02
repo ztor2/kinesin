@@ -6,28 +6,27 @@ description: "Explaining of Backpropagation in Deep Neural Networks"
 import BackpropSimulator from '../../../components/BackpropSimulator.jsx';
 
 ### Intro
+
+> <i><strong>역전파(Backpropagation)</strong>는 연쇄 법칙(Chain Rule)을 활용해 신경망의 수많은 파라미터들에 대한 학습을 가능하게 함으로써 딥러닝의 시대를 열었다.</i>
 <br/>
 
-> <i><strong>역전파(Backpropagation)</strong>는 연쇄 법칙(Chain rule)을 활용해 신경망의 수많은 파라미터들에 대한 학습을 가능하게 함으로써 딥러닝의 시대를 열었다.</i>
-<br/>
+- 심층 신경망(Deep Neural Networks, DNN) 학습의 목표는 수많은 파라미터(가중치)를 갱신하여 예측값과 실제 정답 간의 오차를 최소화하는 것이다.
+- 파라미터의 업데이트 방향과 크기를 결정하기 위해서는 오차 함수(Loss Function)에 대한 각 개별 가중치의 기울기(Gradient), 의미적으로는 각 가중치의 기여도를 정확히 산출해야 한다.
+    - 각 기울기가 오차에 얼마나 기여했는지에 대한 민감도(Sensitivity)를 나타내는 값이 기울기(Gradient), 즉 편미분(Partial Derivative) 값이다.
+- 초기 신경망 연구에서는 가중치를 미세하게 변경하며 오차 변화를 측정하는 수치적 미분(Numerical Differentiation)을 시도했으나, 이는 파라미터 수에 비례하는 막대한 연산 비용을 요구하여 한계에 직면했다.
+- 이를 극복하기 위해 다층 합성함수의 미분 원리인 <strong>연쇄 법칙(Chain Rule)</strong>을 도입하여, 출력층에서 입력층 방향으로 오차 민감도를 역방향 전파하며 기울기를 산출하는 <strong>역전파(Backpropagation)</strong> 알고리즘이 제안되어 표준이 되었다.<br/>
+- 현재 대부분의 LLM들은 역전파 알고리즘을 기반으로 최적화와 학습이 이루어진다.<br/><br/>
 
-- 심층 신경망(Deep Neural Networks, DNN) 학습의 본질적 목표는 수많은 파라미터(가중치)를 갱신하여 예측값과 실제 정답 간의 오차를 최소화하는 것이다.<br/>
-- 파라미터의 업데이트 방향과 크기를 결정하기 위해서는 오차 함수(Loss Function)에 대한 각 개별 가중치의 기울기(Gradient)를 정확히 산출해야 한다.<br/>
-- 초기 신경망 연구에서는 가중치를 미세하게 변경하며 오차 변화를 측정하는 수치적 미분(Numerical Differentiation)을 시도했으나, 이는 파라미터 수에 비례하는 막대한 연산 비용을 요구하여 한계에 직면했다.<br/>
-- 이를 극복하기 위해 다층 합성함수의 미분 원리인 <strong>연쇄 법칙(Chain Rule)</strong>을 도입하여, 출력층에서 입력층 방향으로 오차 민감도를 역방향 전파하며 기울기를 산출하는 <strong>역전파(Backpropagation)</strong> 알고리즘이 정립되었다.<br/>
-- 오늘날 수조 개의 파라미터를 지닌 거대 언어 모델(LLM) 역시 이 역전파 알고리즘을 기반으로 최적화 및 학습이 이루어진다.<br/><br/>
-
-본 문서에서는 순전파(Forward Pass)와 손실 산출, 역전파를 통한 기울기 도출의 수학적 과정, 그리고 역전파 연쇄 법칙의 직관을 집중적으로 다룬다.
+본 문서에서는 순전파(Forward Pass)와 손실 계산, 역전파를 통한 기울기 계산, 그리고 시각화를 통해 역전파를 직관적으로 이해해보고자 한다.
 
 <br/>
 
 ### Forward Pass & Loss Function
-<br/><br/>
 
-> <i>신경망의 순전파는 입력 데이터가 다수의 은닉층을 차례로 통과하며 최종 예측값을 도출하는 일련의 합성함수 연산 과정이다.</i> <br/>
+> <i>순전파(Forward Pass)는 입력 데이터가 다수의 은닉층을 차례로 통과하며 최종 예측값을 도출하는 일련의 합성함수 연산 과정</i> <br/>
 <br/>
 
-순전파 단계에서 특정 층(Layer) $l$의 출력 $\mathbf{h}_l$은 이전 층의 출력 $\mathbf{h}_{l-1}$에 가중치 행렬 $W_l$을 곱하고 편향 $b_l$을 더하는 선형 변환 후, 비선형 활성화 함수 $f$를 통과하여 계산된다. 
+순전파 단계에서 특정 층(Layer) $l$의 출력 $\mathbf{h}_l$은 이전 층의 출력 $\mathbf{h}_{l-1}$에 가중치 행렬 $W_l$을 곱하고 편향 $b_l$을 더하는 선형 변환 후, 비선형 활성화 함수(예: <i>ReLU, Sigmoid, SwiGLU</i>) $f$를 통과하여 계산된다. 
 
 <br/>
 $$
@@ -38,7 +37,7 @@ $$
 $$
 <br/>
 
-입력 데이터 $\mathbf{x}$가 최종 출력층을 통과하여 도출된 예측값을 $\hat{\mathbf{y}}$라 할 때, 모델의 성능은 예측값과 실제 정답 $\mathbf{y}$ 간의 차이를 정량화하는 <strong>손실 함수(Loss Function, $L$)</strong>에 의해 평가된다. 회귀 문제에서는 주로 평균 제곱 오차(MSE), 분류 및 언어 모델에서는 교차 엔트로피(Cross-Entropy)가 활용된다.
+입력 데이터 $\mathbf{x}$가 최종 출력층을 통과하여 도출된 예측값을 $\hat{\mathbf{y}}$라 할 때, 모델의 성능은 예측값과 실제 정답 $\mathbf{y}$ 간의 차이를 정량화하는 <strong>손실 함수(Loss Function, $L$)</strong>에 의해 평가된다.
 
 <br/>
 $$
@@ -46,7 +45,7 @@ L = \text{Loss}(\hat{\mathbf{y}}, \mathbf{y})
 $$
 <br/>
 
-이 손실 $L$의 값을 최소화하는 최적의 $W$와 $b$를 찾는 것이 딥러닝 학습의 최종 목표다.
+이 손실 $L$의 값을 최소화하는 최적의 가중치 행렬 $W$를 찾는 것이 딥러닝 학습의 최종 목표가 된다.
 
 <br/>
 
@@ -76,14 +75,33 @@ $$
 W_l^{(new)} = W_l^{(old)} - \eta \frac{\partial L}{\partial W_l}
 $$
 <br/>
-e
-<br/>
+
 
 ### Backpropagation Simulator
 <br/>
 
-수식으로 전개된 역전파의 체인 룰과 가중치 업데이트 과정을 시각적으로 직관화하기 위해 아래 시뮬레이터를 활용할 수 있다. <br/>
-입력값($x$)과 목표 정답($y$)을 설정한 뒤 **Forward Pass**를 통해 손실(Loss)을 확인하고, **Backward Pass**를 통해 오차 신호가 뒤에서부터 연쇄 법칙으로 곱해지며 가중치를 변경하는 과정을 직접 관찰해 보자.
+아래 역전파 시뮬레이터에서 입력값($x$)과 목표 정답($y$)을 설정한 뒤 <strong>Forward Pass</strong>를 통해 손실(Loss)을 확인하고, <strong>Backward Pass</strong>를 통해 오차 신호가 뒤에서부터 연쇄 법칙으로 곱해지며 가중치를 변경하는 과정을 관찰할 수 있다.
+연쇄 법칙의 항 단위로 계산하기 위해서는, <strong>손실함수</strong> 및 <strong>활성화 함수</strong>의 형태 그리고 그 미분 함수 형태를 파악해야 한다.
+
+<br/>
+<strong>손실 함수(Loss Function)</strong>
+- 실제 LLM에서는 Multi-class Cross-Entropy Loss가 손실 함수로 주로 사용되지만, 본 시뮬레이터에서는 이해를 돕기 위해 단순한 Mean Squared Error(MSE) Loss를 사용한다.
+<br/>
+$$
+L(\hat{y}, y) = \frac{1}{2} (\hat{y} - y)^2 \quad \implies \quad \frac{\partial L}{\partial \hat{y}} = \hat{y} - y
+$$
+
+<br/>
+<strong>활성화 함수(Activation Function)</strong>
+
+- 각 퍼셉트론(perceptron)에서 모델이 복잡한 작업을 분류할 수 있도록 비선형성을 부여하기 위해 사용되는 함수이다.
+- 본 문서에서는 입력값을 0과 1 사이로 변환하는 간단한 형태의 시그모이드 (Sigmoid) 함수를 시뮬레이터 예시로 사용한다.
+<br/>
+
+$$
+f(z) = \sigma(z) = \frac{1}{1 + e^{-z}} \quad \implies \quad f'(z) = \sigma(z)(1 - \sigma(z))
+$$
+<br/>
 
 <div className="not-content my-8 w-full clear-both">
   <BackpropSimulator client:visible />
@@ -111,6 +129,7 @@ e
 ### References
 <br/>
 
-- **Learning representations by back-propagating errors** - Rumelhart et al. (1986) [(Link)](https://www.nature.com/articles/323533a0)
-- **Deep Learning** - LeCun, Bengio, & Hinton (2015) [(Link)](https://www.nature.com/articles/nature14539)
-- **Activation Functions in Deep Learning** - [Activation Functions](./activations.mdx)
+- <strong>Learning representations by back-propagating errors</strong> - Rumelhart et al. (1986) [(Link)](https://www.nature.com/articles/323533a0)
+- <strong>Deep Learning</strong> - LeCun, Bengio, & Hinton (2015) [(Link)](https://www.nature.com/articles/nature14539)
+- <strong>Activation Functions</strong> - [Activation Functions Guide](../draft/activations.mdx)
+- <strong>Cross-Entropy Loss in LLMs</strong> - [Cross-Entropy Guide](../draft/cross-entropy.mdx)
