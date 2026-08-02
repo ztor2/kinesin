@@ -101,6 +101,23 @@ $$
 $$
 h(z) = \sigma(z) = \frac{1}{1 + e^{-z}} \quad \implies \quad h'(z) = \sigma(z)(1 - \sigma(z))
 $$
+
+<br/>
+<strong>가중치 갱신 (Weight Update Rule)</strong>
+
+- 연쇄 법칙으로 각 파라미터에 대한 손실 함수의 기울기(Gradient, $\frac{\partial L}{\partial W}$)를 산출한 후, 경사하강법(Gradient Descent)을 통해 손실 $L$을 최소화하는 방향으로 가중치와 편향을 업데이트한다.
+<br/>
+$$
+W^{(new)} = W^{(old)} - \eta \cdot \frac{\partial L}{\partial W}
+$$
+$$
+b^{(new)} = b^{(old)} - \eta \cdot \frac{\partial L}{\partial b}
+$$
+<br/>
+
+- $\eta$ (Learning Rate, 학습률): 파라미터 조정의 보폭 크기를 결정하는 하이퍼파라미터.
+- 기울기의 음의 방향($-$): 손실 함수 $L$이 가장 가파르게 감소하는 경사의 반대 방향으로 파라미터를 이동.
+
 <br/>
 
 <div className="not-content my-8 w-full clear-both">
@@ -110,7 +127,6 @@ $$
 <br/>
 
 ### References
-<br/>
 
 - <strong>Learning representations by back-propagating errors</strong> - Rumelhart et al. (1986) [(Link)](https://www.nature.com/articles/323533a0)
 - <strong>Deep Learning</strong> - LeCun, Bengio, & Hinton (2015) [(Link)](https://www.nature.com/articles/nature14539)
