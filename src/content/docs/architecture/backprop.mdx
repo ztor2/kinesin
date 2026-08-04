@@ -1,0 +1,176 @@
+---
+title: "Backpropagation"
+description: "Explaining of Backpropagation in Deep Neural Networks"
+---
+
+import BackpropSimulator from '../../../components/BackpropSimulator.jsx';
+
+### Intro
+
+> <i><strong>역전파(Backpropagation)</strong>는 연쇄 법칙(Chain Rule)을 활용해 신경망의 수많은 파라미터들에 대한 학습을 가능하게 함으로써 딥러닝의 시대를 열었다.</i>
+<br/>
+
+- 심층 신경망(Deep Neural Networks, DNN) 학습의 목표는 수많은 파라미터(가중치)를 갱신하여 예측값과 실제 정답 간의 오차를 최소화하는 것이다.
+- 파라미터의 업데이트 방향과 크기를 결정하기 위해서는 오차 함수(Loss Function)에 대한 각 개별 가중치의 기울기(Gradient), 의미적으로는 각 가중치의 기여도를 정확히 산출해야 한다.
+    - 각 기울기가 오차에 얼마나 기여했는지에 대한 민감도(Sensitivity)를 나타내는 값이 기울기(Gradient), 즉 편미분(Partial Derivative) 값이다.
+- 초기 신경망 연구에서는 가중치를 미세하게 변경하며 오차 변화를 측정하는 수치적 미분(Numerical Differentiation)을 시도했으나, 이는 파라미터 수에 비례하는 막대한 연산 비용을 요구하여 한계에 직면했다.
+- 이를 극복하기 위해 다층 합성함수의 미분 원리인 <strong>연쇄 법칙(Chain Rule)</strong>을 도입하여, 출력층에서 입력층 방향으로 오차 민감도를 역방향 전파하며 기울기를 산출하는 <strong>역전파(Backpropagation)</strong> 알고리즘이 제안되어 표준이 되었다.<br/>
+- 현재 대부분의 LLM들은 역전파 알고리즘을 기반으로 최적화와 학습이 이루어진다.<br/><br/>
+
+본 문서에서는 순전파(Forward Pass)와 손실 계산, 역전파를 통한 기울기 계산, 그리고 시각화를 통해 역전파를 직관적으로 이해해보고자 한다.
+
+<br/>
+
+### Forward Pass & Loss Function
+
+> <i>순전파(Forward Pass)는 입력 데이터가 다수의 은닉층을 차례로 통과하며 최종 예측값을 도출하는 일련의 합성함수 연산 과정</i> <br/>
+<br/>
+
+순전파 단계에서 특정 층(Layer) $l$의 출력 $\mathbf{h}_l$은 이전 층의 출력 $\mathbf{h}_{l-1}$에 가중치 행렬 $W_l$을 곱하고 편향 $b_l$을 더하는 선형 변환 후, 비선형 활성화 함수(예: <i>ReLU, Sigmoid, SwiGLU</i>) $h()$를 통과하여 계산된다. 
+
+<br/>
+$$
+\mathbf{z}_l = W_l \mathbf{h}_{l-1} + b_l
+$$
+$$
+\mathbf{h}_l = h(\mathbf{z}_l)
+$$
+<br/>
+
+입력 데이터 $\mathbf{x}$가 최종 출력층을 통과하여 도출된 예측값을 $\hat{\mathbf{y}}$라 할 때, 모델의 성능은 예측값과 실제 정답 $\mathbf{y}$ 간의 차이를 정량화하는 <strong>손실 함수(Loss Function, $L$)</strong>에 의해 평가된다.
+
+<br/>
+$$
+L = \text{Loss}(\hat{\mathbf{y}}, \mathbf{y})
+$$
+<br/>
+
+이 손실 $L$의 값을 최소화하는 최적의 가중치 행렬 $W$를 찾는 것이 딥러닝 학습의 최종 목표가 된다.
+
+<br/>
+
+### Backward Pass & Chain Rule
+<br/>
+
+역전파는 총 오차 $L$에 대해 특정 가중치 $W_l$이 얼마나 기여했는지, 즉 오차 민감도를 나타내는 편미분 $\frac{\partial L}{\partial W_l}$을 구하는 과정이다. 
+심층 신경망은 여러 함수가 중첩된 구조이므로, 미분을 위해 <strong>연쇄 법칙(Chain Rule)</strong>이 적용된다. 
+
+<br/>
+$$
+\frac{\partial L}{\partial W_l} = \frac{\partial L}{\partial \mathbf{h}_l} \frac{\partial \mathbf{h}_l}{\partial \mathbf{z}_l} \frac{\partial \mathbf{z}_l}{\partial W_l}
+$$
+<br/>
+
+위 수식에서 각 항은 다음과 같은 의미를 지닌다.
+- $\frac{\partial L}{\partial \mathbf{h}_l}$ : 상위 층(출력층 방향)에서 현재 층으로 누적되어 전달된 <strong>전역 오차 신호(Global Error Signal)</strong>.
+- $\frac{\partial \mathbf{h}_l}{\partial \mathbf{z}_l}$ : 현재 층 활성화 함수의 국소적 변화율(Local Gradient, $h'(\mathbf{z}_l)$).
+- $\frac{\partial \mathbf{z}_l}{\partial W_l}$ : 순전파 시 입력되었던 이전 층의 데이터 $\mathbf{h}_{l-1}$. 즉, 과거 입력값의 크기가 가중치의 책임 정도(기울기)를 결정하는 요인으로 작용한다.
+
+역전파 알고리즘은 출력층에서부터 시작하여 이 연쇄 곱셈을 수행한다. 이미 계산된 상위 층의 오차 신호를 하위 층이 <strong>재사용</strong>하기 때문에, 순방향 연산을 반복할 필요 없이 단 한 번의 역방향 패스만으로 모든 파라미터의 기울기를 효율적으로 동시에 산출할 수 있다. 
+
+산출된 기울기는 학습률(Learning Rate, $\eta$)과 결합되어 가중치 갱신 공식에 적용된다.
+
+<br/>
+$$
+W_l^{(new)} = W_l^{(old)} - \eta \frac{\partial L}{\partial W_l}
+$$
+<br/>
+
+
+### Backpropagation Simulator
+<br/>
+
+아래 역전파 시뮬레이터에서 입력값($x$)과 목표 정답($y$)을 설정한 뒤 <strong>Forward Pass</strong>를 통해 손실(Loss)을 확인하고, <strong>Backward Pass</strong>를 통해 오차 신호가 뒤에서부터 연쇄 법칙으로 곱해지며 가중치를 변경하는 과정을 관찰할 수 있다.
+연쇄 법칙의 항 단위로 계산하기 위해서는, <strong>손실함수</strong> 및 <strong>활성화 함수</strong>의 형태 그리고 그 미분 함수 형태를 파악해야 한다.
+
+<br/>
+<strong>손실 함수(Loss Function)</strong>
+- 실제 LLM에서는 Multi-class Cross-Entropy Loss가 손실 함수로 주로 사용되지만, 본 시뮬레이터에서는 이해를 돕기 위해 단순한 Mean Squared Error(MSE) Loss를 사용한다.
+<br/>
+$$
+L(\hat{y}, y) = \frac{1}{2} (\hat{y} - y)^2 \quad \implies \quad \frac{\partial L}{\partial \hat{y}} = \hat{y} - y
+$$
+
+<br/>
+<strong>활성화 함수(Activation Function)</strong>
+
+- 각 퍼셉트론(perceptron)에서 모델이 복잡한 작업을 분류할 수 있도록 비선형성을 부여하기 위해 사용되는 함수이다.
+- 본 문서에서는 입력값을 0과 1 사이로 변환하는 간단한 형태의 시그모이드 (Sigmoid) 함수를 시뮬레이터 예시로 사용한다.
+<br/>
+
+$$
+\sigma(z) = \frac{1}{1 + e^{-z}} \quad \implies \quad \sigma'(z) = \sigma(z)(1 - \sigma(z))
+$$
+
+<br/>
+<strong>가중치 갱신 (Weight Update Rule)</strong>
+
+- 연쇄 법칙으로 각 파라미터에 대한 손실 함수의 기울기(Gradient, $\frac{\partial L}{\partial W}$)를 산출한 후, 경사하강법(Gradient Descent)을 통해 손실 $L$을 최소화하는 방향으로 가중치와 편향을 업데이트한다.
+- $\eta$ (Learning Rate, 학습률)은 파라미터 조정의 보폭 크기를 결정하는 하이퍼파라미터이다.
+
+<br/>
+$$
+W^{(new)} = W^{(old)} - \eta \cdot \frac{\partial L}{\partial W}
+$$
+$$
+b^{(new)} = b^{(old)} - \eta \cdot \frac{\partial L}{\partial b}
+$$
+<br/>
+
+<div className="not-content my-8 w-full clear-both">
+  <BackpropSimulator client:visible />
+</div>
+
+<br/>
+
+### Implementation
+
+PyTorch에서는 자동 미분 엔진(Autograd)을 제공하므로, 복잡한 연쇄 법칙 미분 연산이 `loss.backward()` 한 줄로 자동 수행된다.<br/>
+시뮬레이터에서 다룬 간단한 신경망 구조에서의 역전파를 코드로 구현하면 다음과 같다:
+
+<br/>
+
+```python
+import torch
+
+# 1. 입력 데이터 및 목표 정답 정의
+x = torch.tensor([[0.8]])
+y = torch.tensor([[1.0]])
+
+# 2. 파라미터 초기화 : 학습이 필요한 파트는 requires_grad=True 설정하여 기울기 추적
+W1 = torch.tensor([[0.6]], requires_grad=True)
+b1 = torch.tensor([[0.1]], requires_grad=True)
+W2 = torch.tensor([[1.1]], requires_grad=True)
+b2 = torch.tensor([[-0.2]], requires_grad=True)
+
+# 3. 순전파 (Forward Pass)
+z1 = torch.matmul(x, W1) + b1
+h1 = torch.sigmoid(z1)
+
+z2 = torch.matmul(h1, W2) + b2
+y_hat = torch.sigmoid(z2)
+
+# MSE 손실 함수 계산
+loss = 0.5 * torch.mean((y_hat - y) ** 2)
+
+# 4. 역전파 (Backward Pass) : 연쇄 법칙이 내부적으로 자동 적용
+loss.backward()
+
+# 5. 각 파라미터에 저장된 자동 미분 기울기 확인
+print(f"∂L/∂W1: {W1.grad.item():.4f}") 
+print(f"∂L/∂W2: {W2.grad.item():.4f}")
+
+# 6. 경사하강법 파라미터 갱신
+lr = 0.5
+with torch.no_grad():
+    W1 -= lr * W1.grad
+    b1 -= lr * b1.grad
+    W2 -= lr * W2.grad
+    b2 -= lr * b2.grad
+```
+<br/>
+
+### References
+
+- <strong>Learning representations by back-propagating errors</strong> - Rumelhart et al. (1986) [(Link)](https://www.nature.com/articles/323533a0)
+- <strong>Deep Learning</strong> - LeCun, Bengio, & Hinton (2015) [(Link)](https://www.nature.com/articles/nature14539)

@@ -24,8 +24,8 @@ export default defineConfig({
       },
       sidebar: [
           {
-              label: 'Study',
-              autogenerate: { directory: 'study' },
+              label: 'Architecture',
+              autogenerate: { directory: 'architecture' },
           },
           {
               label: 'Datasets',
@@ -34,6 +34,10 @@ export default defineConfig({
           {
               label: 'Benchmark',
               autogenerate: { directory: 'benchmark' },
+          },
+          {
+              label: 'Papers',
+              autogenerate: { directory: 'papers' },
           },
       ],
       }), react()],

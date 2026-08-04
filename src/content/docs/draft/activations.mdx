@@ -1,0 +1,171 @@
+---
+title: "Activation Functions"
+description: "Analysis of Non-linear Activation Functions in Deep Learning and LLMs"
+---
+
+### Intro
+<br/>
+
+- 심층 신경망(Deep Neural Networks)과 거대 언어 모델(LLM)이 단순한 선형 회귀를 넘어 다차원 공간의 복잡하고 패턴화된 데이터를 학습할 수 있는 근본적 이유는 <strong>비선형 활성화 함수(Non-linear Activation Function)</strong>의 도입 덕분이다.
+- 만약 활성화 함수 없이 선형 연산($W \cdot x + b$)만 수십, 수백 층 중첩된다면, 행렬 곱의 결합 법칙에 의해 단 하나의 선형 행렬로 축소되어 다층 신경망을 구축하는 의미가 사라진다.
+- 활성화 함수는 신경망에 비선형 표현력을 부여함과 동시에, **역전파(Backpropagation) 과정에서 오차 신호가 미분 연쇄 법칙(Chain Rule)을 통해 이전 층으로 전달되도록 돕는 미분 매개체(Local Gradient)** 역할을 수행한다.
+
+<br/>
+
+본 문서에서는 주요 활성화 함수의 수학적 정의, 미분 특성, 딥러닝 역사에 따른 발전 과정, 그리고 최신 LLM(Llama, Mistral 등)에서 표준으로 사용되는 SwiGLU / GELU까지 체계적으로 다룬다.
+
+<br/>
+
+---
+
+### Classical Activation Functions
+<br/>
+
+초기 딥러닝 및 분류 모델에서 폭넓게 사용된 대표적 미분 가능 활성화 함수이다.
+
+#### 1. Sigmoid (시그모이드)
+<br/>
+
+Sigmoid 함수는 모든 실수를 0과 1 사이의 확률값 형태로 압축(Squashing)한다.
+
+$$
+\sigma(z) = \frac{1}{1 + e^{-z}}
+$$
+
+- **미분식**:
+$$
+\sigma'(z) = \sigma(z)(1 - \sigma(z))
+$$
+
+- **특징 및 한계**:
+  - 미분이 매우 간단하여 초기 역전파 연산에 용이했다.
+  - 하지만 $|z|$ 값이 커지면 미분값 $\sigma'(z)$가 0으로 급격히 수렴하는 **기울기 소실(Vanishing Gradient)** 문제가 발생한다.
+  - 출력의 중심이 0이 아니어서(Non-zero centered) 가중치 업데이트 속도가 느려질 수 있다.
+
+<br/>
+
+#### 2. Tanh (Hyperbolic Tangent)
+<br/>
+
+Tanh 함수는 Sigmoid를 변형하여 출력을 -1과 1 사이로 변환한다.
+
+$$
+\tanh(z) = \frac{e^z - e^{-z}}{e^z + e^{-z}}
+$$
+
+- **미분식**:
+$$
+\tanh'(z) = 1 - \tanh^2(z)
+$$
+
+- **특징**:
+  - 출력이 0을 중심으로 형성(Zero-centered)되어 Sigmoid보다 수렴 속도가 빠르다.
+  - 여전히 양 극단에서 미분값이 0으로 수렴하므로 깊은 레이어에서는 기울기 소실 문제가 잔존한다.
+
+<br/>
+
+---
+
+### Modern Piecewise Linear Activations
+<br/>
+
+심층 신경망의 깊이가 수십 층 이상으로 깊어짐에 따라 기울기 소실 문제를 극복하기 위해 연산이 단순하고 극단 영역에서도 기울기가 유지되는 함수들이 도입되었다.
+
+#### 1. ReLU (Rectified Linear Unit)
+<br/>
+
+양수 영역에서는 입력값을 그대로 출력하고, 음수 영역에서는 0을 출력한다.
+
+$$
+\text{ReLU}(z) = \max(0, z)
+$$
+
+- **미분식**:
+$$
+\text{ReLU}'(z) = \begin{cases} 1 & \text{if } z > 0 \\ 0 & \text{if } z < 0 \end{cases}
+$$
+
+- **특징**:
+  - $z > 0$ 영역에서 기울기가 항상 1로 일정하여 **기울기 소실 문제를 획기적으로 해결**했다.
+  - 연산 속도가 극도로 빠르다.
+  - 음수 영역에서는 미분값이 0이 되어 파라미터가 더 이상 갱신되지 않는 **Dying ReLU** 현상이 존재한다.
+
+<br/>
+
+#### 2. Leaky ReLU
+<br/>
+
+ReLU의 Dying ReLU 현상을 보완하기 위해 음수 영역에 작은 기울기 $\alpha$(예: 0.01)를 부여한다.
+
+$$
+\text{LeakyReLU}(z) = \max(\alpha z, z)
+$$
+
+<br/>
+
+---
+
+### Activations in Modern LLMs (GELU & SwiGLU)
+<br/>
+
+최신 거대 언어 모델(LLM) 및 트랜스포머(Transformer) 아키텍처에서는 단순 선형 조각 함수를 넘어, 매끄러운 곡선(Smoothness)과 확률적 게이팅(Gating) 개념이 결합된 활성화 함수를 주로 채택한다.
+
+#### 1. GELU (Gaussian Error Linear Unit)
+<br/>
+
+GPT-3, BERT, ViT 등에서 기본 활성화 함수로 채택된 함수로, 입력값 $z$에 표준정규분포 누적분포함수 $\Phi(z)$를 곱해 결정론적 비선형성을 부여한다.
+
+$$
+\text{GELU}(z) = z \cdot \Phi(z) = z \cdot P(X \le z), \quad X \sim \mathcal{N}(0, 1)
+$$
+
+- **근사식**:
+$$
+\text{GELU}(z) \approx 0.5z \cdot \left(1 + \tanh\left(\sqrt{\frac{2}{\pi}} \left(z + 0.044715 z^3\right)\right)\right)
+$$
+
+- **특징**:
+  - 0 인근 영역에서 곡선이 매끄럽게 형성되어 미분 연속성이 보장된다.
+  - 입력을 확률적으로 통과시키는 효과를 가져 뛰어난 일반화 성능을 보인다.
+
+<br/>
+
+#### 2. SwiGLU (Swish Gated Linear Unit)
+<br/>
+
+Llama 1/2/3, Mistral, PaLM 등 최신 LLM의 Feed-Forward Network(FFN) 층에서 표준으로 자리잡은 게이팅 방식의 활성화 연산이다.
+
+$$
+\text{SwiGLU}(x, W, V, W_g) = \text{Swish}_{1}(x W_g) \otimes (x V) \cdot W
+$$
+*(단, $\text{Swish}_1(z) = z \cdot \sigma(z) = \text{SiLU}(z)$)*
+
+- **특징**:
+  - 단순 활성화 적용을 넘어, 하나의 가중치 경로($x W_g$)가 다른 경로($x V$)의 정보 흐름을 제어하는 **게이팅 메커니즘(Gating Mechanism)**을 구현한다.
+  - 모델의 표현력과 정보 보유량이 크게 향상되어 동일 파라미터 대비 뛰어난 벤치마크 성능을 제공한다.
+
+<br/>
+
+---
+
+### Comparison Summary
+<br/>
+
+| 활성화 함수 | 주요 수식 | 미분값 ($f'(z)$ 범위) | 주요 활용 및 특징 |
+| :--- | :--- | :--- | :--- |
+| **Sigmoid** | $\frac{1}{1 + e^{-z}}$ | $(0, 0.25]$ | 이진 분류 출력층, 초기 딥러닝 |
+| **Tanh** | $\frac{e^z - e^{-z}}{e^z + e^{-z}}$ | $(0, 1.0]$ | 순환 신경망(RNN/LSTM) |
+| **ReLU** | $\max(0, z)$ | $\{0, 1\}$ | CNN 및 일반 비전 모델 |
+| **GELU** | $z \cdot \Phi(z)$ | 연속적 Smooth | GPT-3, BERT, ViT |
+| **SwiGLU** | $\text{SiLU}(x W_g) \otimes (x V)$ | 게이팅 미분 연산 | Llama 2/3, Mistral 등 최신 LLM |
+
+<br/>
+
+---
+
+### References
+<br/>
+
+- **Gaussian Error Linear Units (GELUs)** - Hendrycks & Gimpel (2016) [(arXiv)](https://arxiv.org/abs/1606.08415)
+- **GLU Variants Improve Transformer** - Noam Shazeer (2020) [(arXiv)](https://arxiv.org/abs/2002.05202)
+- **Backpropagation Document** - [Backpropagation & Chain Rule](./backprop.mdx)

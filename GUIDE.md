@@ -108,3 +108,54 @@ import Tooltip from '../../../components/Tooltip.astro';
 - 마우스 hover와 키보드 focus에서 모두 표시됩니다.
 - CSS 기반 Astro 컴포넌트이므로 `client:*` 지시어가 필요하지 않습니다.
 - 한글 조사를 공백 없이 붙이려면 `</Tooltip>은`처럼 작성합니다.
+
+### 6. 마크다운 인용문(Blockquote) 및 리스트(Bulleted List) 전역 CSS 규칙
+
+MDX 내에서 인용구(`>`) 및 리스트(`-`) 스타일링 시 Tailwind CSS v4(`@import 'tailwindcss';`)의 Preflight 리셋에 의해 기본 불릿 포인트(`list-style: none`)가 사라지거나 Starlight 전역 CSS에 의해 덮어씌워질 수 있습니다.
+
+- `src/styles/custom.css`에 `@import 'tailwindcss';`를 작성한 뒤, 마크다운 본문 영역(`.sl-markdown-content ul`, `ol`, `li`)의 `list-style-type: disc !important` 및 padding 규칙이 복원되어 있습니다.
+- `custom.css` 내 전역 룰(`.sl-markdown-content blockquote:not(:where(.not-content *))`)에 인디고/파스텔톤 배경색, 좌측 굵은 강조선(`border-inline-start-color`), 패딩 및 다크모드 대응 스타일이 `!important`로 지정되어 있습니다.
+- 따라서 MDX 문서 작성 시 복잡한 HTML 클래스를 직접 적을 필요 없이, **표준 마크다운 인용문 `>` 및 불릿 리스트 `-` 문법**만 사용하면 자동으로 고품질 디자인과 점(bullet point) 표기가 보장됩니다.
+
+```mdx
+> <i><strong>역전파(Backpropagation)</strong>는 연쇄 법칙(Chain Rule)을 활용해 신경망 학습을 가능케 했다.</i>
+
+- 리스트 항목 1
+- 리스트 항목 2
+```
+
+### 7. React/MDX 대화형 시각화 컴포넌트 내 KaTeX 수학 수식 적용 및 유의사항
+
+React 대화형 시각화 컴포넌트(예: `BackpropSimulator.jsx`) 내부의 수식 텍스트나 분수 기호를 고품질 수학 폰트로 표기할 때 `katex` 라이브러리를 직접 활용합니다.
+
+- **헬퍼 컴포넌트 (`MathView`) 패턴**:
+  별도의 외부 React 래퍼 패키지 대신 KaTeX의 `renderToString()`과 `dangerouslySetInnerHTML`을 결합한 경량 헬퍼 컴포넌트를 정의하여 사용합니다.
+
+  ```jsx
+  import katex from 'katex';
+
+  const MathView = ({ math, style }) => {
+    const html = katex.renderToString(math, { throwOnError: false });
+    return (
+      <span 
+        style={{ display: 'inline-flex', alignItems: 'center', fontSize: '1.12em', ...style }} 
+        dangerouslySetInnerHTML={{ __html: html }} 
+      />
+    );
+  };
+  ```
+
+- **한글 텍스트 분리 유의사항 (CRITICAL)**:
+  `katex.renderToString("손실 함수 L = ...")`처럼 한글 설명 문자열을 통째로 math 모드에 입력하면 `Unicode text character "손" used in math mode` 경고/오류가 발생합니다.
+  한글 텍스트는 일반 React DOM(`<span>`)으로 작성하고, **수학 기호 조각만 `<MathView math="..." />`로 분리 주입**해야 경고 없이 깔끔하게 렌더링됩니다.
+
+  ```jsx
+  // 올바른 패턴 (한글 텍스트와 KaTeX 수식 분리)
+  <span>
+    손실 함수 <MathView math="L = \frac{1}{2}(\hat{y} - y)^2" />를 <MathView math="\hat{y}" />에 대해 미분합니다.
+  </span>
+  ```
+
+- **가독성 폰트 크기 지정**:
+  기본 KaTeX 수식 폰트 크기가 약간 작아 보일 수 있으므로 `fontSize: '1.12em'` ~ `15px` 정도의 인라인 스타일을 부여하여 시원한 가독성을 제공합니다.
+

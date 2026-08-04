@@ -1,4 +1,5 @@
 @import 'katex/dist/katex.min.css';
+@import 'tailwindcss';
 
 /* src/styles/custom.css */
 
@@ -12,55 +13,84 @@ body {
   font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+/* Tailwind Preflight에 의해 리셋된 Starlight Markdown 리스트(ul, ol, li) 불릿 포인트 복원 */
+.sl-markdown-content ul:not(:where(.not-content *)) {
+  list-style-type: disc !important;
+  padding-inline-start: 1.5rem !important;
+  margin-block: 0.75rem !important;
+}
+
+.sl-markdown-content ol:not(:where(.not-content *)) {
+  list-style-type: decimal !important;
+  padding-inline-start: 1.5rem !important;
+  margin-block: 0.75rem !important;
+}
+
+.sl-markdown-content li:not(:where(.not-content *)) {
+  margin-block: 0.25rem !important;
+}
+
+/* Starlight Markdown Blockquote 전역 커스텀 스타일 (배경색 & 좌측 굵은 강조선) */
+.sl-markdown-content blockquote:not(:where(.not-content *)) {
+  border-inline-start-width: 4px !important;
+  border-inline-start-color: #6366f1 !important; /* Indigo 500 */
+  background-color: rgba(238, 242, 255, 0.75) !important; /* Indigo-50 */
+  border-radius: 0 12px 12px 0 !important;
+  padding: 0.875rem 1.25rem !important;
+  margin-block: 1.25rem !important;
+  color: #1e293b !important;
+  font-style: normal !important;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04) !important;
+}
+
+:root[data-theme='dark'] .sl-markdown-content blockquote:not(:where(.not-content *)) {
+  border-inline-start-color: #818cf8 !important; /* Indigo 400 */
+  background-color: rgba(30, 27, 75, 0.6) !important; /* Indigo-950 */
+  color: #f1f5f9 !important;
+}
+
 /* 사이트 제목 타이틀 색상 및 폰트 변경 */
 .site-title {
   color: #000000 !important; /* 검은색 */
   font-weight: 700;
   font-family: ui-monospace, Menlo, Monaco, "Cascadia Mono", "Segoe UI Mono", "Roboto Mono", "Oxygen Mono", "Ubuntu Monospace", "Source Code Pro", "Fira Mono", "Droid Sans Mono", "Courier New", monospace !important;
-  letter-spacing: -0.03em; /* 기술적인 느낌을 위해 자간을 살짝 조절 */
+  letter-spacing: -0.03em;
 }
 
 :root[data-theme='dark'] .site-title {
   color: #f8fafc !important;
 }
 
-/* 검색창 UI 버그 수정 (헤더에서도 유효) */
-
-/* 1. 검색 입력창에서 텍스트와 'X' 버튼이 겹치는 현상 수정 */
+/* 검색창 UI 버그 수정 */
 .pagefind-ui__search-input {
-  padding-right: 2.5rem !important; /* 오른쪽에 충분한 여백 확보 */
+  padding-right: 2.5rem !important;
 }
 
-/* 2. 'X' (Clear) 버튼 위치 조정 */
 .pagefind-ui__search-clear {
   width: 1.5rem !important;
   height: 1.5rem !important;
   margin-right: 0.5rem !important;
 }
 
-/* 3. 모달 내 검색창 전체 너비 사용 */
 dialog[data-pagefind-ui] .pagefind-ui {
   width: 100% !important;
 }
 
-/* 하단 페이지 이동(Next/Previous) 버튼 크기 조절 */
+/* 하단 페이지 이동 버튼 */
 .pagination-links a {
-  padding: 0.5rem 1rem !important; /* 전체적인 버튼 패딩 축소 */
+  padding: 0.5rem 1rem !important;
   gap: 0.25rem !important;
 }
 
-/* 'Next', 'Previous' 작은 글자 크기 조절 */
 .pagination-links .link-kind {
   font-size: 0.75rem !important;
 }
 
-/* 실제 페이지 제목(큰 글자) 크기 조절 */
 .pagination-links .link-title {
-  font-size: 1rem !important; /* 기본보다 작게 설정 */
+  font-size: 1rem !important;
   font-weight: 600;
 }
 
-/* 화살표 아이콘 크기 조절 */
 .pagination-links svg {
   width: 1rem !important;
   height: 1rem !important;

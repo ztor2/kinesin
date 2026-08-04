@@ -6,24 +6,25 @@ description: "위치 인코딩(PE)과 RoPE의 수학적 원리, 상대 위치 �
 import { PESimulator } from '../../../components/PESimulator.jsx';
 
 ### Intro
+> <i> <strong>PE</strong>는 LLM의 창발성(Emergent Properties) 발현의 구조적 기반이며, <strong>RoPE</strong>는 초장기 컨텍스트 처리를 가능하게 하여 LLM 대중화를 가속화했다. </i> <br/>
 <br/>
 
-- LLM(Large Language Models) 발전의 주요 전환점 중 하나는 순서가 있는 언어 데이터를 처리하는 방식이 RNN(Recurrent Neural Network)의 순차 입력에서 트랜스포머의(Transformers)의 병렬 처리 방식으로 변화한 것이다.<br/>
-- 트랜스포머의 Self-attention은 각 단어에 위치 정보 벡터를 더하는 <strong>위치 인코딩(Positional Encoding, PE)</strong>을 사용하여 언어의 순서를 인식한다.
-<br/>
+- LLM(Large Language Models)을 학습하는 과정에 있어 그 중요도에 비해 조명받지 못하는 부분이 <strong>위치 인코딩(Positional Encoding, PE)</strong>이다. <br/>
+- LLM 발전의 주요 전환점 중 하나는 순서가 있는 언어 데이터를 처리하는 방식이 RNN(Recurrent Neural Network)의 순차 입력에서 트랜스포머의(Transformers)의 병렬 처리 방식으로 변화한 것이다.<br/>
+  - 트랜스포머의 Self-attention은 각 단어에 위치 정보 벡터를 더하는 <strong>위치 인코딩</strong>을 사용하여 언어의 순서를 인식한다.
 - 트랜스포머는 마침 스케일 법칙(Scaling law)이 잘 적용되는 모델이었고, LLM은 이에 따라 빠르게 발전이 진행되어 대중화되었다. <br/>
 - 하지만 LLM 대중화 이후 대화 누적, 문서 입력, 도구 사용 등으로 <strong>컨텍스트(context) 길이의 한계</strong>가 성능 향상의 병목이 되었다.
-- 기존 위치 인코딩은 장기 컨텍스트 처리 측면에서 약점이 발생했고, 장기 컨텍스트에서도 위치 정보를 안정적으로 유지할 수 있는 위치 인코딩이 필요하게 되었다. <br/>
+- 기존 위치 인코딩은 초장기 컨텍스트 처리 측면에서 약점이 발생했고, 장기 컨텍스트에서도 위치 정보를 안정적으로 유지할 수 있는 위치 인코딩이 필요하게 되었다. <br/>
 - 이 때 위치 정보를 기하학적으로 부여하는 <strong>회전 위치 임베딩(Rotary Position Embedding, RoPE)</strong>이 제안되어 사용되기 시작했다. <br/>
 - RoPE는 장기 컨텍스트에서도 토큰 간 상대적 위치 정보를 잘 보존하는 강점을 보였다.
 - 현재는 RoPE를 기반으로 학습되어 1M 토큰 이상의 입력을 처리할 수 있는 모델들도 널리 쓰이고 있다. <br/><br/>
 
-본 문서에서는 초기의 PE, 즉 Absolute PE와 이후 개선된 PE인 RoPE의 원리를 간단히 비교하며 살펴본다.
+
+본 문서에서는 초기의 PE와 이후 PE의 개선된 버전인 RoPE의 원리를 비교하며 간단히 살펴본다.
 
 <br/>
 
 ### Absolute Positional Encoding (PE)
-<br/><br/>
 
 > <i>트랜스포머에 사용된 초기의 Positional Encoding을 후속 PE 연구와의 구분을 위해 Sinusoidal Positional Encoding 또는 Absolute Positional Encoding이라 부른다.</i> <br/>
 <br/>
@@ -57,7 +58,7 @@ $$
 <br/>
 
 위치 벡터 $\mathbf{p}_m$을 임베딩에 더한 뒤, Attention 점수를 구하기 위해 Query($m$)와 Key($n$)를 내적하면 다음과 같이 4개 항으로 전개된다.
-이 값들이 모델의 예측 과정에서 토큰 순서 정보의 역할을 하게 된다. <br/>
+이 때 위치 벡터로 인해 생기는 항들이 모델의 예측 과정에서 토큰 순서 정보의 역할을 하게 된다. <br/>
 
 <br/>
 $$
@@ -69,7 +70,7 @@ $$
 - <strong>의미 공간 왜곡 문제</strong>: 단어 고유의 의미 벡터($\mathbf{x}$)와 위치 벡터($\mathbf{p}$)가 동일한 공간에서 덧셈으로 뒤섞이며, 의미 표현이 왜곡될 가능성이 있다.
 - <strong>상대적 거리 정보 보존 문제</strong>: 두 토큰 간의 거리가 멀어짐에 따라 어텐션 점수가 자연스럽게 감소하는 성질(Distance Decay)을 수학적으로 확실히 보장하지 못한다.
   - Absolute PE 또한 삼각함수의 덧셈 정리를 바탕으로 연산 과정에서 토큰 간의 상대적 위치 관계도 어느 정도 파악할 수 있도록 고안되어 있다. 
-  다만, LLM 대중화 이후의 초장기 컨텍스트에서는 상대 위치 정보를 충분히 보존하지 못하는 한계가 드러나게 되었다.
+  - 다만 LLM 대중화 이후의 초장기 수준 컨텍스트에서는 이 방식만으로 상대 위치 정보를 충분히 보존하지 못하는 한계가 관찰되었다.
 
 <br/>
 
