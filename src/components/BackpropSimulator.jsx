@@ -768,7 +768,7 @@ export const BackpropSimulator = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
             <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
               <span style={{ fontSize: '12px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '4px' }}>
-                수식 유도
+                수식 유도 원리
               </span>
               <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6' }}>
                 {activeTerm.mathReasonNode}
