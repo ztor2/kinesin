@@ -129,3 +129,8 @@ dialog[data-pagefind-ui] .pagefind-ui {
   .sl-markdown-content a:not(:where(.not-content *)):hover {
   color: #86efac;
 }
+
+/* 하단 푸터 내 중복 LastUpdated 날짜 숨김 (상단 PageTitle로 이동됨) */
+footer .meta.sl-flex {
+  display: none !important;
+}

@@ -23,7 +23,7 @@ import BackpropSimulator from '../../../components/BackpropSimulator.jsx';
 
 ### Forward Pass & Loss Function
 
-> <i>순전파(Forward Pass)는 입력 데이터가 다수의 은닉층을 차례로 통과하며 최종 예측값을 도출하는 일련의 합성함수 연산 과정</i> <br/>
+> <i>순전파(Forward Pass)는 입력 데이터가 다수의 은닉층을 차례로 통과하며 최종 예측값을 도출하는 일련의 합성함수 연산 과정을 말한다.</i> <br/>
 <br/>
 
 순전파 단계에서 특정 층(Layer) $l$의 출력 $\mathbf{h}_l$은 이전 층의 출력 $\mathbf{h}_{l-1}$에 가중치 행렬 $W_l$을 곱하고 편향 $b_l$을 더하는 선형 변환 후, 비선형 활성화 함수(예: <i>ReLU, Sigmoid, SwiGLU</i>) $h()$를 통과하여 계산된다. 

@@ -81,7 +81,11 @@ export const BackpropSimulator = () => {
           손실 함수 <MathView math="L = \frac{1}{2}(\hat{y} - y)^2" />를 <MathView math="\hat{y}" />에 대해 미분하면, 2차항 계수 <MathView math="\frac{1}{2}" />과 2가 상쇄되어 단순 오차 차이 <MathView math="(\hat{y} - y)" />만 남습니다.
         </span>
       ),
-      description: '최종 예측값(ŷ)과 목표 정답(y) 간의 오차 차이입니다. 역전파가 시작되는 맨 첫 번째 출발점 오차 신호입니다.',
+      descriptionNode: (
+        <span>
+          최종 예측값(<MathView math="\hat{y}" />)과 목표 정답(<MathView math="y" />) 간의 오차 차이. 역전파가 시작되는 맨 첫 번째 출발점 오차 신호.
+        </span>
+      ),
       highlight: 'loss',
       themeColor: '#e11d48',
       bgColor: '#fff1f2'
@@ -93,10 +97,14 @@ export const BackpropSimulator = () => {
       value: dyHat_dz2,
       mathReasonNode: (
         <span>
-          출력 활성화 식 <MathView math="\hat{y} = \sigma(z_2)" />를 미분하면 <MathView math="\sigma(z_2)(1 - \sigma(z_2))" />가 됩니다. 입력 <MathView math="z_2" /> 위치에서의 비선형 변화율(기울기)입니다.
+          출력 활성화 식 <MathView math="\hat{y} = \sigma(z_2)" />를 미분하면 <MathView math="\sigma(z_2)(1 - \sigma(z_2))" />가 됩니다. 입력 <MathView math="z_2" /> 위치에서의 비선형 변화율(기울기).
         </span>
       ),
-      description: '출력층 비선형 활성화 함수(Sigmoid)의 국소 변화율입니다. 오차 신호가 출력 노드를 통과할 때 곱해지는 감쇄/증폭율입니다.',
+      descriptionNode: (
+        <span>
+          출력층 비선형 활성화 함수(Sigmoid)의 국소 변화율. 오차 신호가 출력 노드를 통과할 때 곱해지는 감쇄/증폭율.
+        </span>
+      ),
       highlight: 'yHat',
       themeColor: '#0284c7',
       bgColor: '#f0f9ff'
@@ -111,7 +119,11 @@ export const BackpropSimulator = () => {
           선형 결합 식 <MathView math="z_2 = W_2 h_1 + b_2" />를 <MathView math="W_2" />에 대해 편미분하면, <MathView math="W_2" />에 곱해져 있던 계수인 은닉층 입력값 <MathView math="h_1" />만 그대로 남습니다 (<MathView math="\frac{\partial z_2}{\partial W_2} = h_1" />).
         </span>
       ),
-      description: '순전파 시 은닉층 h₁에서 들어온 활성화 값입니다. 과거 입력값이 클수록 가중치 W₂가 지는 오차 책임(기울기)이 커집니다.',
+      descriptionNode: (
+        <span>
+          순전파 시 은닉층 <MathView math="h_1" />에서 들어온 활성화 값. 과거 입력값이 클수록 가중치 <MathView math="W_2" />가 지는 오차 기여(기울기)가 증가.
+        </span>
+      ),
       highlight: 'w2',
       themeColor: '#d97706',
       bgColor: '#fffbeb'
@@ -126,7 +138,11 @@ export const BackpropSimulator = () => {
           선형 결합 식 <MathView math="z_2 = W_2 h_1 + b_2" />를 이전 층 출력 <MathView math="h_1" />에 대해 편미분하면 계수인 상위 가중치 <MathView math="W_2" />만 남게 됩니다 (<MathView math="\frac{\partial z_2}{\partial h_1} = W_2" />).
         </span>
       ),
-      description: '하위 층(h₁)으로 오차가 역전파될 때 곱해지는 상위 층 가중치 W₂입니다. 가중치 크기에 비례해 오차 신호가 전달됩니다.',
+      descriptionNode: (
+        <span>
+          하위 층(<MathView math="h_1" />)으로 오차가 역전파될 때 곱해지는 상위 층 가중치 <MathView math="W_2" />. 가중치 크기에 비례해 오차 신호가 전달됨.
+        </span>
+      ),
       highlight: 'w2',
       themeColor: '#d97706',
       bgColor: '#fffbeb'
@@ -138,10 +154,14 @@ export const BackpropSimulator = () => {
       value: dh1_dz1,
       mathReasonNode: (
         <span>
-          은닉층 활성화 식 <MathView math="h_1 = \sigma(z_1)" />를 <MathView math="z_1" />에 대해 미분한 <MathView math="\sigma(z_1)(1 - \sigma(z_1))" />입니다. 은닉층 노드에서의 국소 기울기입니다.
+          은닉층 활성화 식 <MathView math="h_1 = \sigma(z_1)" />를 <MathView math="z_1" />에 대해 미분한 <MathView math="\sigma(z_1)(1 - \sigma(z_1))" />. 은닉층 노드에서의 국소 기울기.
         </span>
       ),
-      description: '은닉층 1 활성화 함수(Sigmoid)의 국소 변화율입니다. 상위 오차 신호(δ₂)와 W₂가 곱해진 후 이 미분값이 다시 연쇄 곱셈됩니다.',
+      descriptionNode: (
+        <span>
+          은닉층 활성화 함수(Sigmoid)의 국소 변화율. 상위 오차 신호(<MathView math="\delta_2" />)와 <MathView math="W_2" />가 곱해진 후 이 미분값이 다시 연쇄 곱셈됨.
+        </span>
+      ),
       highlight: 'h1',
       themeColor: '#7c3aed',
       bgColor: '#f5f3ff'
@@ -156,7 +176,11 @@ export const BackpropSimulator = () => {
           선형 결합 식 <MathView math="z_1 = W_1 x + b_1" />을 가중치 <MathView math="W_1" />에 대해 편미분하면, <MathView math="W_1" />에 곱해져 있던 계수인 최초 입력값 <MathView math="x" />만 그대로 남게 됩니다 (<MathView math="\frac{\partial z_1}{\partial W_1} = x" />).
         </span>
       ),
-      description: '신경망의 최초 입력 데이터(x)입니다. 입력값 크기가 가중치 W₁의 최종 기울기(∇W₁) 크기를 결정짓는 주요 요인입니다.',
+      descriptionNode: (
+        <span>
+          신경망의 최초 입력 데이터(<MathView math="x" />). 입력값 크기가 가중치 <MathView math="W_1" />의 최종 기울기(<MathView math="\nabla W_1" />) 크기를 결정짓는 주요 요인.
+        </span>
+      ),
       highlight: 'w1',
       themeColor: '#0891b2',
       bgColor: '#ecfeff'
@@ -269,50 +293,60 @@ export const BackpropSimulator = () => {
           <div 
             style={{
               display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(120px, 1fr))',
-              gap: '12px',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+              gap: '14px',
               backgroundColor: '#f8fafc',
-              padding: '16px',
+              padding: '16px 18px',
               borderRadius: '12px',
               border: '1px solid #e2e8f0'
             }}
           >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', fontWeight: '700', color: '#334155' }}>
-                <span>입력 (x)</span>
-                <span style={{ fontFamily: 'monospace', color: '#0284c7', fontWeight: 'bold' }}>{x.toFixed(2)}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', fontWeight: '800', color: '#000000' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#000000' }}>
+                  입력 (<MathView math="x" style={{ fontSize: '14px', color: '#000000' }} />)
+                </span>
+                <span style={{ fontFamily: 'monospace', color: '#000000', fontWeight: '800', fontSize: '14px' }}>{x.toFixed(2)}</span>
               </div>
               <input type="range" min="0.1" max="1.0" step="0.05" value={x} onChange={(e) => { setX(Number(e.target.value)); setStep(1); }} style={{ width: '100%', cursor: 'pointer' }} />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', fontWeight: '700', color: '#334155' }}>
-                <span>정답 (y)</span>
-                <span style={{ fontFamily: 'monospace', color: '#e11d48', fontWeight: 'bold' }}>{target.toFixed(2)}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', fontWeight: '800', color: '#000000' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#000000' }}>
+                  정답 (<MathView math="y" style={{ fontSize: '14px', color: '#000000' }} />)
+                </span>
+                <span style={{ fontFamily: 'monospace', color: '#000000', fontWeight: '800', fontSize: '14px' }}>{target.toFixed(2)}</span>
               </div>
               <input type="range" min="0.1" max="1.0" step="0.05" value={target} onChange={(e) => { setTarget(Number(e.target.value)); setStep(1); }} style={{ width: '100%', cursor: 'pointer' }} />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', fontWeight: '700', color: '#334155' }}>
-                <span>편향 (b₁)</span>
-                <span style={{ fontFamily: 'monospace', color: '#7c3aed', fontWeight: 'bold' }}>{b1.toFixed(2)}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', fontWeight: '800', color: '#000000' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#000000' }}>
+                  편향 (<MathView math="b_1" style={{ fontSize: '14px', color: '#000000' }} />)
+                </span>
+                <span style={{ fontFamily: 'monospace', color: '#000000', fontWeight: '800', fontSize: '14px' }}>{b1.toFixed(2)}</span>
               </div>
               <input type="range" min="-1.0" max="1.0" step="0.05" value={b1} onChange={(e) => { setB1(Number(e.target.value)); setStep(1); }} style={{ width: '100%', cursor: 'pointer' }} />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', fontWeight: '700', color: '#334155' }}>
-                <span>편향 (b₂)</span>
-                <span style={{ fontFamily: 'monospace', color: '#d97706', fontWeight: 'bold' }}>{b2.toFixed(2)}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', fontWeight: '800', color: '#000000' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#000000' }}>
+                  편향 (<MathView math="b_2" style={{ fontSize: '14px', color: '#000000' }} />)
+                </span>
+                <span style={{ fontFamily: 'monospace', color: '#000000', fontWeight: '800', fontSize: '14px' }}>{b2.toFixed(2)}</span>
               </div>
               <input type="range" min="-1.0" max="1.0" step="0.05" value={b2} onChange={(e) => { setB2(Number(e.target.value)); setStep(1); }} style={{ width: '100%', cursor: 'pointer' }} />
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11.5px', fontWeight: '700', color: '#334155' }}>
-                <span>학습률 (η)</span>
-                <span style={{ fontFamily: 'monospace', color: '#059669', fontWeight: 'bold' }}>{lr.toFixed(1)}</span>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', fontWeight: '800', color: '#000000' }}>
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#000000' }}>
+                  학습률 (<MathView math="\eta" style={{ fontSize: '14px', color: '#000000' }} />)
+                </span>
+                <span style={{ fontFamily: 'monospace', color: '#000000', fontWeight: '800', fontSize: '14px' }}>{lr.toFixed(1)}</span>
               </div>
               <input type="range" min="0.1" max="1.5" step="0.1" value={lr} onChange={(e) => setLr(Number(e.target.value))} style={{ width: '100%', cursor: 'pointer' }} />
             </div>
@@ -388,11 +422,19 @@ export const BackpropSimulator = () => {
                   50% { filter: drop-shadow(0 0 14px rgba(16, 185, 129, 0.95)); }
                   100% { filter: drop-shadow(0 0 0px rgba(16, 185, 129, 0)); }
                 }
+                @keyframes cyanPulseGlow {
+                  0% { filter: drop-shadow(0 0 0px rgba(8, 145, 178, 0)); }
+                  50% { filter: drop-shadow(0 0 14px rgba(8, 145, 178, 0.95)); }
+                  100% { filter: drop-shadow(0 0 0px rgba(8, 145, 178, 0)); }
+                }
                 .active-pulsing-node {
                   animation: pulseGlow 1.2s ease-in-out infinite;
                 }
                 .step4-green-pulse {
                   animation: emeraldPulseGlow 1.2s ease-in-out infinite;
+                }
+                .active-cyan-pulse {
+                  animation: cyanPulseGlow 1.2s ease-in-out infinite;
                 }
               `}</style>
             </defs>
@@ -400,7 +442,7 @@ export const BackpropSimulator = () => {
             {/* W1 연결선 */}
             <line 
               x1="90" y1="120" x2="300" y2="120" 
-              stroke={step === 3 ? '#d97706' : step === 1 ? '#0284c7' : activeTerm.highlight === 'w1' ? '#7c3aed' : '#cbd5e1'} 
+              stroke={step === 3 ? '#d97706' : step === 1 ? '#0284c7' : activeTerm.highlight === 'w1' ? '#0891b2' : '#cbd5e1'} 
               strokeWidth={step === 1 || step === 3 || activeTerm.highlight === 'w1' ? '5' : '2.5'}
               strokeDasharray={step === 1 || step === 3 ? '8 6' : 'none'}
               style={{ animation: step === 1 ? 'forwardDashFlow 0.75s linear infinite' : step === 3 ? 'backwardDashFlow 0.75s linear infinite' : 'none' }}
@@ -409,14 +451,14 @@ export const BackpropSimulator = () => {
             />
 
             {/* 가중치 W1 KaTeX 뱃지 (Step 4 선택 시 에메랄드 녹색 반짝임) */}
-            <g transform="translate(195, 75)" className={step === 4 ? 'step4-green-pulse' : activeTerm.highlight === 'w1' ? 'active-pulsing-node' : ''}>
+            <g transform="translate(195, 75)" className={step === 4 ? 'step4-green-pulse' : activeTerm.highlight === 'w1' ? 'active-cyan-pulse' : ''}>
               <rect 
                 x="-55" y="-15" width="110" height="28" rx="6" 
-                fill={step === 4 ? '#d1fae5' : activeTerm.highlight === 'w1' ? '#f5f3ff' : '#ffffff'} 
+                fill={step === 4 ? '#d1fae5' : activeTerm.highlight === 'w1' ? '#ecfeff' : '#ffffff'} 
                 stroke="none"
               />
               <foreignObject x="-55" y="-15" width="110" height="28">
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'bold', color: step === 4 ? '#059669' : activeTerm.highlight === 'w1' ? '#6d28d9' : '#334155' }}>
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'bold', color: step === 4 ? '#059669' : activeTerm.highlight === 'w1' ? '#0891b2' : '#1e293b' }}>
                   <MathView math={`W_1 = ${w1.toFixed(2)}`} style={{ fontSize: '13px' }} />
                 </div>
               </foreignObject>
@@ -505,9 +547,9 @@ export const BackpropSimulator = () => {
                   <MathView math="h_1" style={{ fontSize: '20px' }} />
                 </div>
               </foreignObject>
-              <text textAnchor="middle" y="-54" fontSize="13" fontWeight="700" fill="#6d28d9">은닉층</text>
+              <text textAnchor="middle" y="-54" fontSize="13" fontWeight="700" fill="#0284c7">은닉층</text>
               <foreignObject x="-45" y="48" width="90" height="26">
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6d28d9', fontWeight: 'bold' }}>
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7', fontWeight: 'bold' }}>
                   <MathView math={step >= 1 ? h1.toFixed(3) : '?'} style={{ fontSize: '13.5px' }} />
                 </div>
               </foreignObject>
@@ -764,24 +806,24 @@ export const BackpropSimulator = () => {
             <MathView math={activeTerm.calcFormulaMath} style={{ fontSize: '13px' }} />
           </div>
 
-          {/* 수식 유도 & 개념 2열 세련된 카드 그리드 */}
+          {/* 개념 & 수식 유도 2열 세련된 카드 그리드 (위치 교체: 개념 1열, 수식유도 2열) */}
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
-            <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-              <span style={{ fontSize: '12px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '4px' }}>
-                수식 유도 원리
-              </span>
-              <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6' }}>
-                {activeTerm.mathReasonNode}
-              </div>
-            </div>
-
             <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
               <span style={{ fontSize: '12px', fontWeight: '800', color: activeTerm.themeColor, display: 'block', marginBottom: '4px' }}>
                 개념 : {activeTerm.name}
               </span>
-              <span style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6', display: 'block' }}>
-                {activeTerm.description}
+              <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6', display: 'block' }}>
+                {activeTerm.descriptionNode}
+              </div>
+            </div>
+
+            <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+              <span style={{ fontSize: '12px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '4px' }}>
+                수식 유도
               </span>
+              <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6' }}>
+                {activeTerm.mathReasonNode}
+              </div>
             </div>
           </div>
         </div>
