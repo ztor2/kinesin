@@ -78,7 +78,7 @@ export const BackpropSimulator = () => {
       value: dL_dyHat,
       mathReasonNode: (
         <span>
-          손실 함수 <MathView math="L = \frac{1}{2}(\hat{y} - y)^2" />를 <MathView math="\hat{y}" />에 대해 미분하면, 2차항 계수 <MathView math="\frac{1}{2}" />과 2가 상쇄되어 단순 오차 차이 <MathView math="(\hat{y} - y)" />만 남습니다.
+          손실 함수 <MathView math="L = \frac{1}{2}(\hat{y} - y)^2" />를 <MathView math="\hat{y}" />에 대해 미분하면, 2차항 계수 <MathView math="\frac{1}{2}" />과 2가 상쇄되어 단순 오차 차이 <MathView math="(\hat{y} - y)" />로 표현됨.
         </span>
       ),
       descriptionNode: (
@@ -97,7 +97,7 @@ export const BackpropSimulator = () => {
       value: dyHat_dz2,
       mathReasonNode: (
         <span>
-          출력 활성화 식 <MathView math="\hat{y} = \sigma(z_2)" />를 미분하면 <MathView math="\sigma(z_2)(1 - \sigma(z_2))" />가 됩니다. 입력 <MathView math="z_2" /> 위치에서의 비선형 변화율(기울기).
+          출력 활성화 식 <MathView math="\hat{y} = \sigma(z_2)" />를 미분하면 <MathView math="\sigma(z_2)(1 - \sigma(z_2))" />기 도출. 입력 <MathView math="z_2" /> 위치에서의 비선형 변화율(기울기).
         </span>
       ),
       descriptionNode: (
@@ -116,7 +116,7 @@ export const BackpropSimulator = () => {
       value: h1,
       mathReasonNode: (
         <span>
-          선형 결합 식 <MathView math="z_2 = W_2 h_1 + b_2" />를 <MathView math="W_2" />에 대해 편미분하면, <MathView math="W_2" />에 곱해져 있던 계수인 은닉층 입력값 <MathView math="h_1" />만 그대로 남습니다 (<MathView math="\frac{\partial z_2}{\partial W_2} = h_1" />).
+          선형 결합 식 <MathView math="z_2 = W_2 h_1 + b_2" />를 <MathView math="W_2" />에 대해 편미분하면, <MathView math="W_2" />에 곱해져 있던 계수인 은닉층 입력값 <MathView math="h_1" />이 남는다. (<MathView math="\frac{\partial z_2}{\partial W_2} = h_1" />).
         </span>
       ),
       descriptionNode: (
@@ -135,7 +135,7 @@ export const BackpropSimulator = () => {
       value: w2,
       mathReasonNode: (
         <span>
-          선형 결합 식 <MathView math="z_2 = W_2 h_1 + b_2" />를 이전 층 출력 <MathView math="h_1" />에 대해 편미분하면 계수인 상위 가중치 <MathView math="W_2" />만 남게 됩니다 (<MathView math="\frac{\partial z_2}{\partial h_1} = W_2" />).
+          선형 결합 식 <MathView math="z_2 = W_2 h_1 + b_2" />를 이전 층 출력 <MathView math="h_1" />에 대해 편미분하면 계수인 상위 가중치 <MathView math="W_2" />가 남는다. (<MathView math="\frac{\partial z_2}{\partial h_1} = W_2" />).
         </span>
       ),
       descriptionNode: (
@@ -173,7 +173,7 @@ export const BackpropSimulator = () => {
       value: x,
       mathReasonNode: (
         <span>
-          선형 결합 식 <MathView math="z_1 = W_1 x + b_1" />을 가중치 <MathView math="W_1" />에 대해 편미분하면, <MathView math="W_1" />에 곱해져 있던 계수인 최초 입력값 <MathView math="x" />만 그대로 남게 됩니다 (<MathView math="\frac{\partial z_1}{\partial W_1} = x" />).
+          선형 결합 식 <MathView math="z_1 = W_1 x + b_1" />을 가중치 <MathView math="W_1" />에 대해 편미분하면, <MathView math="W_1" />에 곱해져 있던 계수인 최초 입력값 <MathView math="x" />만 남는다. (<MathView math="\frac{\partial z_1}{\partial W_1} = x" />).
         </span>
       ),
       descriptionNode: (
