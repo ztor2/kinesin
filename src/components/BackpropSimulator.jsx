@@ -758,8 +758,8 @@ export const BackpropSimulator = () => {
 
         {/* 3. 선택된 미분 항 통합 상세 내역 (수식 유도 & 개념 2열 통합 카드) */}
         <div style={{ padding: '16px', backgroundColor: activeTerm.bgColor, borderRadius: '14px', border: `1.5px solid ${activeTerm.themeColor}40`, display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.2s ease' }}>
-          {/* 하이라이트 요약 헤더 */}
-          <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e1b4b', backgroundColor: '#ffffff', padding: '10px 16px', borderRadius: '10px', border: `1px solid ${activeTerm.themeColor}30`, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+          {/* 하이라이트 요약 헤더 (중앙 정렬) */}
+          <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e1b4b', backgroundColor: '#ffffff', padding: '10px 16px', borderRadius: '10px', border: `1px solid ${activeTerm.themeColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '6px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
             <MathView math={`\\left( ${activeTerm.symbol} \\right) = `} style={{ fontSize: '13px' }} />
             <MathView math={activeTerm.calcFormulaMath} style={{ fontSize: '13px' }} />
           </div>
@@ -768,7 +768,7 @@ export const BackpropSimulator = () => {
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
             <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
               <span style={{ fontSize: '12px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '4px' }}>
-                수식 유도 원리
+                수식 유도
               </span>
               <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6' }}>
                 {activeTerm.mathReasonNode}

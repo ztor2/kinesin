@@ -53,7 +53,7 @@ $$
 <br/>
 
 역전파는 총 오차 $L$에 대해 특정 가중치 $W_l$이 얼마나 기여했는지, 즉 오차 민감도를 나타내는 편미분 $\frac{\partial L}{\partial W_l}$을 구하는 과정이다. 
-심층 신경망은 여러 함수가 중첩된 구조이므로, 해석적 미분을 위해 수학의 <strong>연쇄 법칙(Chain Rule)</strong>이 필연적으로 적용된다. 
+심층 신경망은 여러 함수가 중첩된 구조이므로, 미분을 위해 <strong>연쇄 법칙(Chain Rule)</strong>이 적용된다. 
 
 <br/>
 $$
@@ -61,7 +61,7 @@ $$
 $$
 <br/>
 
-위 수식에서 각 항은 다음과 같은 물리적 의미를 지닌다.
+위 수식에서 각 항은 다음과 같은 의미를 지닌다.
 - $\frac{\partial L}{\partial \mathbf{h}_l}$ : 상위 층(출력층 방향)에서 현재 층으로 누적되어 전달된 <strong>전역 오차 신호(Global Error Signal)</strong>.
 - $\frac{\partial \mathbf{h}_l}{\partial \mathbf{z}_l}$ : 현재 층 활성화 함수의 국소적 변화율(Local Gradient, $h'(\mathbf{z}_l)$).
 - $\frac{\partial \mathbf{z}_l}{\partial W_l}$ : 순전파 시 입력되었던 이전 층의 데이터 $\mathbf{h}_{l-1}$. 즉, 과거 입력값의 크기가 가중치의 책임 정도(기울기)를 결정하는 요인으로 작용한다.
@@ -106,6 +106,8 @@ $$
 <strong>가중치 갱신 (Weight Update Rule)</strong>
 
 - 연쇄 법칙으로 각 파라미터에 대한 손실 함수의 기울기(Gradient, $\frac{\partial L}{\partial W}$)를 산출한 후, 경사하강법(Gradient Descent)을 통해 손실 $L$을 최소화하는 방향으로 가중치와 편향을 업데이트한다.
+- $\eta$ (Learning Rate, 학습률)은 파라미터 조정의 보폭 크기를 결정하는 하이퍼파라미터이다.
+
 <br/>
 $$
 W^{(new)} = W^{(old)} - \eta \cdot \frac{\partial L}{\partial W}
@@ -113,11 +115,6 @@ $$
 $$
 b^{(new)} = b^{(old)} - \eta \cdot \frac{\partial L}{\partial b}
 $$
-<br/>
-
-- $\eta$ (Learning Rate, 학습률): 파라미터 조정의 보폭 크기를 결정하는 하이퍼파라미터.
-- 기울기의 음의 방향($-$): 손실 함수 $L$이 가장 가파르게 감소하는 경사의 반대 방향으로 파라미터를 이동.
-
 <br/>
 
 <div className="not-content my-8 w-full clear-both">
