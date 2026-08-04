@@ -485,9 +485,11 @@ export const BackpropSimulator = () => {
                 </div>
               </foreignObject>
               <text textAnchor="middle" y="-54" fontSize="13" fontWeight="700" fill="#64748b">입력층</text>
-              <text textAnchor="middle" y="65" fontSize="14" fontFamily="monospace" fontWeight="700" fill="#0284c7">
-                {x.toFixed(2)}
-              </text>
+              <foreignObject x="-45" y="48" width="90" height="26">
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7', fontWeight: 'bold' }}>
+                  <MathView math={x.toFixed(2)} style={{ fontSize: '13.5px' }} />
+                </div>
+              </foreignObject>
             </g>
 
             {/* 노드 2: h1 (Violet & Indigo 테마) */}
@@ -504,13 +506,15 @@ export const BackpropSimulator = () => {
                 </div>
               </foreignObject>
               <text textAnchor="middle" y="-54" fontSize="13" fontWeight="700" fill="#6d28d9">은닉층</text>
-              <text textAnchor="middle" y="65" fontSize="14" fontFamily="monospace" fontWeight="700" fill="#6d28d9">
-                {step >= 1 ? h1.toFixed(3) : '?'}
-              </text>
+              <foreignObject x="-45" y="48" width="90" height="26">
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#6d28d9', fontWeight: 'bold' }}>
+                  <MathView math={step >= 1 ? h1.toFixed(3) : '?'} style={{ fontSize: '13.5px' }} />
+                </div>
+              </foreignObject>
             </g>
 
-            {/* 노드 3: yHat (Sky & Blue 테마) */}
-            <g transform="translate(510, 120)" className={activeTermKey === 'dyHat_dz2' ? 'active-pulsing-node' : ''}>
+            {/* 노드 3: yHat (Sky & Blue 테마, 글로우 애니메이션 삭제) */}
+            <g transform="translate(510, 120)">
               <circle 
                 r="44" 
                 fill={step === 1 ? '#e0f2fe' : activeTermKey === 'dyHat_dz2' ? '#e0f2fe' : '#ffffff'} 
@@ -523,9 +527,11 @@ export const BackpropSimulator = () => {
                 </div>
               </foreignObject>
               <text textAnchor="middle" y="-54" fontSize="13" fontWeight="700" fill="#0284c7">출력층</text>
-              <text textAnchor="middle" y="65" fontSize="14" fontFamily="monospace" fontWeight="700" fill="#0284c7">
-                {step >= 1 ? yHat.toFixed(3) : '?'}
-              </text>
+              <foreignObject x="-45" y="48" width="90" height="26">
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7', fontWeight: 'bold' }}>
+                  <MathView math={step >= 1 ? yHat.toFixed(3) : '?'} style={{ fontSize: '13.5px' }} />
+                </div>
+              </foreignObject>
             </g>
 
             {/* 노드 4: Loss (Rose & Crimson 테마) */}
@@ -542,9 +548,11 @@ export const BackpropSimulator = () => {
                   <MathView math={`y = ${target.toFixed(2)}`} style={{ fontSize: '13px' }} />
                 </div>
               </foreignObject>
-              <text textAnchor="middle" y="60" fontSize="14" fontFamily="monospace" fontWeight="bold" fill="#e11d48">
-                {step >= 2 ? loss.toFixed(4) : '?'}
-              </text>
+              <foreignObject x="-45" y="44" width="90" height="26">
+                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#e11d48', fontWeight: 'bold' }}>
+                  <MathView math={step >= 2 ? loss.toFixed(4) : '?'} style={{ fontSize: '13.5px' }} />
+                </div>
+              </foreignObject>
             </g>
           </svg>
         </div>
@@ -587,13 +595,13 @@ export const BackpropSimulator = () => {
             </span>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
               <div style={{ backgroundColor: '#ffffff', padding: '12px 16px', borderRadius: '10px', border: '1px solid #fecdd3', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '12px', fontWeight: '800', color: '#e11d48', display: 'block', marginBottom: '4px' }}>손실 함수 (Loss)</span>
-                <MathView math={`L = \\frac{1}{2}(\\hat{y} - y)^2 = \\frac{1}{2}(${yHat.toFixed(4)} - ${target.toFixed(2)})^2 = \\mathbf{${loss.toFixed(4)}}`} />
+                <span style={{ fontSize: '12px', fontWeight: '800', color: '#e11d48', display: 'block', marginBottom: '4px' }}>손실 함수 </span>
+                <MathView math={`L = \\frac{1}{2}(\\hat{y} - y)^2 = \\frac{1}{2}(${yHat.toFixed(4)} - ${target.toFixed(2)})^2 = \\mathbf{${loss.toFixed(4)}}`} style={{ color: '#991b1b', fontWeight: '700' }} />
               </div>
 
               <div style={{ backgroundColor: '#ffffff', padding: '12px 16px', borderRadius: '10px', border: '1px solid #fecdd3', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
                 <span style={{ fontSize: '12px', fontWeight: '800', color: '#e11d48', display: 'block', marginBottom: '4px' }}>출력 오차 민감도</span>
-                <MathView math={`\\frac{\\partial L}{\\partial \\hat{y}} = \\hat{y} - y = ${yHat.toFixed(4)} - ${target.toFixed(2)} = \\mathbf{${dL_dyHat.toFixed(4)}}`} />
+                <MathView math={`\\frac{\\partial L}{\\partial \\hat{y}} = \\hat{y} - y = ${yHat.toFixed(4)} - ${target.toFixed(2)} = \\mathbf{${dL_dyHat.toFixed(4)}}`} style={{ color: '#991b1b', fontWeight: '700' }} />
               </div>
             </div>
           </div>
@@ -608,17 +616,17 @@ export const BackpropSimulator = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
               <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #fde68a', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
                 <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#d97706', display: 'block', marginBottom: '3px' }}>1. 출력층 기울기 (δ₂)</span>
-                <MathView math={`\\delta_2 = (\\hat{y}-y)\\sigma'(z_2) = \\mathbf{${delta2.toFixed(4)}}`} style={{ fontSize: '12.5px' }} />
+                <MathView math={`\\delta_2 = (\\hat{y}-y)\\sigma'(z_2) = \\mathbf{${delta2.toFixed(4)}}`} style={{ fontSize: '12.5px', color: '#92400e', fontWeight: '700' }} />
               </div>
 
               <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #fde68a', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#d97706', display: 'block', marginBottom: '3px' }}>2. W₂ 기울기 (<MathView math="\frac{\partial L}{\partial W_2}" style={{ fontSize: '11px' }} />)</span>
-                <MathView math={`\\frac{\\partial L}{\\partial W_2} = \\delta_2 \\cdot h_1 = \\mathbf{${dL_dw2.toFixed(4)}}`} style={{ fontSize: '12.5px' }} />
+                <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#d97706', display: 'block', marginBottom: '3px' }}>2. W₂ 기울기 (<MathView math="\frac{\partial L}{\partial W_2}" style={{ fontSize: '11px', color: '#d97706' }} />)</span>
+                <MathView math={`\\frac{\\partial L}{\\partial W_2} = \\delta_2 \\cdot h_1 = \\mathbf{${dL_dw2.toFixed(4)}}`} style={{ fontSize: '12.5px', color: '#92400e', fontWeight: '700' }} />
               </div>
 
               <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #fde68a', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#d97706', display: 'block', marginBottom: '3px' }}>3. W₁ 기울기 (<MathView math="\frac{\partial L}{\partial W_1}" style={{ fontSize: '11px' }} />)</span>
-                <MathView math={`\\frac{\\partial L}{\\partial W_1} = (\\delta_2 W_2)\\sigma'(z_1)x = \\mathbf{${dL_dw1.toFixed(4)}}`} style={{ fontSize: '12.5px' }} />
+                <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#d97706', display: 'block', marginBottom: '3px' }}>3. W₁ 기울기 (<MathView math="\frac{\partial L}{\partial W_1}" style={{ fontSize: '11px', color: '#d97706' }} />)</span>
+                <MathView math={`\\frac{\\partial L}{\\partial W_1} = (\\delta_2 W_2)\\sigma'(z_1)x = \\mathbf{${dL_dw1.toFixed(4)}}`} style={{ fontSize: '12.5px', color: '#92400e', fontWeight: '700' }} />
               </div>
             </div>
           </div>
@@ -638,11 +646,13 @@ export const BackpropSimulator = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
               <div style={{ padding: '12px 10px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1px solid #a7f3d0', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>W₁</span>
-                <span style={{ fontSize: '10.5px', color: '#64748b', fontFamily: 'monospace', display: 'block', marginBottom: '6px' }}>
-                  {w1.toFixed(3)} - {lr.toFixed(1)}×({dL_dw1.toFixed(4)})
+                <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>
+                  <MathView math="W_1" style={{ fontSize: '13px', color: '#059669' }} />
                 </span>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '12.5px', fontWeight: '700' }}>
+                <div style={{ display: 'block', marginBottom: '6px' }}>
+                  <MathView math={`${w1.toFixed(3)} - ${lr.toFixed(1)} \\times (${dL_dw1.toFixed(4)})`} style={{ fontSize: '11px', color: '#334155' }} />
+                </div>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '14px', fontWeight: '700' }}>
                   <span style={{ color: '#ef4444' }}>{w1.toFixed(3)}</span>
                   <ArrowRightIcon />
                   <span style={{ color: '#059669', fontWeight: '800' }}>{w1_next.toFixed(3)}</span>
@@ -650,10 +660,12 @@ export const BackpropSimulator = () => {
               </div>
 
               <div style={{ padding: '12px 10px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1px solid #a7f3d0', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>b₁</span>
-                <span style={{ fontSize: '10.5px', color: '#64748b', fontFamily: 'monospace', display: 'block', marginBottom: '6px' }}>
-                  {b1.toFixed(3)} - {lr.toFixed(1)}×({dL_db1.toFixed(4)})
+                <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>
+                  <MathView math="b_1" style={{ fontSize: '13px', color: '#059669' }} />
                 </span>
+                <div style={{ display: 'block', marginBottom: '6px' }}>
+                  <MathView math={`${b1.toFixed(3)} - ${lr.toFixed(1)} \\times (${dL_db1.toFixed(4)})`} style={{ fontSize: '11px', color: '#334155' }} />
+                </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '12.5px', fontWeight: '700' }}>
                   <span style={{ color: '#ef4444' }}>{b1.toFixed(3)}</span>
                   <ArrowRightIcon />
@@ -662,10 +674,12 @@ export const BackpropSimulator = () => {
               </div>
 
               <div style={{ padding: '12px 10px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1px solid #a7f3d0', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>W₂</span>
-                <span style={{ fontSize: '10.5px', color: '#64748b', fontFamily: 'monospace', display: 'block', marginBottom: '6px' }}>
-                  {w2.toFixed(3)} - {lr.toFixed(1)}×({dL_dw2.toFixed(4)})
+                <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>
+                  <MathView math="W_2" style={{ fontSize: '13px', color: '#059669' }} />
                 </span>
+                <div style={{ display: 'block', marginBottom: '6px' }}>
+                  <MathView math={`${w2.toFixed(3)} - ${lr.toFixed(1)} \\times (${dL_dw2.toFixed(4)})`} style={{ fontSize: '11px', color: '#334155' }} />
+                </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '12.5px', fontWeight: '700' }}>
                   <span style={{ color: '#ef4444' }}>{w2.toFixed(3)}</span>
                   <ArrowRightIcon />
@@ -674,10 +688,12 @@ export const BackpropSimulator = () => {
               </div>
 
               <div style={{ padding: '12px 10px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1px solid #a7f3d0', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>b₂</span>
-                <span style={{ fontSize: '10.5px', color: '#64748b', fontFamily: 'monospace', display: 'block', marginBottom: '6px' }}>
-                  {b2.toFixed(3)} - {lr.toFixed(1)}×({dL_db2.toFixed(4)})
+                <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>
+                  <MathView math="b_2" style={{ fontSize: '13px', color: '#059669' }} />
                 </span>
+                <div style={{ display: 'block', marginBottom: '6px' }}>
+                  <MathView math={`${b2.toFixed(3)} - ${lr.toFixed(1)} \\times (${dL_db2.toFixed(4)})`} style={{ fontSize: '11px', color: '#334155' }} />
+                </div>
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '12.5px', fontWeight: '700' }}>
                   <span style={{ color: '#ef4444' }}>{b2.toFixed(3)}</span>
                   <ArrowRightIcon />
@@ -699,8 +715,7 @@ export const BackpropSimulator = () => {
 
         {/* 1. 수치 곱셈 연산식 바 */}
         <div style={{ fontSize: '13px', color: '#1e1b4b', overflowX: 'auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: '#f1f5f9', padding: '12px 18px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <MathView math={`\\frac{\\partial L}{\\partial W_1} = (${dL_dyHat.toFixed(4)}) \\times (${dyHat_dz2.toFixed(4)}) \\times (${w2.toFixed(2)}) \\times (${dh1_dz1.toFixed(4)}) \\times (${x.toFixed(2)}) = `} style={{ fontSize: '13px' }} />
-          <span style={{ color: '#4338ca', fontWeight: '800', fontSize: '15px', fontFamily: 'monospace' }}>{dL_dw1.toFixed(4)}</span>
+          <MathView math={`\\frac{\\partial L}{\\partial W_1} = (${dL_dyHat.toFixed(4)}) \\times (${dyHat_dz2.toFixed(4)}) \\times (${w2.toFixed(2)}) \\times (${dh1_dz1.toFixed(4)}) \\times (${x.toFixed(2)}) = ${dL_dw1.toFixed(4)}`} style={{ fontSize: '13px' }} />
         </div>
 
         {/* 2. 역할별 입체 테마 미분 항 버튼 목록 */}
@@ -745,7 +760,6 @@ export const BackpropSimulator = () => {
         <div style={{ padding: '16px', backgroundColor: activeTerm.bgColor, borderRadius: '14px', border: `1.5px solid ${activeTerm.themeColor}40`, display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.2s ease' }}>
           {/* 하이라이트 요약 헤더 */}
           <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e1b4b', backgroundColor: '#ffffff', padding: '10px 16px', borderRadius: '10px', border: `1px solid ${activeTerm.themeColor}30`, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-            <span style={{ fontWeight: '800', color: activeTerm.themeColor }}>{activeTerm.name}</span>
             <MathView math={`\\left( ${activeTerm.symbol} \\right) = `} style={{ fontSize: '13px' }} />
             <MathView math={activeTerm.calcFormulaMath} style={{ fontSize: '13px' }} />
           </div>
@@ -763,7 +777,7 @@ export const BackpropSimulator = () => {
 
             <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
               <span style={{ fontSize: '12px', fontWeight: '800', color: activeTerm.themeColor, display: 'block', marginBottom: '4px' }}>
-                개념 및 연쇄 해석
+                개념 : {activeTerm.name}
               </span>
               <span style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6', display: 'block' }}>
                 {activeTerm.description}
