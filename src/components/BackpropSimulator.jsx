@@ -450,28 +450,38 @@ export const BackpropSimulator = () => {
               markerStart={step === 3 ? 'url(#arrow-orange)' : undefined}
             />
 
-            {/* 가중치 W1 KaTeX 뱃지 (Step 4 선택 시 에메랄드 녹색 반짝임) */}
+            {/* 가중치 W1 뱃지 (SVG 텍스트 통합) */}
             <g transform="translate(195, 75)" className={step === 4 ? 'step4-green-pulse' : activeTerm.highlight === 'w1' ? 'active-cyan-pulse' : ''}>
               <rect 
                 x="-55" y="-15" width="110" height="28" rx="6" 
                 fill={step === 4 ? '#d1fae5' : activeTerm.highlight === 'w1' ? '#ecfeff' : '#ffffff'} 
                 stroke="none"
               />
-              <foreignObject x="-55" y="-15" width="110" height="28">
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'bold', color: step === 4 ? '#059669' : activeTerm.highlight === 'w1' ? '#0891b2' : '#1e293b' }}>
-                  <MathView math={`W_1 = ${w1.toFixed(2)}`} style={{ fontSize: '13px' }} />
-                </div>
-              </foreignObject>
+              <text 
+                textAnchor="middle" 
+                y="4" 
+                fontSize="12.5" 
+                fontWeight="800" 
+                fontFamily="Georgia, serif" 
+                fill={step === 4 ? '#059669' : activeTerm.highlight === 'w1' ? '#0891b2' : '#1e293b'}
+              >
+                W₁ = {w1.toFixed(2)}
+              </text>
             </g>
 
-            {/* z1 선형 신호 KaTeX 뱃지 */}
+            {/* z1 선형 신호 뱃지 (SVG 텍스트 통합) */}
             <g transform="translate(195, 165)">
-              <rect x="-58" y="-14" width="116" height="28" rx="6" fill={step === 1 ? '#e0f2fe' : '#f1f5f9'} stroke="none" />
-              <foreignObject x="-58" y="-14" width="116" height="28">
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'bold', color: step === 1 ? '#0369a1' : '#64748b' }}>
-                  <MathView math={`z_1 = ${z1.toFixed(3)}`} style={{ fontSize: '13px' }} />
-                </div>
-              </foreignObject>
+              <rect x="-58" y="-14" width="116" height="28" rx="6" fill={step === 1 ? '#e0f2fe' : step === 3 ? '#fffbeb' : '#e2e8f0'} stroke="none" />
+              <text 
+                textAnchor="middle" 
+                y="5" 
+                fontSize="12.5" 
+                fontWeight="800" 
+                fontFamily="Georgia, serif" 
+                fill={step === 1 ? '#0369a1' : step === 3 ? '#b45309' : '#334155'}
+              >
+                z₁ = {z1.toFixed(3)}
+              </text>
             </g>
 
             {/* W2 연결선 */}
@@ -485,28 +495,38 @@ export const BackpropSimulator = () => {
               markerStart={step === 3 ? 'url(#arrow-orange)' : undefined}
             />
 
-            {/* 가중치 W2 KaTeX 뱃지 (Step 4 선택 시 에메랄드 녹색 반짝임) */}
+            {/* 가중치 W2 뱃지 (SVG 텍스트 통합) */}
             <g transform="translate(405, 75)" className={step === 4 ? 'step4-green-pulse' : activeTerm.highlight === 'w2' ? 'active-pulsing-node' : ''}>
               <rect 
                 x="-55" y="-15" width="110" height="28" rx="6" 
-                fill={step === 4 ? '#d1fae5' : activeTerm.highlight === 'w2' ? '#fef3c7' : '#ffffff'} 
-                stroke="none"
+                fill={step === 4 ? '#d1fae5' : step === 3 ? '#fef3c7' : activeTerm.highlight === 'w2' ? '#fef3c7' : '#ffffff'} 
+                stroke={step === 3 ? '#fde68a' : 'none'}
               />
-              <foreignObject x="-55" y="-15" width="110" height="28">
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'bold', color: step === 4 ? '#059669' : activeTerm.highlight === 'w2' ? '#b45309' : '#334155' }}>
-                  <MathView math={`W_2 = ${w2.toFixed(2)}`} style={{ fontSize: '13px' }} />
-                </div>
-              </foreignObject>
+              <text 
+                textAnchor="middle" 
+                y="4" 
+                fontSize="12.5" 
+                fontWeight="800" 
+                fontFamily="Georgia, serif" 
+                fill={step === 4 ? '#059669' : step === 3 ? '#b45309' : activeTerm.highlight === 'w2' ? '#b45309' : '#1e293b'}
+              >
+                W₂ = {w2.toFixed(2)}
+              </text>
             </g>
 
-            {/* z2 선형 신호 KaTeX 뱃지 */}
+            {/* z2 선형 신호 뱃지 (SVG 텍스트 통합) */}
             <g transform="translate(405, 165)">
-              <rect x="-58" y="-14" width="116" height="28" rx="6" fill={step === 1 ? '#e0f2fe' : '#f1f5f9'} stroke="none" />
-              <foreignObject x="-58" y="-14" width="116" height="28">
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'bold', color: step === 1 ? '#0369a1' : '#64748b' }}>
-                  <MathView math={`z_2 = ${z2.toFixed(3)}`} style={{ fontSize: '13px' }} />
-                </div>
-              </foreignObject>
+              <rect x="-58" y="-14" width="116" height="28" rx="6" fill={step === 1 ? '#e0f2fe' : step === 3 ? '#fffbeb' : '#e2e8f0'} stroke="none" />
+              <text 
+                textAnchor="middle" 
+                y="5" 
+                fontSize="12.5" 
+                fontWeight="800" 
+                fontFamily="Georgia, serif" 
+                fill={step === 1 ? '#0369a1' : step === 3 ? '#b45309' : '#334155'}
+              >
+                z₂ = {z2.toFixed(3)}
+              </text>
             </g>
 
             {/* Loss 수평선 (Step 2 선택 시 장미색 흐름 애니메이션 적용) */}
@@ -521,17 +541,28 @@ export const BackpropSimulator = () => {
             {/* 노드 1: x (Cyan & Slate 테마) */}
             <g transform="translate(90, 120)">
               <circle r="44" fill="#ffffff" stroke="#0284c7" strokeWidth="3.5" />
-              <foreignObject x="-44" y="-44" width="88" height="88">
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0369a1', fontWeight: 'bold' }}>
-                  <MathView math="x" style={{ fontSize: '20px' }} />
-                </div>
-              </foreignObject>
+              <text 
+                textAnchor="middle" 
+                y="8" 
+                fontSize="22" 
+                fontWeight="bold" 
+                fontStyle="italic" 
+                fontFamily="Georgia, 'Times New Roman', serif" 
+                fill="#0369a1"
+              >
+                x
+              </text>
               <text textAnchor="middle" y="-54" fontSize="13" fontWeight="700" fill="#64748b">입력층</text>
-              <foreignObject x="-45" y="48" width="90" height="26">
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7', fontWeight: 'bold' }}>
-                  <MathView math={x.toFixed(2)} style={{ fontSize: '13.5px' }} />
-                </div>
-              </foreignObject>
+              <text 
+                textAnchor="middle" 
+                y="65" 
+                fontSize="14" 
+                fontWeight="800" 
+                fontFamily="monospace" 
+                fill="#0284c7"
+              >
+                {x.toFixed(2)}
+              </text>
             </g>
 
             {/* 노드 2: h1 (Violet & Indigo 테마) */}
@@ -542,17 +573,28 @@ export const BackpropSimulator = () => {
                 stroke={step === 1 ? '#0284c7' : activeTerm.highlight === 'h1' ? '#7c3aed' : step === 3 ? '#d97706' : '#cbd5e1'} 
                 strokeWidth={step === 1 || activeTerm.highlight === 'h1' ? '5' : '3'} 
               />
-              <foreignObject x="-44" y="-44" width="88" height="88">
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1f2937', fontWeight: 'bold' }}>
-                  <MathView math="h_1" style={{ fontSize: '20px' }} />
-                </div>
-              </foreignObject>
+              <text 
+                textAnchor="middle" 
+                y="7" 
+                fontSize="21" 
+                fontWeight="bold" 
+                fontStyle="italic" 
+                fontFamily="Georgia, 'Times New Roman', serif" 
+                fill="#1f2937"
+              >
+                h₁
+              </text>
               <text textAnchor="middle" y="-54" fontSize="13" fontWeight="700" fill="#0284c7">은닉층</text>
-              <foreignObject x="-45" y="48" width="90" height="26">
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7', fontWeight: 'bold' }}>
-                  <MathView math={step >= 1 ? h1.toFixed(3) : '?'} style={{ fontSize: '13.5px' }} />
-                </div>
-              </foreignObject>
+              <text 
+                textAnchor="middle" 
+                y="65" 
+                fontSize="14" 
+                fontWeight="800" 
+                fontFamily="monospace" 
+                fill="#0284c7"
+              >
+                {step >= 1 ? h1.toFixed(3) : '?'}
+              </text>
             </g>
 
             {/* 노드 3: yHat (Sky & Blue 테마, 글로우 애니메이션 삭제) */}
@@ -563,17 +605,28 @@ export const BackpropSimulator = () => {
                 stroke={step === 1 ? '#0284c7' : activeTermKey === 'dyHat_dz2' ? '#0284c7' : step === 3 ? '#d97706' : '#cbd5e1'} 
                 strokeWidth={step === 1 || activeTermKey === 'dyHat_dz2' ? '5' : '3'} 
               />
-              <foreignObject x="-44" y="-44" width="88" height="88">
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#1f2937', fontWeight: 'bold' }}>
-                  <MathView math="\hat{y}" style={{ fontSize: '20px' }} />
-                </div>
-              </foreignObject>
+              <text 
+                textAnchor="middle" 
+                y="6" 
+                fontSize="21" 
+                fontWeight="bold" 
+                fontStyle="italic" 
+                fontFamily="Georgia, 'Times New Roman', serif" 
+                fill="#1f2937"
+              >
+                ŷ
+              </text>
               <text textAnchor="middle" y="-54" fontSize="13" fontWeight="700" fill="#0284c7">출력층</text>
-              <foreignObject x="-45" y="48" width="90" height="26">
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#0284c7', fontWeight: 'bold' }}>
-                  <MathView math={step >= 1 ? yHat.toFixed(3) : '?'} style={{ fontSize: '13.5px' }} />
-                </div>
-              </foreignObject>
+              <text 
+                textAnchor="middle" 
+                y="65" 
+                fontSize="14" 
+                fontWeight="800" 
+                fontFamily="monospace" 
+                fill="#0284c7"
+              >
+                {step >= 1 ? yHat.toFixed(3) : '?'}
+              </text>
             </g>
 
             {/* 노드 4: Loss (Rose & Crimson 테마) */}
@@ -585,16 +638,26 @@ export const BackpropSimulator = () => {
                 strokeWidth={step === 2 ? '4.5' : '3'} 
               />
               <text textAnchor="middle" y="5" fontSize="15" fontWeight="800" fill="#be123c">Loss</text>
-              <foreignObject x="-40" y="-58" width="80" height="24">
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '13px', fontWeight: 'bold', color: '#be123c' }}>
-                  <MathView math={`y = ${target.toFixed(2)}`} style={{ fontSize: '13px' }} />
-                </div>
-              </foreignObject>
-              <foreignObject x="-45" y="44" width="90" height="26">
-                <div style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#e11d48', fontWeight: 'bold' }}>
-                  <MathView math={step >= 2 ? loss.toFixed(4) : '?'} style={{ fontSize: '13.5px' }} />
-                </div>
-              </foreignObject>
+              <text 
+                textAnchor="middle" 
+                y="-42" 
+                fontSize="12.5" 
+                fontWeight="800" 
+                fontFamily="Georgia, serif" 
+                fill="#be123c"
+              >
+                y = {target.toFixed(2)}
+              </text>
+              <text 
+                textAnchor="middle" 
+                y="65" 
+                fontSize="14" 
+                fontWeight="800" 
+                fontFamily="monospace" 
+                fill="#e11d48"
+              >
+                {step >= 2 ? loss.toFixed(4) : '?'}
+              </text>
             </g>
           </svg>
         </div>
