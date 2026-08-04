@@ -25,6 +25,17 @@ import darkLogoSrc from '../assets/kinesin-dark.png';
 	</div>
 </div>
 
+{/* 기본 테마를 auto로 설정 및 시스템 스키마 추종 보장 */}
+<script is:inline>
+	(function() {
+		const storageKey = 'starlight-theme';
+		const currentTheme = localStorage.getItem(storageKey);
+		if (!currentTheme || currentTheme === '') {
+			localStorage.setItem(storageKey, 'auto');
+		}
+	})();
+</script>
+
 <style>
 	.header {
 		display: flex;

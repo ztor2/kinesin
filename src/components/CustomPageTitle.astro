@@ -1,0 +1,33 @@
+---
+import type { Props } from '@astrojs/starlight/props';
+import Default from '@astrojs/starlight/components/PageTitle.astro';
+import LastUpdated from '@astrojs/starlight/components/LastUpdated.astro';
+---
+
+<div class="custom-page-title-wrapper">
+	<Default {...Astro.props} />
+	<div class="page-title-meta">
+		<LastUpdated {...Astro.props} />
+	</div>
+</div>
+
+<style>
+	.custom-page-title-wrapper {
+		display: flex;
+		flex-direction: column;
+		gap: 0.25rem;
+		margin-bottom: 1.5rem;
+	}
+	.page-title-meta {
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+		display: flex;
+		align-items: center;
+		gap: 0.5rem;
+	}
+	.page-title-meta :global(p) {
+		margin: 0;
+		font-size: var(--sl-text-xs);
+		color: var(--sl-color-gray-3);
+	}
+</style>
