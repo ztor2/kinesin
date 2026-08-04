@@ -583,7 +583,7 @@ export const BackpropSimulator = () => {
         {step === 2 && (
           <div style={{ backgroundColor: '#fff1f2', padding: '18px', borderRadius: '14px', border: '1.5px solid #fecdd3', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 12px -2px rgba(225,29,72,0.08)' }}>
             <span style={{ fontSize: '14px', fontWeight: '800', color: '#be123c' }}>
-              2. 오차 산출 (Loss)
+              2. 오차 산출
             </span>
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
               <div style={{ backgroundColor: '#ffffff', padding: '12px 16px', borderRadius: '10px', border: '1px solid #fecdd3', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
@@ -629,7 +629,7 @@ export const BackpropSimulator = () => {
           <div style={{ backgroundColor: '#ecfdf5', padding: '18px', borderRadius: '14px', border: '1.5px solid #a7f3d0', display: 'flex', flexDirection: 'column', gap: '14px', boxShadow: '0 4px 12px -2px rgba(5,150,105,0.08)' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
               <span style={{ fontSize: '14px', fontWeight: '800', color: '#047857' }}>
-                4. 가중치 갱신 (Weight Update)
+                4. 가중치 갱신
               </span>
               <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: '700', color: '#059669', backgroundColor: '#ffffff', padding: '4px 10px', borderRadius: '8px', border: '1px solid #a7f3d0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
                 갱신 공식: <MathView math="W^{(new)} = W^{(old)} - \eta \cdot \frac{\partial L}{\partial W}" />
@@ -689,86 +689,86 @@ export const BackpropSimulator = () => {
         )}
       </div>
 
-      {/* 5. W₁ 연쇄 법칙 상세 과정 (역할별 테마 미분 버튼 적용) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', backgroundColor: '#f8fafc', padding: '20px', borderRadius: '16px', border: '1px solid #cbd5e1' }}>
+      {/* 5. W₁ 연쇄 법칙 상세 과정 (단일 통합 체인 룰 탐색기 카드) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#ffffff', padding: '22px', borderRadius: '18px', border: '1px solid #cbd5e1', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.05)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
           <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#1e1b4b' }}>
             연쇄 법칙을 사용한 <MathView math="W_1" style={{ fontSize: '13.5px' }} /> 기울기 계산 과정
           </span>
         </div>
 
-        {/* 수치 연산식과 미분 항 클릭 버튼 통합 카드 */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', backgroundColor: '#ffffff', padding: '18px', borderRadius: '14px', border: '1px solid #cbd5e1', alignItems: 'center', boxShadow: '0 2px 8px rgba(0,0,0,0.02)' }}>
-          {/* 실제 수치 곱셈식 */}
-          <div style={{ fontSize: '13px', color: '#1e1b4b', overflowX: 'auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: '#f1f5f9', padding: '10px 16px', borderRadius: '10px', border: '1px solid #e2e8f0' }}>
-            <MathView math={`\\frac{\\partial L}{\\partial W_1} = (${dL_dyHat.toFixed(4)}) \\times (${dyHat_dz2.toFixed(4)}) \\times (${w2.toFixed(2)}) \\times (${dh1_dz1.toFixed(4)}) \\times (${x.toFixed(2)}) = `} style={{ fontSize: '13px' }} />
-            <span style={{ color: '#4338ca', fontWeight: '800', fontSize: '14.5px', fontFamily: 'monospace' }}>{dL_dw1.toFixed(4)}</span>
-          </div>
-
-          {/* 역할별 입체 테마 색상이 부여된 미분 항 버튼 목록 */}
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap', width: '100%' }}>
-            {[
-              { key: 'dL_dyHat' },
-              { key: 'dyHat_dz2' },
-              { key: 'dz2_dh1' },
-              { key: 'dh1_dz1' },
-              { key: 'dz1_dw1' }
-            ].map((item, idx) => {
-              const info = chainRuleTerms[item.key];
-              const isSelected = activeTermKey === item.key;
-              return (
-                <React.Fragment key={item.key}>
-                  {idx > 0 && <span style={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '15px' }}>×</span>}
-                  <button
-                    onClick={() => setActiveTermKey(item.key)}
-                    style={{
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      padding: '9px 18px',
-                      borderRadius: '10px',
-                      border: isSelected ? `2px solid ${info.themeColor}` : '1px solid #cbd5e1',
-                      backgroundColor: isSelected ? info.bgColor : '#ffffff',
-                      color: isSelected ? info.themeColor : '#334155',
-                      fontWeight: '800',
-                      cursor: 'pointer',
-                      boxShadow: isSelected ? `0 4px 12px ${info.themeColor}33` : '0 1px 3px rgba(0,0,0,0.04)',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    <MathView math={info.symbol} style={{ fontSize: '15.5px' }} />
-                  </button>
-                </React.Fragment>
-              );
-            })}
-          </div>
+        {/* 1. 수치 곱셈 연산식 바 */}
+        <div style={{ fontSize: '13px', color: '#1e1b4b', overflowX: 'auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: '#f1f5f9', padding: '12px 18px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+          <MathView math={`\\frac{\\partial L}{\\partial W_1} = (${dL_dyHat.toFixed(4)}) \\times (${dyHat_dz2.toFixed(4)}) \\times (${w2.toFixed(2)}) \\times (${dh1_dz1.toFixed(4)}) \\times (${x.toFixed(2)}) = `} style={{ fontSize: '13px' }} />
+          <span style={{ color: '#4338ca', fontWeight: '800', fontSize: '15px', fontFamily: 'monospace' }}>{dL_dw1.toFixed(4)}</span>
         </div>
 
-        {/* 선택된 항 상세 설명 카드xs*/}
-        <div style={{ padding: '16px', backgroundColor: '#ffffff', borderRadius: '14px', border: `1.5px solid ${activeTerm.themeColor}40`, display: 'flex', flexDirection: 'column', gap: '10px', boxShadow: '0 4px 12px -2px rgba(0,0,0,0.03)' }}>
-          <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e1b4b', backgroundColor: activeTerm.bgColor, padding: '10px 14px', borderRadius: '8px', border: `1px solid ${activeTerm.themeColor}30`, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
+        {/* 2. 역할별 입체 테마 미분 항 버튼 목록 */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap', width: '100%' }}>
+          {[
+            { key: 'dL_dyHat' },
+            { key: 'dyHat_dz2' },
+            { key: 'dz2_dh1' },
+            { key: 'dh1_dz1' },
+            { key: 'dz1_dw1' }
+          ].map((item, idx) => {
+            const info = chainRuleTerms[item.key];
+            const isSelected = activeTermKey === item.key;
+            return (
+              <React.Fragment key={item.key}>
+                {idx > 0 && <span style={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '15px' }}>×</span>}
+                <button
+                  onClick={() => setActiveTermKey(item.key)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '9px 18px',
+                    borderRadius: '10px',
+                    border: isSelected ? `2px solid ${info.themeColor}` : '1px solid #cbd5e1',
+                    backgroundColor: isSelected ? info.bgColor : '#ffffff',
+                    color: isSelected ? info.themeColor : '#334155',
+                    fontWeight: '800',
+                    cursor: 'pointer',
+                    boxShadow: isSelected ? `0 4px 12px ${info.themeColor}33` : '0 1px 3px rgba(0,0,0,0.04)',
+                    transition: 'all 0.2s ease'
+                  }}
+                >
+                  <MathView math={info.symbol} style={{ fontSize: '15.5px' }} />
+                </button>
+              </React.Fragment>
+            );
+          })}
+        </div>
+
+        {/* 3. 선택된 미분 항 통합 상세 내역 (수식 유도 & 개념 2열 통합 카드) */}
+        <div style={{ padding: '16px', backgroundColor: activeTerm.bgColor, borderRadius: '14px', border: `1.5px solid ${activeTerm.themeColor}40`, display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.2s ease' }}>
+          {/* 하이라이트 요약 헤더 */}
+          <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e1b4b', backgroundColor: '#ffffff', padding: '10px 16px', borderRadius: '10px', border: `1px solid ${activeTerm.themeColor}30`, display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '6px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
             <span style={{ fontWeight: '800', color: activeTerm.themeColor }}>{activeTerm.name}</span>
             <MathView math={`\\left( ${activeTerm.symbol} \\right) = `} style={{ fontSize: '13px' }} />
             <MathView math={activeTerm.calcFormulaMath} style={{ fontSize: '13px' }} />
-
           </div>
 
-          <div style={{ padding: '12px 14px', backgroundColor: '#ecfdf5', borderRadius: '8px', border: '1px solid #a7f3d0' }}>
-            <span style={{ fontSize: '12px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>
-              수식 유도
-            </span>
-            <div style={{ fontSize: '12.5px', color: '#047857', lineHeight: '1.6' }}>
-              {activeTerm.mathReasonNode}
+          {/* 수식 유도 & 개념 2열 세련된 카드 그리드 */}
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+            <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+              <span style={{ fontSize: '12px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '4px' }}>
+                수식 유도 원리
+              </span>
+              <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6' }}>
+                {activeTerm.mathReasonNode}
+              </div>
             </div>
-          </div>
 
-          <div style={{ padding: '12px 14px', backgroundColor: activeTerm.bgColor, borderRadius: '8px', border: `1px solid ${activeTerm.themeColor}30` }}>
-            <span style={{ fontSize: '12px', fontWeight: '800', color: activeTerm.themeColor, display: 'block', marginBottom: '3px' }}>
-              개념
-            </span>
-            <span style={{ fontSize: '12.5px', color: '#1e293b', lineHeight: '1.6', display: 'block' }}>
-              {activeTerm.description}
-            </span>
+            <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+              <span style={{ fontSize: '12px', fontWeight: '800', color: activeTerm.themeColor, display: 'block', marginBottom: '4px' }}>
+                개념 및 연쇄 해석
+              </span>
+              <span style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6', display: 'block' }}>
+                {activeTerm.description}
+              </span>
+            </div>
           </div>
         </div>
       </div>
