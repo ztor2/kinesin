@@ -1,8 +1,8 @@
 ---
-// SectionSlider.astro - Card-Internal Integrated Frame Layout
+// SectionSlider.astro - Card-Internal Integrated Frame & Fullscreen Zen Mode Layout (Zero-Pixel Perfect Baseline Alignment)
 ---
 
-<div class="section-slider-root" style="width: 100%; position: relative; margin: 0;">
+<div class="section-slider-root" id="section-slider-root" style="width: 100%; position: relative; margin: 0;">
   <!-- 폰트 및 테마 스타일 -->
   <style>
     .gmarket-font {
@@ -25,23 +25,48 @@
       touch-action: pan-y;
     }
 
-    /* 카드 외부 독립 우측 상단 모드 전환 행 */
+    /* 카드 외부 독립 우측 상단 모드 전환 & 전체화면 조작 그룹 (1:1 완전 수평 정렬) */
     .section-slider-top-bar {
       display: flex;
       justify-content: flex-end;
       align-items: center;
+      gap: 18px;
       margin-bottom: 0.625rem;
       width: 100%;
+      height: 22px;
     }
 
-    .view-mode-toggle-wrapper {
+    /* 동일 수평 높이(22px) 및 동일 베이스라인 래퍼 */
+    .top-bar-action-item {
       display: inline-flex;
       align-items: center;
       gap: 6px;
+      height: 22px;
       font-size: 12px;
       font-weight: 700;
+      line-height: 1;
       color: var(--sl-color-text, #475569);
       user-select: none;
+    }
+
+    /* 전체화면 텍스트 클릭 버튼 (span 기반으로 button 태그 기본 마진/패딩 차단) */
+    .fullscreen-action-btn {
+      cursor: pointer;
+      transition: color 0.15s ease;
+    }
+
+    .fullscreen-action-btn:hover {
+      color: #6366f1;
+    }
+
+    .fullscreen-action-btn svg {
+      width: 13px;
+      height: 13px;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
     }
 
     /* 슬라이딩 토글 스위치 */
@@ -160,6 +185,27 @@
       background-color: #4338ca;
     }
 
+    /* 전체화면 보기 전용 모드 CSS 스타일 (Zen Fullscreen Overlay) */
+    .section-slider-root.is-fullscreen {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 100vh !important;
+      z-index: 999999 !important;
+      background-color: var(--sl-color-bg, #0f172a) !important;
+      padding: 24px 16px !important;
+      box-sizing: border-box !important;
+      overflow-y: auto !important;
+    }
+
+    .section-slider-root.is-fullscreen .section-slider-card {
+      max-width: 900px !important;
+      margin: 0 auto !important;
+      padding: 32px 36px !important;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3) !important;
+    }
+
     @media (max-width: 50rem) {
       .section-slider-card {
         padding: 16px 14px !important;
@@ -171,6 +217,12 @@
         padding: 0 10px;
         font-size: 11px;
       }
+      .section-slider-root.is-fullscreen {
+        padding: 12px 8px !important;
+      }
+      .section-slider-root.is-fullscreen .section-slider-card {
+        padding: 16px 12px !important;
+      }
     }
   </style>
 
@@ -179,9 +231,18 @@
     <slot />
   </div>
 
-  <!-- 카드 외부 우측 상단 모드 전환 행 -->
+  <!-- 카드 외부 우측 상단 조작 그룹: 전체화면 텍스트 클릭 & 카드모드 토글 스위치 (1:1 완전 정렬) -->
   <div class="section-slider-top-bar">
-    <div class="view-mode-toggle-wrapper gmarket-font">
+    {/* 1. 전체화면 텍스트 조작 (Span 기반 단일 아이템) */}
+    <span id="fullscreen-toggle-btn" class="top-bar-action-item fullscreen-action-btn gmarket-font" title="전체화면 집중 독서 모드">
+      <span id="fullscreen-btn-label">전체화면</span>
+      <svg viewBox="0 0 24 24">
+        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+      </svg>
+    </span>
+
+    {/* 2. 카드 모드 슬라이딩 토글 */}
+    <div class="top-bar-action-item gmarket-font">
       <span>카드 모드</span>
       <div id="mode-toggle-switch" class="toggle-switch-track card-mode" title="카드 모드 / 전체 스크롤 모드 전환">
         <div class="toggle-switch-thumb"></div>
@@ -246,6 +307,7 @@
       const rawContent = document.getElementById('slider-raw-content');
       const renderedViewport = document.getElementById('slider-rendered-viewport');
       const scrollView = document.getElementById('slider-scroll-view');
+      const sliderRoot = document.getElementById('section-slider-root');
       
       const numIndicators = document.querySelectorAll('.slider-num-indicator');
       const progressBar = document.getElementById('slider-progress-bar');
@@ -253,6 +315,8 @@
       const btnsPrev = document.querySelectorAll('.slider-btn-prev');
       const btnsNext = document.querySelectorAll('.slider-btn-next');
       const toggleSwitch = document.getElementById('mode-toggle-switch');
+      const fullscreenBtn = document.getElementById('fullscreen-toggle-btn');
+      const fullscreenBtnLabel = document.getElementById('fullscreen-btn-label');
       
       const cardView = document.getElementById('slider-card-view');
       const cardElement = document.getElementById('slider-card-element');
@@ -295,6 +359,7 @@
 
       let currentIndex = 0;
       let isSlideMode = true;
+      let isFullscreenMode = false;
 
       scrollView.innerHTML = rawContent.innerHTML;
 
@@ -329,11 +394,13 @@
           });
 
           // 페이지 전환 시 카드 상단으로 자동 매끄러운 스크롤 이동
-          if (shouldScrollToTop && cardElement) {
+          if (shouldScrollToTop && cardElement && !isFullscreenMode) {
             const rect = cardElement.getBoundingClientRect();
             const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
             const targetY = rect.top + scrollTop - 80;
             window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+          } else if (shouldScrollToTop && isFullscreenMode && sliderRoot) {
+            sliderRoot.scrollTo({ top: 0, behavior: 'smooth' });
           }
         } else {
           // 스크롤 모드 OFF 상태
@@ -385,10 +452,62 @@
         updateControls(false);
       }
 
+      // -------------------------------------------------------------
+      // 📱 전체화면 해제 및 텍스트 전환 엔진
+      // -------------------------------------------------------------
+      function toggleFullscreen() {
+        isFullscreenMode = !isFullscreenMode;
+
+        if (isFullscreenMode) {
+          sliderRoot.classList.add('is-fullscreen');
+          if (fullscreenBtnLabel) fullscreenBtnLabel.textContent = '전체화면 종료';
+
+          try {
+            history.pushState({ fullscreen: true }, '');
+          } catch(e) {}
+
+          if (sliderRoot.requestFullscreen) {
+            sliderRoot.requestFullscreen().catch(() => {});
+          } else if (sliderRoot.webkitRequestFullscreen) {
+            sliderRoot.webkitRequestFullscreen();
+          }
+        } else {
+          exitFullscreenState();
+        }
+      }
+
+      function exitFullscreenState() {
+        if (!isFullscreenMode) return;
+        isFullscreenMode = false;
+        sliderRoot.classList.remove('is-fullscreen');
+        if (fullscreenBtnLabel) fullscreenBtnLabel.textContent = '전체화면';
+
+        if (document.exitFullscreen && document.fullscreenElement) {
+          document.exitFullscreen().catch(() => {});
+        } else if (document.webkitExitFullscreen && document.webkitFullscreenElement) {
+          document.webkitExitFullscreen();
+        }
+      }
+
+      // 모바일 네이티브 뒤로가기 제스처 연동
+      window.addEventListener('popstate', function(e) {
+        if (isFullscreenMode) {
+          exitFullscreenState();
+        }
+      });
+
+      // 브라우저 네이티브 ESC 전체화면 해제 이벤트 연동
+      document.addEventListener('fullscreenchange', function() {
+        if (!document.fullscreenElement) {
+          exitFullscreenState();
+        }
+      });
+
       // 이벤트 바인딩
       btnsPrev.forEach(btn => btn.addEventListener('click', handlePrev));
       btnsNext.forEach(btn => btn.addEventListener('click', handleNext));
       toggleSwitch.addEventListener('click', toggleMode);
+      if (fullscreenBtn) fullscreenBtn.addEventListener('click', toggleFullscreen);
 
       // 모바일 스마트 터치 스와이프 (Touch Swipe)
       let touchStartX = 0;
