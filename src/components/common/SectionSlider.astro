@@ -1,5 +1,5 @@
 ---
-// SectionSlider.astro - Card-Internal Integrated Frame & Fullscreen Zen Mode Layout (iOS Safari Exit Fix & Zero Wobble Horizontal Scroll)
+// SectionSlider.astro - Card-Internal Integrated Frame & Filled Centered 'Restart' Button
 ---
 
 <div class="section-slider-root" id="section-slider-root" style="width: 100%; position: relative; margin: 0;">
@@ -25,7 +25,7 @@
       touch-action: pan-y;
     }
 
-    /* 카드 외부 독립 우측 상단 모드 전환 & 전체화면 조작 그룹 (1:1 완전 수평 정렬) */
+    /* 카드 외부 독립 우측 상단 모드 전환 & 전체화면 조작 그룹 (우측 여백 패딩 안전구역 확보) */
     .section-slider-top-bar {
       display: flex;
       justify-content: flex-end;
@@ -34,6 +34,8 @@
       margin-bottom: 0.625rem;
       width: 100%;
       height: 22px;
+      padding-right: 6px;
+      box-sizing: border-box;
     }
 
     /* 동일 수평 높이(22px) 및 동일 베이스라인 래퍼 */
@@ -52,21 +54,21 @@
     /* 주황색 계열 Accent 적용된 전체화면 텍스트 클릭 버튼 */
     .fullscreen-action-btn {
       cursor: pointer;
-      color: #f97316 !important; /* Orange 500 대표 주황색 */
+      color: #f97316 !important;
       transition: all 0.15s ease;
     }
 
     .fullscreen-action-btn:hover {
-      color: #ea580c !important; /* Orange 600 진한 주황색 */
+      color: #ea580c !important;
       opacity: 0.9;
     }
 
     :root[data-theme='dark'] .fullscreen-action-btn {
-      color: #fb923c !important; /* Dark 모드 화사한 Orange 400 */
+      color: #fb923c !important;
     }
 
     :root[data-theme='dark'] .fullscreen-action-btn:hover {
-      color: #fdba74 !important; /* Dark 모드 호버 Orange 300 */
+      color: #fdba74 !important;
     }
 
     .fullscreen-action-btn svg {
@@ -150,12 +152,12 @@
     }
 
     .card-internal-nav-bar.bottom-nav {
-      margin-top: 1.25rem;
+      margin-top: 0.75rem;
       padding-top: 0.875rem;
       border-top: 1px dashed var(--sl-color-hairline, #e2e8f0);
     }
 
-    /* 미니멀 헤더 버튼 표준 규격 */
+    /* 미니멀 헤더 및 버튼 표준 규격 */
     .hdr-nav-btn {
       height: 32px;
       padding: 0 14px;
@@ -195,6 +197,36 @@
       background-color: #4338ca;
     }
 
+    /* 마지막 슬라이드 전용 독립 중앙 배치 '처음으로' Filled 버튼 */
+    .restart-btn-container {
+      display: none;
+      justify-content: center;
+      width: 100%;
+      margin-top: 1.25rem;
+    }
+
+    .slider-restart-btn {
+      height: 32px;
+      padding: 0 18px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: 700;
+      color: #ffffff;
+      background-color: #4f46e5;
+      border: 1px solid transparent;
+      border-radius: 9px;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+      cursor: pointer;
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      line-height: 1;
+    }
+
+    .slider-restart-btn:hover {
+      background-color: #4338ca;
+    }
+
     /* 전체화면 보기 전용 모드 CSS 스타일 (Zen Fullscreen Overlay - iOS Safari 호환 및 가로 흔들림 차단) */
     .section-slider-root.is-fullscreen {
       position: fixed !important;
@@ -209,7 +241,7 @@
       padding: 24px 16px !important;
       box-sizing: border-box !important;
       overflow-y: auto !important;
-      overflow-x: hidden !important; /* 가로 스크롤 및 흔들림 100% 방지 */
+      overflow-x: hidden !important;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -229,14 +261,17 @@
     }
 
     @media (max-width: 50rem) {
+      .section-slider-top-bar {
+        padding-right: 8px;
+      }
       .section-slider-card {
         padding: 16px 14px !important;
         border-radius: 14px !important;
         min-height: 220px;
       }
-      .hdr-nav-btn {
+      .hdr-nav-btn, .slider-restart-btn {
         height: 30px;
-        padding: 0 10px;
+        padding: 0 12px;
         font-size: 11px;
       }
       .section-slider-root.is-fullscreen {
@@ -317,7 +352,14 @@
       {/* 3. 카드 본문 콘텐츠 뷰포트 */}
       <div id="slider-rendered-viewport"></div>
 
-      {/* 4. 카드 내부 하단 네비게이션 바 */}
+      {/* 4. 마지막 슬라이드 전용 독립 상단 중앙 배치 '처음으로' 버튼 컨테이너 */}
+      <div id="restart-btn-container" class="restart-btn-container">
+        <button id="slider-restart-btn" class="slider-restart-btn gmarket-font" title="첫번째 카드로 돌아가기">
+          처음으로
+        </button>
+      </div>
+
+      {/* 5. 카드 내부 하단 네비게이션 바 */}
       <div class="card-internal-nav-bar bottom-nav">
         <button class="gmarket-font hdr-nav-btn hdr-btn-subtle slider-btn-prev">
           ◀ 이전
@@ -353,6 +395,8 @@
       
       const btnsPrev = document.querySelectorAll('.slider-btn-prev');
       const btnsNext = document.querySelectorAll('.slider-btn-next');
+      const restartContainer = document.getElementById('restart-btn-container');
+      const restartBtn = document.getElementById('slider-restart-btn');
       const toggleSwitch = document.getElementById('mode-toggle-switch');
       const fullscreenBtn = document.getElementById('fullscreen-toggle-btn');
       const fullscreenBtnLabel = document.getElementById('fullscreen-btn-label');
@@ -362,13 +406,14 @@
 
       if (!rawContent || !renderedViewport) return;
 
-      // H2, H3 헤딩 탐색
+      // H2, H3 헤딩 탐색 및 파트별 슬라이드 구조화
       const headings = Array.from(rawContent.querySelectorAll('h3, h2'));
       const slides = [];
 
       if (headings.length > 0) {
         headings.forEach((heading, idx) => {
           const titleText = heading.textContent ? heading.textContent.replace('¶', '').trim() : `Part ${idx + 1}`;
+          const headingId = heading.getAttribute('id') || '';
           
           let topBlock = heading;
           while (topBlock.parentElement && topBlock.parentElement !== rawContent && topBlock.parentElement.id !== 'slider-raw-content') {
@@ -386,6 +431,7 @@
           }
 
           slides.push({
+            id: headingId,
             title: titleText,
             html: htmlChunk
           });
@@ -393,7 +439,7 @@
       }
 
       if (slides.length === 0) {
-        slides.push({ title: '전체 문서', html: rawContent.innerHTML });
+        slides.push({ id: '', title: '전체 문서', html: rawContent.innerHTML });
       }
 
       let currentIndex = 0;
@@ -401,6 +447,27 @@
       let isFullscreenMode = false;
 
       scrollView.innerHTML = rawContent.innerHTML;
+
+      // 🔗 1. 카드 파트 ➔ 우측 목차(TOC) 하이라이트 동기화 함수
+      function syncTocHighlight(headingId) {
+        const tocLinks = document.querySelectorAll('starlight-toc a, mobile-starlight-toc a, nav[aria-label="Table of contents"] a');
+        if (!tocLinks || tocLinks.length === 0) return;
+
+        tocLinks.forEach(link => {
+          const href = link.getAttribute('href');
+          if (href && headingId && href.endsWith(`#${headingId}`)) {
+            link.setAttribute('aria-current', 'true');
+            link.classList.add('is-active-toc');
+            link.style.color = '#6366f1';
+            link.style.fontWeight = '700';
+          } else {
+            link.removeAttribute('aria-current');
+            link.classList.remove('is-active-toc');
+            link.style.color = '';
+            link.style.fontWeight = '';
+          }
+        });
+      }
 
       function updateControls(shouldScrollToTop = false) {
         if (isSlideMode) {
@@ -432,6 +499,16 @@
             btn.style.boxShadow = isLast ? 'none' : '0 4px 12px rgba(79, 70, 229, 0.25)';
           });
 
+          // ↺ 마지막 슬라이드에 다다랐을 때만 독립 중앙 행 '처음으로' 버튼 노출
+          if (restartContainer) {
+            restartContainer.style.display = isLast ? 'flex' : 'none';
+          }
+
+          // 목차(TOC) 하이라이트 실시간 연동
+          if (slide.id) {
+            syncTocHighlight(slide.id);
+          }
+
           // 페이지 전환 시 카드 상단으로 자동 매끄러운 스크롤 이동
           if (shouldScrollToTop && cardElement && !isFullscreenMode) {
             const rect = cardElement.getBoundingClientRect();
@@ -444,6 +521,7 @@
         } else {
           // 스크롤 모드 OFF 상태
           numIndicators.forEach(el => el.textContent = '1 / 1');
+          if (restartContainer) restartContainer.style.display = 'none';
           
           btnsPrev.forEach(btn => {
             btn.disabled = true;
@@ -461,6 +539,31 @@
         }
       }
 
+      // 🔗 2. 목차(TOC) 클릭 ➔ 카드 해당 파트 즉시 스위칭 역방향 연동
+      function bindTocClickEvents() {
+        const tocLinks = document.querySelectorAll('starlight-toc a, mobile-starlight-toc a, nav[aria-label="Table of contents"] a');
+        if (!tocLinks || tocLinks.length === 0) return;
+
+        tocLinks.forEach(link => {
+          link.addEventListener('click', function(e) {
+            if (!isSlideMode) return;
+
+            const href = this.getAttribute('href');
+            if (!href || !href.includes('#')) return;
+
+            const targetId = href.split('#')[1];
+            if (!targetId) return;
+
+            const targetIndex = slides.findIndex(s => s.id === targetId);
+            if (targetIndex !== -1) {
+              e.preventDefault();
+              currentIndex = targetIndex;
+              updateControls(true);
+            }
+          });
+        });
+      }
+
       function handlePrev() {
         if (isSlideMode && currentIndex > 0) {
           currentIndex--;
@@ -471,6 +574,13 @@
       function handleNext() {
         if (isSlideMode && currentIndex < slides.length - 1) {
           currentIndex++;
+          updateControls(true);
+        }
+      }
+
+      function handleRestart() {
+        if (isSlideMode) {
+          currentIndex = 0;
           updateControls(true);
         }
       }
@@ -491,9 +601,7 @@
         updateControls(false);
       }
 
-      // -------------------------------------------------------------
-      // 📱 iOS Safari 호환 100% 보장 전체화면 진입/종료 엔진
-      // -------------------------------------------------------------
+      // iOS Safari 호환 전체화면 엔진
       function toggleFullscreen() {
         if (!isFullscreenMode) {
           isFullscreenMode = true;
@@ -530,14 +638,12 @@
         } catch(e) {}
       }
 
-      // 모바일 네이티브 뒤로가기 제스처 연동
       window.addEventListener('popstate', function(e) {
         if (isFullscreenMode) {
           exitFullscreenState();
         }
       });
 
-      // 브라우저 네이티브 ESC 전체화면 해제 이벤트 연동
       document.addEventListener('fullscreenchange', function() {
         if (!document.fullscreenElement && isFullscreenMode) {
           exitFullscreenState();
@@ -547,10 +653,14 @@
       // 이벤트 바인딩
       btnsPrev.forEach(btn => btn.addEventListener('click', handlePrev));
       btnsNext.forEach(btn => btn.addEventListener('click', handleNext));
+      if (restartBtn) restartBtn.addEventListener('click', handleRestart);
       toggleSwitch.addEventListener('click', toggleMode);
       if (fullscreenBtn) fullscreenBtn.addEventListener('click', toggleFullscreen);
 
-      // 모바일 스마트 터치 스와이프 (Touch Swipe)
+      // TOC 링크 터치/클릭 역방향 스위칭 바인딩
+      bindTocClickEvents();
+
+      // 모바일 스마트 터치 스와이프
       let touchStartX = 0;
       let touchStartY = 0;
 
