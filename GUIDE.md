@@ -159,3 +159,87 @@ React 대화형 시각화 컴포넌트(예: `BackpropSimulator.jsx`) 내부의 �
 - **가독성 폰트 크기 지정**:
   기본 KaTeX 수식 폰트 크기가 약간 작아 보일 수 있으므로 `fontSize: '1.12em'` ~ `15px` 정도의 인라인 스타일을 부여하여 시원한 가독성을 제공합니다.
 
+### 8. `framer-motion` (Motion) 모듈 활용 가이드 및 시각화 모범 사례
+
+React 기반 대화형 시각화 컴포넌트(예: `BackpropSimulator.jsx`)에서 UI 상태 전환, 카드 스위칭, 파라미터 조절 드로어, 수치 갱신 타격감 등을 스프링 물리(Spring Physics) 기반 애니메이션으로 연출할 때 `framer-motion`을 활용합니다.
+
+- **기본 모듈 Import**:
+  ```jsx
+  import { motion, AnimatePresence } from 'framer-motion';
+  ```
+
+- **핵심 모션 패턴**:
+
+  1. **카드 / 내용 매끄러운 스위칭 (`AnimatePresence mode="wait"`)**:
+     탭이나 단계(Step) 변경 시 기존 카드가 자연스럽게 퇴장(exit)하고 새 카드가 등재(animate)되는 패턴입니다.
+     ```jsx
+     <AnimatePresence mode="wait">
+       {step === 1 && (
+         <motion.div 
+           key="step-1"
+           initial={{ opacity: 0, y: 10 }}
+           animate={{ opacity: 1, y: 0 }}
+           exit={{ opacity: 0, y: -10 }}
+           transition={{ duration: 0.25 }}
+         >
+           {/* Step 1 내용 */}
+         </motion.div>
+       )}
+     </AnimatePresence>
+     ```
+
+  2. **유동 슬라이딩 탭 버튼 (`layoutId`)**:
+     여러 개의 탭 버튼 중 선택된 버튼 배경 뱃지가 부드럽게 미끄러지듯 이동하는 물리 애니메이션입니다.
+     ```jsx
+     {isActive && (
+       <motion.div
+         layoutId="activeStepPill"
+         transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+         style={{
+           position: 'absolute',
+           inset: 0,
+           borderRadius: '12px',
+           background: t.activeBg,
+           zIndex: -1
+         }}
+       />
+     )}
+     ```
+
+  3. **접이식 드로어 / 아코디언 (`height: 'auto'`)**:
+     설정창이나 부가 옵션을 클릭 시 부드럽게 펼치고 접는 패턴입니다. 최상위에 `overflow: 'hidden'`을 명시합니다.
+     ```jsx
+     <AnimatePresence>
+       {showSettings && (
+         <motion.div 
+           initial={{ height: 0, opacity: 0 }}
+           animate={{ height: 'auto', opacity: 1 }}
+           exit={{ height: 0, opacity: 0 }}
+           transition={{ duration: 0.3, ease: 'easeInOut' }}
+           style={{ overflow: 'hidden' }}
+         >
+           {/* 슬라이더 및 파라미터 조작부 */}
+         </motion.div>
+       )}
+     </AnimatePresence>
+     ```
+
+  4. **수치 갱신 타격감 펄스 (`key={value}`)**:
+     학습 실행 또는 값 변경 시 수치가 순간적으로 바뀔 때 `key` 값의 변경을 감지하여 텍스트가 살짝 튀어오르는 스프링 팝업 효과를 줍니다.
+     ```jsx
+     <motion.span 
+       key={w1_next}
+       initial={{ scale: 1.25, color: '#10b981' }}
+       animate={{ scale: 1, color: '#059669' }}
+       transition={{ type: 'spring', stiffness: 400 }}
+       style={{ fontWeight: '800' }}
+     >
+       {w1_next.toFixed(3)}
+     </motion.span>
+     ```
+
+- **SVG 애니메이션 시 레이아웃 깨짐 방지 규칙 (CRITICAL)**:
+  SVG 태그 내부의 `<g>`, `<rect>`, `<circle>` 요소를 `motion` 요소로 변환하고 `animate={{ scale: 1.08 }}`을 주면 기본 CSS `transform-origin`이 SVG 전체 좌상단`(0, 0)`으로 지정되어 다이어그램 노드가 밖으로 튀어나가거나 깨집니다.
+  - **해결책**: SVG 내부 요소에 CSS `transform` 계열 변환을 줄 때는 반드시 `style={{ transformBox: 'fill-box', transformOrigin: 'center' }}`를 함께 선언하거나, 고정 좌표계 구조를 유지하고 내부 CSS 속성(`strokeWidth`, `opacity`)만 애니메이션합니다.
+
+

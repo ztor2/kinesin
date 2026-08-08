@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import katex from 'katex';
+import { motion, AnimatePresence } from 'framer-motion';
 
-// Sigmoid 활성화 함수 및 국소 미분 정의 (backprop.mdx 문서 설명과 100% 일치)
+// Sigmoid 활성화 함수 및 국소 미분 정의
 const sigmoid = (z) => 1 / (1 + Math.exp(-Math.max(-20, Math.min(20, z))));
 const sigmoidDf = (z) => {
   const s = sigmoid(z);
@@ -11,12 +12,12 @@ const sigmoidDf = (z) => {
 // KaTeX 수학 수식 렌더링 헬퍼 컴포넌트
 const MathView = ({ math, style }) => {
   const html = katex.renderToString(math, { throwOnError: false });
-  return <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: '1.12em', ...style }} dangerouslySetInnerHTML={{ __html: html }} />;
+  return <span style={{ display: 'inline-flex', alignItems: 'center', fontSize: '1.08em', ...style }} dangerouslySetInnerHTML={{ __html: html }} />;
 };
 
 // SVG Arrow Right Icon Component
 const ArrowRightIcon = () => (
-  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#059669" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
     <line x1="5" y1="12" x2="19" y2="12"></line>
     <polyline points="12 5 19 12 12 19"></polyline>
   </svg>
@@ -35,13 +36,18 @@ export const BackpropSimulator = () => {
   // 설정 아코디언 열림/닫힘 상태
   const [showSettings, setShowSettings] = useState(false);
 
-  // 현재 Step (1: 순전파, 2: 손실계산, 3: 역전파, 4: 가중치갱신)
-  const [step, setStep] = useState(1);
+  // 현재 Step (0: plain/기본, 1: 순전파, 2: 손실계산, 3: 역전파, 4: 가중치갱신)
+  const [step, setStep] = useState(0);
 
   // 선택된 체인 룰 미분 항 Key
   const [activeTermKey, setActiveTermKey] = useState('dL_dyHat');
 
-  // --- 1. Forward Pass 연산 (MSE Loss + Sigmoid 활성화 적용) ---
+  // 학습 실행 여부 추적 (최소 1회 학습 실행 후에만 체인 룰 카드 상호작용 허용)
+  const [hasLearned, setHasLearned] = useState(false);
+  const [showLearnPrompt, setShowLearnPrompt] = useState(false);
+  const [pendingTermKey, setPendingTermKey] = useState(null);
+
+  // --- 1. Forward Pass 연산 ---
   const z1 = w1 * x + b1;
   const h1 = sigmoid(z1);
   const z2 = w2 * h1 + b2;
@@ -69,7 +75,7 @@ export const BackpropSimulator = () => {
   const w2_next = w2 - lr * dL_dw2;
   const b2_next = b2 - lr * dL_db2;
 
-  // 체인 룰 개별 미분 항 정보 맵 (역할별 테마 색상 지정)
+  // 체인 룰 개별 미분 항 정보 맵
   const chainRuleTerms = {
     dL_dyHat: {
       symbol: '\\frac{\\partial L}{\\partial \\hat{y}}',
@@ -78,17 +84,18 @@ export const BackpropSimulator = () => {
       value: dL_dyHat,
       mathReasonNode: (
         <span>
-          손실 함수 <MathView math="L = \frac{1}{2}(\hat{y} - y)^2" />를 <MathView math="\hat{y}" />에 대해 미분하면, 2차항 계수 <MathView math="\frac{1}{2}" />과 2가 상쇄되어 단순 오차 차이 <MathView math="(\hat{y} - y)" />로 표현됨.
+          손실 함수 <MathView math="L = \frac{1}{2}(\hat{y} - y)^2" />를 <MathView math="\hat{y}" />에 대해 미분하면, 2차항 계수 <MathView math="\frac{1}{2}" />과 2가 상쇄되어 단순 오차 차이 <MathView math="(\hat{y} - y)" />로 도출됨.
         </span>
       ),
       descriptionNode: (
         <span>
-          최종 예측값(<MathView math="\hat{y}" />)과 목표 정답(<MathView math="y" />) 간의 오차 차이. 역전파가 시작되는 맨 첫 번째 출발점 오차 신호.
+          최종 예측값(<MathView math="\hat{y}" />)과 목표 정답(<MathView math="y" />) 간의 차이. 역전파 오차 신호의 출발점.
         </span>
       ),
       highlight: 'loss',
       themeColor: '#e11d48',
-      bgColor: '#fff1f2'
+      bgColor: '#fff1f2',
+      accentGlow: 'rgba(225, 29, 72, 0.25)'
     },
     dyHat_dz2: {
       symbol: '\\frac{\\partial \\hat{y}}{\\partial z_2}',
@@ -97,17 +104,18 @@ export const BackpropSimulator = () => {
       value: dyHat_dz2,
       mathReasonNode: (
         <span>
-          출력 활성화 식 <MathView math="\hat{y} = \sigma(z_2)" />를 미분하면 <MathView math="\sigma(z_2)(1 - \sigma(z_2))" />기 도출. 입력 <MathView math="z_2" /> 위치에서의 비선형 변화율(기울기).
+          출력 활성화 식 <MathView math="\hat{y} = \sigma(z_2)" />를 미분하면 <MathView math="\sigma(z_2)(1 - \sigma(z_2))" />가 됨. 입력 <MathView math="z_2" />에서의 기울기.
         </span>
       ),
       descriptionNode: (
         <span>
-          출력층 비선형 활성화 함수(Sigmoid)의 국소 변화율. 오차 신호가 출력 노드를 통과할 때 곱해지는 감쇄/증폭율.
+          출력 노드의 Sigmoid 비선형 변화율. 오차 신호가 출력 노드를 통과할 때 곱해지는 기울기 민감도.
         </span>
       ),
       highlight: 'yHat',
       themeColor: '#0284c7',
-      bgColor: '#f0f9ff'
+      bgColor: '#f0f9ff',
+      accentGlow: 'rgba(2, 132, 199, 0.25)'
     },
     dz2_dw2: {
       symbol: '\\frac{\\partial z_2}{\\partial W_2}',
@@ -116,17 +124,18 @@ export const BackpropSimulator = () => {
       value: h1,
       mathReasonNode: (
         <span>
-          선형 결합 식 <MathView math="z_2 = W_2 h_1 + b_2" />를 <MathView math="W_2" />에 대해 편미분하면, <MathView math="W_2" />에 곱해져 있던 계수인 은닉층 입력값 <MathView math="h_1" />이 남는다. (<MathView math="\frac{\partial z_2}{\partial W_2} = h_1" />).
+          선형 결합 식 <MathView math="z_2 = W_2 h_1 + b_2" />를 <MathView math="W_2" />에 대해 편미분하면 은닉층 입력값 <MathView math="h_1" />이 남음 (<MathView math="\frac{\partial z_2}{\partial W_2} = h_1" />).
         </span>
       ),
       descriptionNode: (
         <span>
-          순전파 시 은닉층 <MathView math="h_1" />에서 들어온 활성화 값. 과거 입력값이 클수록 가중치 <MathView math="W_2" />가 지는 오차 기여(기울기)가 증가.
+          순전파 시 은닉층 <MathView math="h_1" />의 활성화 값. 은닉층 활성화가 클수록 가중치 <MathView math="W_2" />의 수정 폭이 커짐.
         </span>
       ),
       highlight: 'w2',
       themeColor: '#d97706',
-      bgColor: '#fffbeb'
+      bgColor: '#fffbeb',
+      accentGlow: 'rgba(217, 119, 6, 0.25)'
     },
     dz2_dh1: {
       symbol: '\\frac{\\partial z_2}{\\partial h_1}',
@@ -135,17 +144,18 @@ export const BackpropSimulator = () => {
       value: w2,
       mathReasonNode: (
         <span>
-          선형 결합 식 <MathView math="z_2 = W_2 h_1 + b_2" />를 이전 층 출력 <MathView math="h_1" />에 대해 편미분하면 계수인 상위 가중치 <MathView math="W_2" />가 남는다. (<MathView math="\frac{\partial z_2}{\partial h_1} = W_2" />).
+          선형 결합 식 <MathView math="z_2 = W_2 h_1 + b_2" />를 <MathView math="h_1" />에 대해 편미분하면 계수인 <MathView math="W_2" />가 남음 (<MathView math="\frac{\partial z_2}{\partial h_1} = W_2" />).
         </span>
       ),
       descriptionNode: (
         <span>
-          하위 층(<MathView math="h_1" />)으로 오차가 역전파될 때 곱해지는 상위 층 가중치 <MathView math="W_2" />. 가중치 크기에 비례해 오차 신호가 전달됨.
+          하위 층으로 오차가 역전파될 때 곱해지는 상위 가중치 <MathView math="W_2" />. 연결 강도에 비례하여 오차가 전달됨.
         </span>
       ),
       highlight: 'w2',
       themeColor: '#d97706',
-      bgColor: '#fffbeb'
+      bgColor: '#fffbeb',
+      accentGlow: 'rgba(217, 119, 6, 0.25)'
     },
     dh1_dz1: {
       symbol: '\\frac{\\partial h_1}{\\partial z_1}',
@@ -154,17 +164,18 @@ export const BackpropSimulator = () => {
       value: dh1_dz1,
       mathReasonNode: (
         <span>
-          은닉층 활성화 식 <MathView math="h_1 = \sigma(z_1)" />를 <MathView math="z_1" />에 대해 미분한 <MathView math="\sigma(z_1)(1 - \sigma(z_1))" />. 은닉층 노드에서의 국소 기울기.
+          은닉층 활성화 <MathView math="h_1 = \sigma(z_1)" />를 미분한 <MathView math="\sigma(z_1)(1 - \sigma(z_1))" />. 은닉층 국소 미분값.
         </span>
       ),
       descriptionNode: (
         <span>
-          은닉층 활성화 함수(Sigmoid)의 국소 변화율. 상위 오차 신호(<MathView math="\delta_2" />)와 <MathView math="W_2" />가 곱해진 후 이 미분값이 다시 연쇄 곱셈됨.
+          은닉층 활성화 함수(Sigmoid)의 기울기. 상위 오차 신호가 은닉층 노드를 통과하며 재감쇄되는 비율.
         </span>
       ),
       highlight: 'h1',
       themeColor: '#7c3aed',
-      bgColor: '#f5f3ff'
+      bgColor: '#f5f3ff',
+      accentGlow: 'rgba(124, 58, 237, 0.25)'
     },
     dz1_dw1: {
       symbol: '\\frac{\\partial z_1}{\\partial W_1}',
@@ -173,29 +184,45 @@ export const BackpropSimulator = () => {
       value: x,
       mathReasonNode: (
         <span>
-          선형 결합 식 <MathView math="z_1 = W_1 x + b_1" />을 가중치 <MathView math="W_1" />에 대해 편미분하면, <MathView math="W_1" />에 곱해져 있던 계수인 최초 입력값 <MathView math="x" />만 남는다. (<MathView math="\frac{\partial z_1}{\partial W_1} = x" />).
+          선형 결합 식 <MathView math="z_1 = W_1 x + b_1" />을 <MathView math="W_1" />에 대해 편미분하면 최초 입력값 <MathView math="x" />가 남음 (<MathView math="\frac{\partial z_1}{\partial W_1} = x" />).
         </span>
       ),
       descriptionNode: (
         <span>
-          신경망의 최초 입력 데이터(<MathView math="x" />). 입력값 크기가 가중치 <MathView math="W_1" />의 최종 기울기(<MathView math="\nabla W_1" />) 크기를 결정짓는 주요 요인.
+          최초 입력 데이터(<MathView math="x" />). 입력 데이터 신호의 크기가 가중치 <MathView math="W_1" /> 갱신 스케일을 조정.
         </span>
       ),
       highlight: 'w1',
       themeColor: '#0891b2',
-      bgColor: '#ecfeff'
+      bgColor: '#ecfeff',
+      accentGlow: 'rgba(8, 145, 178, 0.25)'
     }
   };
 
   const activeTerm = chainRuleTerms[activeTermKey];
 
-  // 1회 학습 실행
+  // 하단 체인 룰 카드 버튼 전용: step === 0 (plain 상태)에서만 활성화
+  // 체인 룰 카드를 클릭하면 자동으로 step 0으로 전환됨
+  const diagramHL = step === 0 ? {
+    w1Edge:   activeTermKey === 'dz1_dw1',
+    z1:       activeTermKey === 'dh1_dz1' || activeTermKey === 'dz1_dw1',
+    h1Node:   activeTermKey === 'dz2_dw2' || activeTermKey === 'dz2_dh1' || activeTermKey === 'dh1_dz1',
+    w2Edge:   activeTermKey === 'dz2_dw2' || activeTermKey === 'dz2_dh1',
+    z2:       activeTermKey === 'dyHat_dz2' || activeTermKey === 'dz2_dw2' || activeTermKey === 'dz2_dh1',
+    yHatNode: activeTermKey === 'dyHat_dz2' || activeTermKey === 'dL_dyHat',
+    lossNode: activeTermKey === 'dL_dyHat',
+  } : {
+    w1Edge: false, z1: false, h1Node: false,
+    w2Edge: false, z2: false, yHatNode: false, lossNode: false,
+  };
+
   const handleRunFullStep = () => {
     setW1(w1_next);
     setB1(b1_next);
     setW2(w2_next);
     setB2(b2_next);
     setStep(4);
+    setHasLearned(true);
   };
 
   const handleReset = () => {
@@ -206,181 +233,255 @@ export const BackpropSimulator = () => {
     setW2(1.1);
     setB2(-0.2);
     setLr(0.5);
-    setStep(1);
+    setStep(0);
+    setHasLearned(false);
   };
 
+  // 체인 룰 카드 클릭 핸들러: 학습 여부 확인 후 분기
+  const handleTermClick = (key) => {
+    if (hasLearned) {
+      setActiveTermKey(key);
+      setStep(0);
+    } else {
+      setPendingTermKey(key);
+      setShowLearnPrompt(true);
+    }
+  };
+
+  // 모달: 확인 → 1회 학습 자동 실행 후 카드 활성화
+  const handleLearnConfirm = () => {
+    setW1(w1_next);
+    setB1(b1_next);
+    setW2(w2_next);
+    setB2(b2_next);
+    setHasLearned(true);
+    setShowLearnPrompt(false);
+    if (pendingTermKey) {
+      setActiveTermKey(pendingTermKey);
+      setPendingTermKey(null);
+    }
+    setStep(0);
+  };
+
+  // 모달: 취소
+  const handleLearnCancel = () => {
+    setShowLearnPrompt(false);
+    setPendingTermKey(null);
+  };
+
+  const stepsList = [
+    { id: 1, label: '1. 순전파 (Forward)', activeBg: 'linear-gradient(135deg, #0284c7, #0369a1)', shadow: 'rgba(2, 132, 199, 0.3)' },
+    { id: 2, label: '2. 오차 산출 (Loss)', activeBg: 'linear-gradient(135deg, #e11d48, #be123c)', shadow: 'rgba(225, 29, 72, 0.3)' },
+    { id: 3, label: '3. 역전파 (Backward)', activeBg: 'linear-gradient(135deg, #d97706, #b45309)', shadow: 'rgba(217, 119, 6, 0.3)' },
+    { id: 4, label: '4. 가중치 갱신 (Update)', activeBg: 'linear-gradient(135deg, #059669, #047857)', shadow: 'rgba(5, 150, 105, 0.3)' }
+  ];
+
   return (
-    <div 
+    <motion.div 
+      initial={{ opacity: 0, y: 15 }}
+      animate={{ opacity: 1, y: 0 }}
+      transition={{ duration: 0.4 }}
       className="not-content font-sans"
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px',
+        gap: '24px',
         width: '100%',
         clear: 'both',
         boxSizing: 'border-box',
         margin: '24px 0',
-        padding: '24px',
-        borderRadius: '20px',
+        padding: '28px',
+        borderRadius: '24px',
         backgroundColor: '#ffffff',
         border: '1px solid #e2e8f0',
-        boxShadow: '0 10px 30px -5px rgba(0, 0, 0, 0.05), 0 4px 12px -2px rgba(0, 0, 0, 0.03)'
+        boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.07), 0 0 1px 1px rgba(0, 0, 0, 0.02)'
       }}
     >
-      {/* 1. 상단 컨트롤 패널 & 깔끔한 슬라이더 접이식 컴포넌트 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-          <button
-            onClick={() => setShowSettings(!showSettings)}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px',
-              padding: '7px 14px',
-              fontSize: '12.5px',
-              fontWeight: '700',
-              borderRadius: '9px',
-              border: '1px solid #cbd5e1',
-              backgroundColor: showSettings ? '#f1f5f9' : '#f8fafc',
-              color: '#334155',
-              cursor: 'pointer',
-              boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
-            }}
-          >
-            <span>학습 파라미터 설정</span>
-            <span style={{ fontSize: '10px', color: '#64748b' }}>{showSettings ? '▲' : '▼'}</span>
-          </button>
+      {/* 1. 상단 타이틀 & 컨트롤 헤더 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '6px', height: '19px', borderRadius: '5px', background: 'linear-gradient(180deg, #093348, #113c2e)' }} />
+            <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.02em' }}>
+              Backpropagation Simulator
+            </h3>
+          </div>
 
-          <div style={{ display: 'flex', gap: '8px' }}>
-            <button 
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginLeft: 'auto' }}>
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={() => setShowSettings(!showSettings)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '6px',
+                padding: '8px 14px',
+                fontSize: '12.5px',
+                fontWeight: '700',
+                borderRadius: '10px',
+                border: '1px solid #cbd5e1',
+                backgroundColor: showSettings ? '#e2e8f0' : '#f8fafc',
+                color: '#334155',
+                cursor: 'pointer',
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+              }}
+            >
+              <span>파라미터 조정</span>
+              <motion.span 
+                animate={{ rotate: showSettings ? 180 : 0 }} 
+                transition={{ duration: 0.2 }}
+                style={{ fontSize: '10px', color: '#64748b', display: 'inline-block' }}
+              >
+                ▼
+              </motion.span>
+            </motion.button>
+
+            <motion.button 
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
               onClick={handleReset}
               style={{
-                padding: '7px 14px',
+                padding: '8px 14px',
                 fontSize: '12.5px',
                 fontWeight: '600',
-                borderRadius: '9px',
+                borderRadius: '10px',
                 border: '1px solid #cbd5e1',
                 backgroundColor: '#ffffff',
                 color: '#475569',
                 cursor: 'pointer',
-                boxShadow: '0 1px 3px rgba(0,0,0,0.04)'
+                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
               }}
             >
               초기화
-            </button>
+            </motion.button>
 
-            <button 
+            <motion.button 
+              whileHover={{ scale: 1.04 }}
+              whileTap={{ scale: 0.96 }}
               onClick={handleRunFullStep}
               style={{
-                padding: '7px 18px',
+                padding: '8px 18px',
                 fontSize: '12.5px',
-                fontWeight: '700',
-                borderRadius: '9px',
+                fontWeight: '800',
+                borderRadius: '10px',
                 border: 'none',
                 background: 'linear-gradient(135deg, #059669, #047857)',
                 color: '#ffffff',
                 cursor: 'pointer',
-                boxShadow: '0 4px 12px rgba(5, 150, 105, 0.35)'
+                boxShadow: '0 4px 14px rgba(5, 150, 105, 0.35)'
               }}
             >
-              1회 학습 실행
-            </button>
+              ⚡ 1회 학습 실행
+            </motion.button>
           </div>
         </div>
 
-        {/* 펼쳐지는 슬라이더 설정창 */}
-        {showSettings && (
-          <div 
-            style={{
-              display: 'grid',
-              gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
-              gap: '14px',
-              backgroundColor: '#f8fafc',
-              padding: '16px 18px',
-              borderRadius: '12px',
-              border: '1px solid #e2e8f0'
-            }}
-          >
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', fontWeight: '800', color: '#000000' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#000000' }}>
-                  입력 (<MathView math="x" style={{ fontSize: '14px', color: '#000000' }} />)
-                </span>
-                <span style={{ fontFamily: 'monospace', color: '#000000', fontWeight: '800', fontSize: '14px' }}>{x.toFixed(2)}</span>
-              </div>
-              <input type="range" min="0.1" max="1.0" step="0.05" value={x} onChange={(e) => { setX(Number(e.target.value)); setStep(1); }} style={{ width: '100%', cursor: 'pointer' }} />
-            </div>
+        {/* 접이식 슬라이더 옵션 드로어 */}
+        <AnimatePresence>
+          {showSettings && (
+            <motion.div 
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.3, ease: 'easeInOut' }}
+              style={{ overflow: 'hidden' }}
+            >
+              <div 
+                style={{
+                  display: 'grid',
+                  gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))',
+                  gap: '16px',
+                  backgroundColor: '#f8fafc',
+                  padding: '18px 20px',
+                  borderRadius: '16px',
+                  border: '1px solid #e2e8f0',
+                  marginTop: '8px'
+                }}
+              >
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: '800', color: '#1e293b' }}>
+                    <span>입력 (<MathView math="x" style={{ fontSize: '13px' }} />)</span>
+                    <span style={{ fontFamily: 'monospace', color: '#0284c7', fontWeight: '800' }}>{x.toFixed(2)}</span>
+                  </div>
+                  <input type="range" min="0.1" max="1.0" step="0.05" value={x} onChange={(e) => { setX(Number(e.target.value)); setStep(0); }} style={{ width: '100%', cursor: 'pointer', accentColor: '#0284c7' }} />
+                </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', fontWeight: '800', color: '#000000' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#000000' }}>
-                  정답 (<MathView math="y" style={{ fontSize: '14px', color: '#000000' }} />)
-                </span>
-                <span style={{ fontFamily: 'monospace', color: '#000000', fontWeight: '800', fontSize: '14px' }}>{target.toFixed(2)}</span>
-              </div>
-              <input type="range" min="0.1" max="1.0" step="0.05" value={target} onChange={(e) => { setTarget(Number(e.target.value)); setStep(1); }} style={{ width: '100%', cursor: 'pointer' }} />
-            </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: '800', color: '#1e293b' }}>
+                    <span>정답 (<MathView math="y" style={{ fontSize: '13px' }} />)</span>
+                    <span style={{ fontFamily: 'monospace', color: '#e11d48', fontWeight: '800' }}>{target.toFixed(2)}</span>
+                  </div>
+                  <input type="range" min="0.1" max="1.0" step="0.05" value={target} onChange={(e) => { setTarget(Number(e.target.value)); setStep(0); }} style={{ width: '100%', cursor: 'pointer', accentColor: '#e11d48' }} />
+                </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', fontWeight: '800', color: '#000000' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#000000' }}>
-                  편향 (<MathView math="b_1" style={{ fontSize: '14px', color: '#000000' }} />)
-                </span>
-                <span style={{ fontFamily: 'monospace', color: '#000000', fontWeight: '800', fontSize: '14px' }}>{b1.toFixed(2)}</span>
-              </div>
-              <input type="range" min="-1.0" max="1.0" step="0.05" value={b1} onChange={(e) => { setB1(Number(e.target.value)); setStep(1); }} style={{ width: '100%', cursor: 'pointer' }} />
-            </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: '800', color: '#1e293b' }}>
+                    <span>편향 (<MathView math="b_1" style={{ fontSize: '13px' }} />)</span>
+                    <span style={{ fontFamily: 'monospace', color: '#475569', fontWeight: '800' }}>{b1.toFixed(2)}</span>
+                  </div>
+                  <input type="range" min="-1.0" max="1.0" step="0.05" value={b1} onChange={(e) => { setB1(Number(e.target.value)); setStep(0); }} style={{ width: '100%', cursor: 'pointer' }} />
+                </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', fontWeight: '800', color: '#000000' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#000000' }}>
-                  편향 (<MathView math="b_2" style={{ fontSize: '14px', color: '#000000' }} />)
-                </span>
-                <span style={{ fontFamily: 'monospace', color: '#000000', fontWeight: '800', fontSize: '14px' }}>{b2.toFixed(2)}</span>
-              </div>
-              <input type="range" min="-1.0" max="1.0" step="0.05" value={b2} onChange={(e) => { setB2(Number(e.target.value)); setStep(1); }} style={{ width: '100%', cursor: 'pointer' }} />
-            </div>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: '800', color: '#1e293b' }}>
+                    <span>편향 (<MathView math="b_2" style={{ fontSize: '13px' }} />)</span>
+                    <span style={{ fontFamily: 'monospace', color: '#475569', fontWeight: '800' }}>{b2.toFixed(2)}</span>
+                  </div>
+                  <input type="range" min="-1.0" max="1.0" step="0.05" value={b2} onChange={(e) => { setB2(Number(e.target.value)); setStep(0); }} style={{ width: '100%', cursor: 'pointer' }} />
+                </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '14px', fontWeight: '800', color: '#000000' }}>
-                <span style={{ display: 'inline-flex', alignItems: 'center', gap: '4px', color: '#000000' }}>
-                  학습률 (<MathView math="\eta" style={{ fontSize: '14px', color: '#000000' }} />)
-                </span>
-                <span style={{ fontFamily: 'monospace', color: '#000000', fontWeight: '800', fontSize: '14px' }}>{lr.toFixed(1)}</span>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: '800', color: '#1e293b' }}>
+                    <span>학습률 (<MathView math="\eta" style={{ fontSize: '13px' }} />)</span>
+                    <span style={{ fontFamily: 'monospace', color: '#059669', fontWeight: '800' }}>{lr.toFixed(1)}</span>
+                  </div>
+                  <input type="range" min="0.1" max="1.5" step="0.1" value={lr} onChange={(e) => setLr(Number(e.target.value))} style={{ width: '100%', cursor: 'pointer', accentColor: '#059669' }} />
+                </div>
               </div>
-              <input type="range" min="0.1" max="1.5" step="0.1" value={lr} onChange={(e) => setLr(Number(e.target.value))} style={{ width: '100%', cursor: 'pointer' }} />
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* 2. Step 탭 버튼 (역할별 풍부한 그래디언트 & 입체감 UI) */}
-      <div style={{ display: 'flex', justifyContent: 'center' }}>
-        <div style={{ display: 'flex', gap: '8px', backgroundColor: '#f1f5f9', padding: '5px', borderRadius: '12px', flexWrap: 'wrap' }}>
-          {[
-            { id: 1, label: '1. 순전파 (Forward)', activeBg: 'linear-gradient(135deg, #0284c7, #0369a1)', shadow: 'rgba(2, 132, 199, 0.35)' },
-            { id: 2, label: '2. 오차 산출', activeBg: 'linear-gradient(135deg, #e11d48, #be123c)', shadow: 'rgba(225, 29, 72, 0.35)' },
-            { id: 3, label: '3. 역전파 (Backward)', activeBg: 'linear-gradient(135deg, #d97706, #b45309)', shadow: 'rgba(217, 119, 6, 0.35)' },
-            { id: 4, label: '4. 가중치 갱신', activeBg: 'linear-gradient(135deg, #059669, #047857)', shadow: 'rgba(5, 150, 105, 0.35)' }
-          ].map((t) => {
+      {/* 2. Step 탭 버튼 (중앙 정렬, 줄바꿈 없음: whiteSpace & flexWrap nowrap) */}
+      <div style={{ display: 'flex', justifyContent: 'center', width: '100%', overflowX: 'auto' }}>
+        <div style={{ display: 'flex', gap: '6px', backgroundColor: '#f1f5f9', padding: '6px', borderRadius: '16px', flexWrap: 'nowrap', whiteSpace: 'nowrap', minWidth: 'max-content' }}>
+          {stepsList.map((t) => {
             const isActive = step === t.id;
             return (
               <button
                 key={t.id}
                 onClick={() => setStep(t.id)}
                 style={{
-                  padding: '8px 16px',
+                  position: 'relative',
+                  padding: '9px 18px',
                   fontSize: '13px',
-                  fontWeight: '700',
-                  borderRadius: '9px',
+                  fontWeight: '800',
+                  borderRadius: '12px',
                   border: 'none',
                   cursor: 'pointer',
-                  background: isActive ? t.activeBg : 'transparent',
+                  background: 'transparent',
                   color: isActive ? '#ffffff' : '#64748b',
-                  boxShadow: isActive ? `0 4px 12px ${t.shadow}` : 'none',
-                  transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
+                  zIndex: 1,
+                  whiteSpace: 'nowrap',
+                  transition: 'color 0.2s ease'
                 }}
               >
+                {isActive && (
+                  <motion.div
+                    layoutId="activeStepPill"
+                    transition={{ type: 'spring', stiffness: 450, damping: 32 }}
+                    style={{
+                      position: 'absolute',
+                      inset: 0,
+                      borderRadius: '12px',
+                      background: t.activeBg,
+                      boxShadow: `0 4px 14px ${t.shadow}`,
+                      zIndex: -1
+                    }}
+                  />
+                )}
                 {t.label}
               </button>
             );
@@ -388,17 +489,40 @@ export const BackpropSimulator = () => {
         </div>
       </div>
 
-      {/* 3. SVG 신경망 다이어그램 (KaTeX 연동, 대형 노드 & 정갈한 펄스 하이라이트) */}
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', backgroundColor: '#f8fafc', padding: '24px', borderRadius: '16px', border: '1px solid #cbd5e1', gap: '16px' }}>
+      {/* 3. 정교한 SVG 다이어그램 (박스 제거 텍스트 하이라이팅 & Y축 원복) */}
+      <div 
+        style={{ 
+          display: 'flex', 
+          flexDirection: 'column', 
+          alignItems: 'center', 
+          backgroundColor: '#f8fafc', 
+          padding: '24px 16px', 
+          borderRadius: '20px', 
+          border: '1px solid #cbd5e1', 
+          boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.02)',
+          position: 'relative',
+          overflow: 'hidden'
+        }}
+      >
         <div style={{ width: '100%', overflowX: 'auto', display: 'flex', justifyContent: 'center' }}>
           <svg viewBox="0 0 760 250" style={{ width: '100%', maxWidth: '760px', height: 'auto', minWidth: '360px' }}>
             <defs>
-              <marker id="arrow-blue" viewBox="0 0 10 10" refX="42" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              {/* 은은한 배경 도트 패턴 */}
+              <pattern id="grid-dots" width="20" height="20" patternUnits="userSpaceOnUse">
+                <circle cx="2" cy="2" r="1.2" fill="#cbd5e1" opacity="0.45" />
+              </pattern>
+
+              {/* 깔끔한 화살표 마커 */}
+              <marker id="arrow-blue" viewBox="0 0 10 10" refX="44" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#0284c7" />
               </marker>
-              <marker id="arrow-orange" viewBox="0 0 10 10" refX="42" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+              <marker id="arrow-orange" viewBox="0 0 10 10" refX="44" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse">
                 <path d="M 0 0 L 10 5 L 0 10 z" fill="#d97706" />
               </marker>
+              <marker id="arrow-cyan" viewBox="0 0 10 10" refX="44" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse">
+                <path d="M 0 0 L 10 5 L 0 10 z" fill="#0891b2" />
+              </marker>
+
               <style>{`
                 @keyframes forwardDashFlow {
                   from { stroke-dashoffset: 0; }
@@ -412,419 +536,559 @@ export const BackpropSimulator = () => {
                   from { stroke-dashoffset: 0; }
                   to { stroke-dashoffset: -20; }
                 }
-                @keyframes pulseGlow {
-                  0% { filter: drop-shadow(0 0 0px rgba(124, 58, 237, 0)); }
-                  50% { filter: drop-shadow(0 0 14px rgba(124, 58, 237, 0.95)); }
-                  100% { filter: drop-shadow(0 0 0px rgba(124, 58, 237, 0)); }
-                }
-                @keyframes emeraldPulseGlow {
-                  0% { filter: drop-shadow(0 0 0px rgba(16, 185, 129, 0)); }
-                  50% { filter: drop-shadow(0 0 14px rgba(16, 185, 129, 0.95)); }
-                  100% { filter: drop-shadow(0 0 0px rgba(16, 185, 129, 0)); }
-                }
-                @keyframes cyanPulseGlow {
-                  0% { filter: drop-shadow(0 0 0px rgba(8, 145, 178, 0)); }
-                  50% { filter: drop-shadow(0 0 14px rgba(8, 145, 178, 0.95)); }
-                  100% { filter: drop-shadow(0 0 0px rgba(8, 145, 178, 0)); }
-                }
-                .active-pulsing-node {
-                  animation: pulseGlow 1.2s ease-in-out infinite;
-                }
-                .step4-green-pulse {
-                  animation: emeraldPulseGlow 1.2s ease-in-out infinite;
-                }
-                .active-cyan-pulse {
-                  animation: cyanPulseGlow 1.2s ease-in-out infinite;
-                }
               `}</style>
             </defs>
 
-            {/* W1 연결선 */}
+            {/* 배경 패턴 */}
+            <rect width="760" height="250" fill="url(#grid-dots)" />
+
+            {/* --- W1 연결선 (입력x -> h1) --- */}
             <line 
               x1="90" y1="120" x2="300" y2="120" 
-              stroke={step === 3 ? '#d97706' : step === 1 ? '#0284c7' : activeTerm.highlight === 'w1' ? '#0891b2' : '#cbd5e1'} 
-              strokeWidth={step === 1 || step === 3 || activeTerm.highlight === 'w1' ? '5' : '2.5'}
+              stroke={step === 3 ? '#d97706' : step === 1 ? '#0284c7' : diagramHL.w1Edge ? '#0891b2' : '#cbd5e1'} 
+              strokeWidth={step === 1 || step === 3 || diagramHL.w1Edge ? '4.5' : '2'}
               strokeDasharray={step === 1 || step === 3 ? '8 6' : 'none'}
               style={{ animation: step === 1 ? 'forwardDashFlow 0.75s linear infinite' : step === 3 ? 'backwardDashFlow 0.75s linear infinite' : 'none' }}
-              markerEnd={step === 3 ? undefined : 'url(#arrow-blue)'}
+              markerEnd={step === 3 ? undefined : diagramHL.w1Edge ? 'url(#arrow-cyan)' : 'url(#arrow-blue)'}
               markerStart={step === 3 ? 'url(#arrow-orange)' : undefined}
             />
 
-            {/* 가중치 W1 뱃지 (SVG 텍스트 통합) */}
-            <g transform="translate(195, 75)" className={step === 4 ? 'step4-green-pulse' : activeTerm.highlight === 'w1' ? 'active-cyan-pulse' : ''}>
-              <rect 
-                x="-55" y="-15" width="110" height="28" rx="6" 
-                fill={step === 4 ? '#d1fae5' : activeTerm.highlight === 'w1' ? '#ecfeff' : '#ffffff'} 
-                stroke="none"
-              />
-              <text 
-                textAnchor="middle" 
-                y="4" 
-                fontSize="12.5" 
-                fontWeight="800" 
-                fontFamily="Georgia, serif" 
-                fill={step === 4 ? '#059669' : activeTerm.highlight === 'w1' ? '#0891b2' : '#1e293b'}
-              >
-                W₁ = {w1.toFixed(2)}
-              </text>
+            {/* W1 텍스트 (195, 75) - 소프트 파스텔 캡슐 하이라이트 (diagramHL 기반) */}
+            <g transform="translate(195, 75)">
+              <foreignObject x="-60" y="-14" width="120" height="28">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <div 
+                    style={{
+                      padding: '2px 10px',
+                      borderRadius: '12px',
+                      backgroundColor: step === 4 ? '#d1fae5' : step === 3 ? '#fef3c7' : diagramHL.w1Edge ? '#e0f2fe' : 'transparent',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <MathView 
+                      math={`W_1 = ${w1.toFixed(2)}`} 
+                      style={{ 
+                        fontSize: '13.5px', 
+                        color: step === 4 ? '#047857' : step === 3 ? '#b45309' : diagramHL.w1Edge ? '#0284c7' : '#334155', 
+                        fontWeight: step === 4 || step === 3 || diagramHL.w1Edge ? '800' : '700'
+                      }} 
+                    />
+                  </div>
+                </div>
+              </foreignObject>
             </g>
 
-            {/* z1 선형 신호 뱃지 (SVG 텍스트 통합) */}
+            {/* z1 텍스트 (195, 165) - diagramHL 기반 정밀 하이라이트 */}
             <g transform="translate(195, 165)">
-              <rect x="-58" y="-14" width="116" height="28" rx="6" fill={step === 1 ? '#e0f2fe' : step === 3 ? '#fffbeb' : '#e2e8f0'} stroke="none" />
-              <text 
-                textAnchor="middle" 
-                y="5" 
-                fontSize="12.5" 
-                fontWeight="800" 
-                fontFamily="Georgia, serif" 
-                fill={step === 1 ? '#0369a1' : step === 3 ? '#b45309' : '#334155'}
-              >
-                z₁ = {z1.toFixed(3)}
-              </text>
+              <foreignObject x="-60" y="-14" width="120" height="28">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <div 
+                    style={{
+                      padding: '2px 10px',
+                      borderRadius: '12px',
+                      backgroundColor: step === 1 ? '#e0f2fe' : diagramHL.z1 ? '#e0f2fe' : 'transparent',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <MathView 
+                      math={`z_1 = ${z1.toFixed(3)}`} 
+                      style={{ 
+                        fontSize: '13.5px', 
+                        color: step === 1 ? '#0369a1' : diagramHL.z1 ? '#0369a1' : '#64748b',
+                        fontWeight: step === 1 || diagramHL.z1 ? '800' : '600'
+                      }} 
+                    />
+                  </div>
+                </div>
+              </foreignObject>
             </g>
 
-            {/* W2 연결선 */}
+            {/* --- W2 연결선 (h1 -> yHat) --- */}
             <line 
               x1="300" y1="120" x2="510" y2="120" 
-              stroke={step === 3 ? '#d97706' : step === 1 ? '#0284c7' : activeTerm.highlight === 'w2' ? '#d97706' : '#cbd5e1'} 
-              strokeWidth={step === 1 || step === 3 || activeTerm.highlight === 'w2' ? '5' : '2.5'}
+              stroke={step === 3 ? '#d97706' : step === 1 ? '#0284c7' : diagramHL.w2Edge ? '#d97706' : '#cbd5e1'} 
+              strokeWidth={step === 1 || step === 3 || diagramHL.w2Edge ? '4.5' : '2'}
               strokeDasharray={step === 1 || step === 3 ? '8 6' : 'none'}
               style={{ animation: step === 1 ? 'forwardDashFlow 0.75s linear infinite' : step === 3 ? 'backwardDashFlow 0.75s linear infinite' : 'none' }}
-              markerEnd={step === 3 ? undefined : 'url(#arrow-blue)'}
+              markerEnd={step === 3 ? undefined : diagramHL.w2Edge ? 'url(#arrow-orange)' : 'url(#arrow-blue)'}
               markerStart={step === 3 ? 'url(#arrow-orange)' : undefined}
             />
 
-            {/* 가중치 W2 뱃지 (SVG 텍스트 통합) */}
-            <g transform="translate(405, 75)" className={step === 4 ? 'step4-green-pulse' : activeTerm.highlight === 'w2' ? 'active-pulsing-node' : ''}>
-              <rect 
-                x="-55" y="-15" width="110" height="28" rx="6" 
-                fill={step === 4 ? '#d1fae5' : step === 3 ? '#fef3c7' : activeTerm.highlight === 'w2' ? '#fef3c7' : '#ffffff'} 
-                stroke={step === 3 ? '#fde68a' : 'none'}
-              />
-              <text 
-                textAnchor="middle" 
-                y="4" 
-                fontSize="12.5" 
-                fontWeight="800" 
-                fontFamily="Georgia, serif" 
-                fill={step === 4 ? '#059669' : step === 3 ? '#b45309' : activeTerm.highlight === 'w2' ? '#b45309' : '#1e293b'}
-              >
-                W₂ = {w2.toFixed(2)}
-              </text>
+            {/* W2 텍스트 (405, 75) - 소프트 파스텔 캡슐 하이라이트 (diagramHL 기반) */}
+            <g transform="translate(405, 75)">
+              <foreignObject x="-60" y="-14" width="120" height="28">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <div 
+                    style={{
+                      padding: '2px 10px',
+                      borderRadius: '12px',
+                      backgroundColor: step === 4 ? '#d1fae5' : step === 3 ? '#fef3c7' : diagramHL.w2Edge ? '#fef3c7' : 'transparent',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <MathView 
+                      math={`W_2 = ${w2.toFixed(2)}`} 
+                      style={{ 
+                        fontSize: '13.5px', 
+                        color: step === 4 ? '#047857' : step === 3 ? '#b45309' : diagramHL.w2Edge ? '#b45309' : '#334155', 
+                        fontWeight: step === 4 || step === 3 || diagramHL.w2Edge ? '800' : '700'
+                      }} 
+                    />
+                  </div>
+                </div>
+              </foreignObject>
             </g>
 
-            {/* z2 선형 신호 뱃지 (SVG 텍스트 통합) */}
+            {/* z2 텍스트 (405, 165) - diagramHL 기반 정밀 하이라이트 */}
             <g transform="translate(405, 165)">
-              <rect x="-58" y="-14" width="116" height="28" rx="6" fill={step === 1 ? '#e0f2fe' : step === 3 ? '#fffbeb' : '#e2e8f0'} stroke="none" />
-              <text 
-                textAnchor="middle" 
-                y="5" 
-                fontSize="12.5" 
-                fontWeight="800" 
-                fontFamily="Georgia, serif" 
-                fill={step === 1 ? '#0369a1' : step === 3 ? '#b45309' : '#334155'}
-              >
-                z₂ = {z2.toFixed(3)}
-              </text>
+              <foreignObject x="-60" y="-14" width="120" height="28">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <div 
+                    style={{
+                      padding: '2px 10px',
+                      borderRadius: '12px',
+                      backgroundColor: step === 1 ? '#e0f2fe' : diagramHL.z2 ? '#e0f2fe' : 'transparent',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <MathView 
+                      math={`z_2 = ${z2.toFixed(3)}`} 
+                      style={{ 
+                        fontSize: '13.5px', 
+                        color: step === 1 ? '#0369a1' : diagramHL.z2 ? '#0369a1' : '#64748b',
+                        fontWeight: step === 1 || diagramHL.z2 ? '800' : '600'
+                      }} 
+                    />
+                  </div>
+                </div>
+              </foreignObject>
             </g>
 
-            {/* Loss 수평선 (Step 2 선택 시 장미색 흐름 애니메이션 적용) */}
+            {/* --- Loss 연결선 (yHat -> Loss) --- */}
             <line 
               x1="510" y1="120" x2="670" y2="120" 
               stroke={step === 2 ? '#e11d48' : '#cbd5e1'} 
-              strokeWidth={step === 2 ? '3.5' : '2.5'} 
+              strokeWidth={step === 2 ? '4' : '2'} 
               strokeDasharray={step === 2 ? '6 4' : '5 5'}
               style={{ animation: step === 2 ? 'lossDashFlow 0.6s linear infinite' : 'none' }}
             />
 
-            {/* 노드 1: x (Cyan & Slate 테마) */}
+            {/* === 노드 1: x (90, 120) === */}
             <g transform="translate(90, 120)">
-              <circle r="44" fill="#ffffff" stroke="#0284c7" strokeWidth="3.5" />
-              <text 
-                textAnchor="middle" 
-                y="8" 
-                fontSize="22" 
-                fontWeight="bold" 
-                fontStyle="italic" 
-                fontFamily="Georgia, 'Times New Roman', serif" 
-                fill="#0369a1"
-              >
-                x
-              </text>
-              <text textAnchor="middle" y="-54" fontSize="13" fontWeight="700" fill="#64748b">입력층</text>
-              <text 
-                textAnchor="middle" 
-                y="65" 
-                fontSize="14" 
-                fontWeight="800" 
-                fontFamily="monospace" 
-                fill="#0284c7"
-              >
-                {x.toFixed(2)}
-              </text>
+              <circle r="46" fill="none" stroke="#0284c7" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.6" />
+              <circle r="40" fill="#ffffff" stroke="#0284c7" strokeWidth="3.5" filter="drop-shadow(0 4px 10px rgba(2, 132, 199, 0.18))" />
+              
+              {/* KaTeX 노드 라벨 */}
+              <foreignObject x="-30" y="-20" width="60" height="40">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <MathView math="\mathbf{x}" style={{ fontSize: '22px', color: '#0369a1' }} />
+                </div>
+              </foreignObject>
+              
+              {/* 노드 상단 라벨 (간격 y=-60 확장 & 폰트크기 14.5px 업그레이드) */}
+              <text textAnchor="middle" y="-60" fontSize="14.5" fontWeight="800" fill="#475569">입력층</text>
+
+              {/* 하단 KaTeX 수치 표식 */}
+              <foreignObject x="-40" y="56" width="80" height="24">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <MathView math={`= \\mathbf{${x.toFixed(2)}}`} style={{ fontSize: '13px', color: '#0284c7' }} />
+                </div>
+              </foreignObject>
             </g>
 
-            {/* 노드 2: h1 (Violet & Indigo 테마) */}
-            <g transform="translate(300, 120)" className={activeTerm.highlight === 'h1' ? 'active-pulsing-node' : ''}>
+            {/* === 노드 2: h1 (300, 120) === */}
+            <g transform="translate(300, 120)">
               <circle 
-                r="44" 
-                fill={step === 1 ? '#e0f2fe' : activeTerm.highlight === 'h1' ? '#f5f3ff' : '#ffffff'} 
-                stroke={step === 1 ? '#0284c7' : activeTerm.highlight === 'h1' ? '#7c3aed' : step === 3 ? '#d97706' : '#cbd5e1'} 
-                strokeWidth={step === 1 || activeTerm.highlight === 'h1' ? '5' : '3'} 
+                r="46" 
+                fill="none" 
+                stroke={step === 1 ? '#0284c7' : diagramHL.h1Node ? '#7c3aed' : '#cbd5e1'} 
+                strokeWidth="1.5" 
+                strokeDasharray="4 3" 
+                opacity="0.6" 
               />
-              <text 
-                textAnchor="middle" 
-                y="7" 
-                fontSize="21" 
-                fontWeight="bold" 
-                fontStyle="italic" 
-                fontFamily="Georgia, 'Times New Roman', serif" 
-                fill="#1f2937"
-              >
-                h₁
-              </text>
-              <text textAnchor="middle" y="-54" fontSize="13" fontWeight="700" fill="#0284c7">은닉층</text>
-              <text 
-                textAnchor="middle" 
-                y="65" 
-                fontSize="14" 
-                fontWeight="800" 
-                fontFamily="monospace" 
-                fill="#0284c7"
-              >
-                {step >= 1 ? h1.toFixed(3) : '?'}
-              </text>
+              <circle 
+                r="40" 
+                fill={step === 1 ? '#e0f2fe' : diagramHL.h1Node ? '#f5f3ff' : '#ffffff'} 
+                stroke={step === 1 ? '#0284c7' : diagramHL.h1Node ? '#7c3aed' : step === 3 ? '#d97706' : '#cbd5e1'} 
+                strokeWidth={step === 1 || diagramHL.h1Node ? '4' : '3'} 
+                filter="drop-shadow(0 4px 10px rgba(0, 0, 0, 0.08))"
+              />
+
+              {/* KaTeX 노드 라벨 */}
+              <foreignObject x="-30" y="-20" width="60" height="40">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <MathView math="\mathbf{h_1}" style={{ fontSize: '21px', color: '#1e293b' }} />
+                </div>
+              </foreignObject>
+
+              {/* 노드 상단 라벨 (간격 y=-60 확장 & 폰트크기 14.5px 업그레이드) */}
+              <text textAnchor="middle" y="-60" fontSize="14.5" fontWeight="800" fill="#0284c7">은닉층</text>
+
+              {/* 하단 KaTeX 수치 표식 */}
+              <foreignObject x="-45" y="56" width="90" height="24">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <MathView math={hasLearned || step > 0 ? `= \\mathbf{${h1.toFixed(3)}}` : '= ?'} style={{ fontSize: '13px', color: step === 1 ? '#0284c7' : '#334155' }} />
+                </div>
+              </foreignObject>
             </g>
 
-            {/* 노드 3: yHat (Sky & Blue 테마, 글로우 애니메이션 삭제) */}
+            {/* === 노드 3: yHat (510, 120) === */}
             <g transform="translate(510, 120)">
               <circle 
-                r="44" 
-                fill={step === 1 ? '#e0f2fe' : activeTermKey === 'dyHat_dz2' ? '#e0f2fe' : '#ffffff'} 
-                stroke={step === 1 ? '#0284c7' : activeTermKey === 'dyHat_dz2' ? '#0284c7' : step === 3 ? '#d97706' : '#cbd5e1'} 
-                strokeWidth={step === 1 || activeTermKey === 'dyHat_dz2' ? '5' : '3'} 
+                r="46" 
+                fill="none" 
+                stroke={step === 1 || diagramHL.yHatNode ? '#0284c7' : '#cbd5e1'} 
+                strokeWidth="1.5" 
+                strokeDasharray="4 3" 
+                opacity="0.6" 
               />
-              <text 
-                textAnchor="middle" 
-                y="6" 
-                fontSize="21" 
-                fontWeight="bold" 
-                fontStyle="italic" 
-                fontFamily="Georgia, 'Times New Roman', serif" 
-                fill="#1f2937"
-              >
-                ŷ
-              </text>
-              <text textAnchor="middle" y="-54" fontSize="13" fontWeight="700" fill="#0284c7">출력층</text>
-              <text 
-                textAnchor="middle" 
-                y="65" 
-                fontSize="14" 
-                fontWeight="800" 
-                fontFamily="monospace" 
-                fill="#0284c7"
-              >
-                {step >= 1 ? yHat.toFixed(3) : '?'}
-              </text>
+              <circle 
+                r="40" 
+                fill={step === 1 ? '#e0f2fe' : diagramHL.yHatNode ? '#e0f2fe' : '#ffffff'} 
+                stroke={step === 1 || diagramHL.yHatNode ? '#0284c7' : step === 3 ? '#d97706' : '#cbd5e1'} 
+                strokeWidth={step === 1 || diagramHL.yHatNode ? '4' : '3'} 
+                filter="drop-shadow(0 4px 10px rgba(0, 0, 0, 0.08))"
+              />
+
+              {/* KaTeX 노드 라벨 */}
+              <foreignObject x="-30" y="-20" width="60" height="40">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <MathView math="\mathbf{\hat{y}}" style={{ fontSize: '21px', color: '#1e293b' }} />
+                </div>
+              </foreignObject>
+
+              {/* 노드 상단 라벨 (간격 y=-60 확장 & 폰트크기 14.5px 업그레이드) */}
+              <text textAnchor="middle" y="-60" fontSize="14.5" fontWeight="800" fill="#0284c7">출력층</text>
+
+              {/* 하단 KaTeX 수치 표식 */}
+              <foreignObject x="-45" y="56" width="90" height="24">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <MathView math={hasLearned || step > 0 ? `= \\mathbf{${yHat.toFixed(3)}}` : '= ?'} style={{ fontSize: '13px', color: step === 1 ? '#0284c7' : '#334155' }} />
+                </div>
+              </foreignObject>
             </g>
 
-            {/* 노드 4: Loss (Rose & Crimson 테마) */}
+            {/* === 노드 4: Loss (670, 120) === */}
             <g transform="translate(670, 120)">
               <rect 
-                x="-36" y="-28" width="72" height="56" rx="12" 
-                fill={step === 2 ? '#ffe4e6' : '#fff1f2'} 
+                x="-38" y="-28" width="76" height="56" rx="14" 
+                fill={step === 2 ? '#ffe4e6' : '#ffffff'} 
                 stroke={step === 2 ? '#e11d48' : '#f43f5e'} 
-                strokeWidth={step === 2 ? '4.5' : '3'} 
+                strokeWidth={step === 2 ? '4' : '2.5'} 
+                filter="drop-shadow(0 4px 10px rgba(225, 29, 72, 0.15))"
               />
-              <text textAnchor="middle" y="5" fontSize="15" fontWeight="800" fill="#be123c">Loss</text>
-              <text 
-                textAnchor="middle" 
-                y="-42" 
-                fontSize="12.5" 
-                fontWeight="800" 
-                fontFamily="Georgia, serif" 
-                fill="#be123c"
-              >
-                y = {target.toFixed(2)}
-              </text>
-              <text 
-                textAnchor="middle" 
-                y="65" 
-                fontSize="14" 
-                fontWeight="800" 
-                fontFamily="monospace" 
-                fill="#e11d48"
-              >
-                {step >= 2 ? loss.toFixed(4) : '?'}
-              </text>
+
+              {/* KaTeX Loss 노드 라벨 */}
+              <foreignObject x="-38" y="-28" width="76" height="56">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <MathView math="\mathbf{\text{Loss}}" style={{ fontSize: '15px', color: '#be123c' }} />
+                </div>
+              </foreignObject>
+
+              {/* 상단 KaTeX 정답 목표 표식 (y=-64 로 간격 상향 조정) */}
+              <foreignObject x="-40" y="-64" width="80" height="24">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <MathView math={`y = \\mathbf{${target.toFixed(2)}}`} style={{ fontSize: '13px', color: '#be123c' }} />
+                </div>
+              </foreignObject>
+
+              {/* 하단 KaTeX 손실 값 표식 */}
+              <foreignObject x="-45" y="56" width="90" height="24">
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <MathView math={hasLearned || step >= 2 ? `= \\mathbf{${loss.toFixed(4)}}` : '= ?'} style={{ fontSize: '12.5px', color: step >= 2 ? '#e11d48' : '#64748b' }} />
+                </div>
+              </foreignObject>
             </g>
           </svg>
         </div>
       </div>
 
-      {/* 4. 선택된 Step (1~4) 별 세련된 커스텀 파스텔 연산 카드 */}
+      {/* 4. 선택된 Step (1~4) 별 세련된 모션 전환 카드 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        
-        {/* Step 1: 순전파 */}
-        {step === 1 && (
-          <div style={{ backgroundColor: '#f0f9ff', padding: '18px', borderRadius: '14px', border: '1.5px solid #bae6fd', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 12px -2px rgba(2,132,199,0.08)' }}>
-            <span style={{ fontSize: '14px', fontWeight: '800', color: '#0369a1' }}>
-              1. 순전파 (Forward)
-            </span>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-              <div style={{ backgroundColor: '#ffffff', padding: '12px 16px', borderRadius: '10px', border: '1px solid #bae6fd', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '12px', fontWeight: '800', color: '#0284c7', display: 'block', marginBottom: '4px' }}>은닉층 (h₁)</span>
-                <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.7' }}>
-                  <MathView math={`z_1 = W_1 x + b_1 = ${w1.toFixed(2)}\\times ${x.toFixed(2)} + ${b1.toFixed(2)} = \\mathbf{${z1.toFixed(3)}}`} /><br/>
-                  <MathView math={`h_1 = \\sigma(z_1) = \\mathbf{${h1.toFixed(3)}}`} style={{ fontWeight: '700', color: '#0284c7' }} />
-                </div>
-              </div>
-
-              <div style={{ backgroundColor: '#ffffff', padding: '12px 16px', borderRadius: '10px', border: '1px solid #bae6fd', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '12px', fontWeight: '800', color: '#0284c7', display: 'block', marginBottom: '4px' }}>출력층 (ŷ)</span>
-                <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.7' }}>
-                  <MathView math={`z_2 = W_2 h_1 + b_2 = ${w2.toFixed(2)}\\times ${h1.toFixed(3)} + (${b2.toFixed(2)}) = \\mathbf{${z2.toFixed(3)}}`} /><br/>
-                  <MathView math={`\\hat{y} = \\sigma(z_2) = \\mathbf{${yHat.toFixed(3)}}`} style={{ fontWeight: '700', color: '#0284c7' }} />
-                </div>
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 2: 오차 산출 */}
-        {step === 2 && (
-          <div style={{ backgroundColor: '#fff1f2', padding: '18px', borderRadius: '14px', border: '1.5px solid #fecdd3', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 12px -2px rgba(225,29,72,0.08)' }}>
-            <span style={{ fontSize: '14px', fontWeight: '800', color: '#be123c' }}>
-              2. 오차 산출
-            </span>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-              <div style={{ backgroundColor: '#ffffff', padding: '12px 16px', borderRadius: '10px', border: '1px solid #fecdd3', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '12px', fontWeight: '800', color: '#e11d48', display: 'block', marginBottom: '4px' }}>손실 함수 </span>
-                <MathView math={`L = \\frac{1}{2}(\\hat{y} - y)^2 = \\frac{1}{2}(${yHat.toFixed(4)} - ${target.toFixed(2)})^2 = \\mathbf{${loss.toFixed(4)}}`} style={{ color: '#991b1b', fontWeight: '700' }} />
-              </div>
-
-              <div style={{ backgroundColor: '#ffffff', padding: '12px 16px', borderRadius: '10px', border: '1px solid #fecdd3', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '12px', fontWeight: '800', color: '#e11d48', display: 'block', marginBottom: '4px' }}>출력 오차 민감도</span>
-                <MathView math={`\\frac{\\partial L}{\\partial \\hat{y}} = \\hat{y} - y = ${yHat.toFixed(4)} - ${target.toFixed(2)} = \\mathbf{${dL_dyHat.toFixed(4)}}`} style={{ color: '#991b1b', fontWeight: '700' }} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 3: 역전파 */}
-        {step === 3 && (
-          <div style={{ backgroundColor: '#fffbeb', padding: '18px', borderRadius: '14px', border: '1.5px solid #fde68a', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 12px -2px rgba(217,119,6,0.08)' }}>
-            <span style={{ fontSize: '14px', fontWeight: '800', color: '#b45309' }}>
-              3. 역전파 (Backward)
-            </span>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
-              <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #fde68a', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#d97706', display: 'block', marginBottom: '3px' }}>1. 출력층 기울기 (δ₂)</span>
-                <MathView math={`\\delta_2 = (\\hat{y}-y)\\sigma'(z_2) = \\mathbf{${delta2.toFixed(4)}}`} style={{ fontSize: '12.5px', color: '#92400e', fontWeight: '700' }} />
-              </div>
-
-              <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #fde68a', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#d97706', display: 'block', marginBottom: '3px' }}>2. W₂ 기울기 (<MathView math="\frac{\partial L}{\partial W_2}" style={{ fontSize: '11px', color: '#d97706' }} />)</span>
-                <MathView math={`\\frac{\\partial L}{\\partial W_2} = \\delta_2 \\cdot h_1 = \\mathbf{${dL_dw2.toFixed(4)}}`} style={{ fontSize: '12.5px', color: '#92400e', fontWeight: '700' }} />
-              </div>
-
-              <div style={{ backgroundColor: '#ffffff', padding: '12px', borderRadius: '10px', border: '1px solid #fde68a', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#d97706', display: 'block', marginBottom: '3px' }}>3. W₁ 기울기 (<MathView math="\frac{\partial L}{\partial W_1}" style={{ fontSize: '11px', color: '#d97706' }} />)</span>
-                <MathView math={`\\frac{\\partial L}{\\partial W_1} = (\\delta_2 W_2)\\sigma'(z_1)x = \\mathbf{${dL_dw1.toFixed(4)}}`} style={{ fontSize: '12.5px', color: '#92400e', fontWeight: '700' }} />
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Step 4: 가중치 갱신 */}
-        {step === 4 && (
-          <div style={{ backgroundColor: '#ecfdf5', padding: '18px', borderRadius: '14px', border: '1.5px solid #a7f3d0', display: 'flex', flexDirection: 'column', gap: '14px', boxShadow: '0 4px 12px -2px rgba(5,150,105,0.08)' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-              <span style={{ fontSize: '14px', fontWeight: '800', color: '#047857' }}>
-                4. 가중치 갱신
+        <AnimatePresence mode="wait">
+          {step === 1 && (
+            <motion.div 
+              key="step-1"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+              style={{ backgroundColor: '#f0f9ff', padding: '20px', borderRadius: '16px', border: '1.5px solid #bae6fd', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 14px -2px rgba(2,132,199,0.08)' }}
+            >
+              <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#0369a1' }}>
+                1. 순전파 (Forward Pass)
               </span>
-              <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: '700', color: '#059669', backgroundColor: '#ffffff', padding: '4px 10px', borderRadius: '8px', border: '1px solid #a7f3d0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                갱신 공식: <MathView math="W^{(new)} = W^{(old)} - \eta \cdot \frac{\partial L}{\partial W}" />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+                <div style={{ backgroundColor: '#ffffff', padding: '14px 16px', borderRadius: '12px', border: '1px solid #bae6fd', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '800', color: '#0284c7', display: 'block', marginBottom: '6px' }}>은닉층 (h₁)</span>
+                  <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.7' }}>
+                    <MathView math={`z_1 = W_1 x + b_1 = ${w1.toFixed(2)}\\times ${x.toFixed(2)} + ${b1.toFixed(2)} = \\mathbf{${z1.toFixed(3)}}`} /><br/>
+                    <MathView math={`h_1 = \\sigma(z_1) = \\mathbf{${h1.toFixed(3)}}`} style={{ fontWeight: '800', color: '#0284c7' }} />
+                  </div>
+                </div>
+
+                <div style={{ backgroundColor: '#ffffff', padding: '14px 16px', borderRadius: '12px', border: '1px solid #bae6fd', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '800', color: '#0284c7', display: 'block', marginBottom: '6px' }}>출력층 (ŷ)</span>
+                  <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.7' }}>
+                    <MathView math={`z_2 = W_2 h_1 + b_2 = ${w2.toFixed(2)}\\times ${h1.toFixed(3)} + (${b2.toFixed(2)}) = \\mathbf{${z2.toFixed(3)}}`} /><br/>
+                    <MathView math={`\\hat{y} = \\sigma(z_2) = \\mathbf{${yHat.toFixed(3)}}`} style={{ fontWeight: '800', color: '#0284c7' }} />
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          )}
+
+          {step === 2 && (
+            <motion.div 
+              key="step-2"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+              style={{ backgroundColor: '#fff1f2', padding: '20px', borderRadius: '16px', border: '1.5px solid #fecdd3', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 14px -2px rgba(225,29,72,0.08)' }}
+            >
+              <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#be123c' }}>
+                2. 오차 산출 (Loss Calculation)
               </span>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
-              <div style={{ padding: '12px 10px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1px solid #a7f3d0', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>
-                  <MathView math="W_1" style={{ fontSize: '13px', color: '#059669' }} />
-                </span>
-                <div style={{ display: 'block', marginBottom: '6px' }}>
-                  <MathView math={`${w1.toFixed(3)} - ${lr.toFixed(1)} \\times (${dL_dw1.toFixed(4)})`} style={{ fontSize: '11px', color: '#334155' }} />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
+                <div style={{ backgroundColor: '#ffffff', padding: '14px 16px', borderRadius: '12px', border: '1px solid #fecdd3', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '800', color: '#e11d48', display: 'block', marginBottom: '6px' }}>손실 함수 (MSE Loss)</span>
+                  <MathView math={`L = \\frac{1}{2}(\\hat{y} - y)^2 = \\frac{1}{2}(${yHat.toFixed(4)} - ${target.toFixed(2)})^2 = \\mathbf{${loss.toFixed(4)}}`} style={{ color: '#be123c', fontWeight: '800' }} />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '14px', fontWeight: '700' }}>
-                  <span style={{ color: '#ef4444' }}>{w1.toFixed(3)}</span>
-                  <ArrowRightIcon />
-                  <span style={{ color: '#059669', fontWeight: '800' }}>{w1_next.toFixed(3)}</span>
+
+                <div style={{ backgroundColor: '#ffffff', padding: '14px 16px', borderRadius: '12px', border: '1px solid #fecdd3', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '800', color: '#e11d48', display: 'block', marginBottom: '6px' }}>출력 오차 민감도</span>
+                  <MathView math={`\\frac{\\partial L}{\\partial \\hat{y}} = \\hat{y} - y = ${yHat.toFixed(4)} - ${target.toFixed(2)} = \\mathbf{${dL_dyHat.toFixed(4)}}`} style={{ color: '#be123c', fontWeight: '800' }} />
                 </div>
               </div>
+            </motion.div>
+          )}
 
-              <div style={{ padding: '12px 10px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1px solid #a7f3d0', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>
-                  <MathView math="b_1" style={{ fontSize: '13px', color: '#059669' }} />
-                </span>
-                <div style={{ display: 'block', marginBottom: '6px' }}>
-                  <MathView math={`${b1.toFixed(3)} - ${lr.toFixed(1)} \\times (${dL_db1.toFixed(4)})`} style={{ fontSize: '11px', color: '#334155' }} />
+          {step === 3 && (
+            <motion.div 
+              key="step-3"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+              style={{ backgroundColor: '#fffbeb', padding: '20px', borderRadius: '16px', border: '1.5px solid #fde68a', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 14px -2px rgba(217,119,6,0.08)' }}
+            >
+              <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#b45309' }}>
+                3. 역전파 (Backward Pass)
+              </span>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
+                <div style={{ backgroundColor: '#ffffff', padding: '12px 14px', borderRadius: '12px', border: '1px solid #fde68a', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#d97706', display: 'block', marginBottom: '4px' }}>1. 출력층 기울기 (δ₂)</span>
+                  <MathView math={`\\delta_2 = (\\hat{y}-y)\\sigma'(z_2) = \\mathbf{${delta2.toFixed(4)}}`} style={{ fontSize: '12.5px', color: '#92400e', fontWeight: '800' }} />
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '12.5px', fontWeight: '700' }}>
-                  <span style={{ color: '#ef4444' }}>{b1.toFixed(3)}</span>
-                  <ArrowRightIcon />
-                  <span style={{ color: '#059669', fontWeight: '800' }}>{b1_next.toFixed(3)}</span>
+
+                <div style={{ backgroundColor: '#ffffff', padding: '12px 14px', borderRadius: '12px', border: '1px solid #fde68a', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#d97706', display: 'block', marginBottom: '4px' }}>2. W₂ 기울기 (<MathView math="\frac{\partial L}{\partial W_2}" style={{ fontSize: '11px' }} />)</span>
+                  <MathView math={`\\frac{\\partial L}{\\partial W_2} = \\delta_2 \\cdot h_1 = \\mathbf{${dL_dw2.toFixed(4)}}`} style={{ fontSize: '12.5px', color: '#92400e', fontWeight: '800' }} />
+                </div>
+
+                <div style={{ backgroundColor: '#ffffff', padding: '12px 14px', borderRadius: '12px', border: '1px solid #fde68a', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#d97706', display: 'block', marginBottom: '4px' }}>3. W₁ 기울기 (<MathView math="\frac{\partial L}{\partial W_1}" style={{ fontSize: '11px' }} />)</span>
+                  <MathView math={`\\frac{\\partial L}{\\partial W_1} = (\\delta_2 W_2)\\sigma'(z_1)x = \\mathbf{${dL_dw1.toFixed(4)}}`} style={{ fontSize: '12.5px', color: '#92400e', fontWeight: '800' }} />
                 </div>
               </div>
+            </motion.div>
+          )}
 
-              <div style={{ padding: '12px 10px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1px solid #a7f3d0', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>
-                  <MathView math="W_2" style={{ fontSize: '13px', color: '#059669' }} />
+          {step === 4 && (
+            <motion.div 
+              key="step-4"
+              initial={{ opacity: 0, y: 10 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -10 }}
+              transition={{ duration: 0.25 }}
+              style={{ backgroundColor: '#ecfdf5', padding: '20px', borderRadius: '16px', border: '1.5px solid #a7f3d0', display: 'flex', flexDirection: 'column', gap: '14px', boxShadow: '0 4px 14px -2px rgba(5,150,105,0.08)' }}
+            >
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#047857' }}>
+                  4. 가중치 갱신 (Gradient Descent)
                 </span>
-                <div style={{ display: 'block', marginBottom: '6px' }}>
-                  <MathView math={`${w2.toFixed(3)} - ${lr.toFixed(1)} \\times (${dL_dw2.toFixed(4)})`} style={{ fontSize: '11px', color: '#334155' }} />
-                </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '12.5px', fontWeight: '700' }}>
-                  <span style={{ color: '#ef4444' }}>{w2.toFixed(3)}</span>
-                  <ArrowRightIcon />
-                  <span style={{ color: '#059669', fontWeight: '800' }}>{w2_next.toFixed(3)}</span>
-                </div>
+                <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: '700', color: '#059669', backgroundColor: '#ffffff', padding: '4px 10px', borderRadius: '8px', border: '1px solid #a7f3d0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                  공식: <MathView math="W^{(new)} = W^{(old)} - \eta \cdot \frac{\partial L}{\partial W}" />
+                </span>
               </div>
 
-              <div style={{ padding: '12px 10px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1px solid #a7f3d0', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '12.5px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>
-                  <MathView math="b_2" style={{ fontSize: '13px', color: '#059669' }} />
-                </span>
-                <div style={{ display: 'block', marginBottom: '6px' }}>
-                  <MathView math={`${b2.toFixed(3)} - ${lr.toFixed(1)} \\times (${dL_db2.toFixed(4)})`} style={{ fontSize: '11px', color: '#334155' }} />
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
+                <div style={{ padding: '12px 10px', borderRadius: '12px', backgroundColor: '#ffffff', border: '1px solid #a7f3d0', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>
+                    <MathView math="W_1" style={{ fontSize: '13px' }} />
+                  </span>
+                  <div style={{ display: 'block', marginBottom: '6px' }}>
+                    <MathView math={`${w1.toFixed(3)} - ${lr.toFixed(1)} \\times (${dL_dw1.toFixed(4)})`} style={{ fontSize: '11px', color: '#475569' }} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '13px', fontWeight: '700' }}>
+                    <span style={{ color: '#ef4444' }}>{w1.toFixed(3)}</span>
+                    <ArrowRightIcon />
+                    <motion.span 
+                      key={w1_next}
+                      initial={{ scale: 1.25, color: '#10b981' }}
+                      animate={{ scale: 1, color: '#059669' }}
+                      transition={{ type: 'spring', stiffness: 400 }}
+                      style={{ fontWeight: '800' }}
+                    >
+                      {w1_next.toFixed(3)}
+                    </motion.span>
+                  </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '12.5px', fontWeight: '700' }}>
-                  <span style={{ color: '#ef4444' }}>{b2.toFixed(3)}</span>
-                  <ArrowRightIcon />
-                  <span style={{ color: '#059669', fontWeight: '800' }}>{b2_next.toFixed(3)}</span>
+
+                <div style={{ padding: '12px 10px', borderRadius: '12px', backgroundColor: '#ffffff', border: '1px solid #a7f3d0', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>
+                    <MathView math="b_1" style={{ fontSize: '13px' }} />
+                  </span>
+                  <div style={{ display: 'block', marginBottom: '6px' }}>
+                    <MathView math={`${b1.toFixed(3)} - ${lr.toFixed(1)} \\times (${dL_db1.toFixed(4)})`} style={{ fontSize: '11px', color: '#475569' }} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '13px', fontWeight: '700' }}>
+                    <span style={{ color: '#ef4444' }}>{b1.toFixed(3)}</span>
+                    <ArrowRightIcon />
+                    <motion.span 
+                      key={b1_next}
+                      initial={{ scale: 1.25, color: '#10b981' }}
+                      animate={{ scale: 1, color: '#059669' }}
+                      transition={{ type: 'spring', stiffness: 400 }}
+                      style={{ fontWeight: '800' }}
+                    >
+                      {b1_next.toFixed(3)}
+                    </motion.span>
+                  </div>
+                </div>
+
+                <div style={{ padding: '12px 10px', borderRadius: '12px', backgroundColor: '#ffffff', border: '1px solid #a7f3d0', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>
+                    <MathView math="W_2" style={{ fontSize: '13px' }} />
+                  </span>
+                  <div style={{ display: 'block', marginBottom: '6px' }}>
+                    <MathView math={`${w2.toFixed(3)} - ${lr.toFixed(1)} \\times (${dL_dw2.toFixed(4)})`} style={{ fontSize: '11px', color: '#475569' }} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '13px', fontWeight: '700' }}>
+                    <span style={{ color: '#ef4444' }}>{w2.toFixed(3)}</span>
+                    <ArrowRightIcon />
+                    <motion.span 
+                      key={w2_next}
+                      initial={{ scale: 1.25, color: '#10b981' }}
+                      animate={{ scale: 1, color: '#059669' }}
+                      transition={{ type: 'spring', stiffness: 400 }}
+                      style={{ fontWeight: '800' }}
+                    >
+                      {w2_next.toFixed(3)}
+                    </motion.span>
+                  </div>
+                </div>
+
+                <div style={{ padding: '12px 10px', borderRadius: '12px', backgroundColor: '#ffffff', border: '1px solid #a7f3d0', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '3px' }}>
+                    <MathView math="b_2" style={{ fontSize: '13px' }} />
+                  </span>
+                  <div style={{ display: 'block', marginBottom: '6px' }}>
+                    <MathView math={`${b2.toFixed(3)} - ${lr.toFixed(1)} \\times (${dL_db2.toFixed(4)})`} style={{ fontSize: '11px', color: '#475569' }} />
+                  </div>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '13px', fontWeight: '700' }}>
+                    <span style={{ color: '#ef4444' }}>{b2.toFixed(3)}</span>
+                    <ArrowRightIcon />
+                    <motion.span 
+                      key={b2_next}
+                      initial={{ scale: 1.25, color: '#10b981' }}
+                      animate={{ scale: 1, color: '#059669' }}
+                      transition={{ type: 'spring', stiffness: 400 }}
+                      style={{ fontWeight: '800' }}
+                    >
+                      {b2_next.toFixed(3)}
+                    </motion.span>
+                  </div>
                 </div>
               </div>
-            </div>
-          </div>
-        )}
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* 5. W₁ 연쇄 법칙 상세 과정 (단일 통합 체인 룰 탐색기 카드) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#ffffff', padding: '22px', borderRadius: '18px', border: '1px solid #cbd5e1', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.05)' }}>
+      {/* 5. 연쇄 법칙(Chain Rule) 상세 내역 탐색기 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#ffffff', padding: '22px', borderRadius: '18px', border: '1px solid #cbd5e1', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.04)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
-          <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#1e1b4b' }}>
-            연쇄 법칙을 사용한 <MathView math="W_1" style={{ fontSize: '13.5px' }} /> 기울기 계산 과정
+          <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#0f172a' }}>
+            연쇄 법칙을 사용한 <MathView math="W_1" style={{ fontSize: '14px' }} /> 기울기 상세 유도
           </span>
         </div>
 
-        {/* 1. 수치 곱셈 연산식 바 */}
-        <div style={{ fontSize: '13px', color: '#1e1b4b', overflowX: 'auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: '#f1f5f9', padding: '12px 18px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+        {/* 학습 미실행 시 확인 모달 */}
+        <AnimatePresence>
+          {showLearnPrompt && (
+            <motion.div
+              initial={{ opacity: 0, y: -8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -8 }}
+              transition={{ duration: 0.25, ease: 'easeOut' }}
+              style={{
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                gap: '14px',
+                padding: '20px 24px',
+                borderRadius: '14px',
+                backgroundColor: '#fffbeb',
+                border: '1px solid #fde68a',
+                boxShadow: '0 4px 16px rgba(217, 119, 6, 0.1)'
+              }}
+            >
+              <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#92400e', lineHeight: '1.5' }}>
+                  실행된 학습이 없습니다. 현재 파라미터로 1회 학습을 자동 실행합니다.
+                </span>
+              </div>
+              <div style={{ display: 'flex', gap: '10px' }}>
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={handleLearnConfirm}
+                  style={{
+                    padding: '8px 22px',
+                    fontSize: '13px',
+                    fontWeight: '800',
+                    borderRadius: '10px',
+                    border: 'none',
+                    background: 'linear-gradient(135deg, #d97706, #b45309)',
+                    color: '#ffffff',
+                    cursor: 'pointer',
+                    boxShadow: '0 3px 10px rgba(217, 119, 6, 0.3)'
+                  }}
+                >
+                확인
+                </motion.button>
+                <motion.button
+                  whileHover={{ scale: 1.04 }}
+                  whileTap={{ scale: 0.96 }}
+                  onClick={handleLearnCancel}
+                  style={{
+                    padding: '8px 22px',
+                    fontSize: '13px',
+                    fontWeight: '700',
+                    borderRadius: '10px',
+                    border: '1px solid #cbd5e1',
+                    backgroundColor: '#ffffff',
+                    color: '#475569',
+                    cursor: 'pointer',
+                    boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+                  }}
+                >
+                  취소
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* 수치 곱셈식 */}
+        <div style={{ fontSize: '13px', color: '#0f172a', overflowX: 'auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: '#f1f5f9', padding: '12px 18px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
           <MathView math={`\\frac{\\partial L}{\\partial W_1} = (${dL_dyHat.toFixed(4)}) \\times (${dyHat_dz2.toFixed(4)}) \\times (${w2.toFixed(2)}) \\times (${dh1_dz1.toFixed(4)}) \\times (${x.toFixed(2)}) = ${dL_dw1.toFixed(4)}`} style={{ fontSize: '13px' }} />
         </div>
 
-        {/* 2. 역할별 입체 테마 미분 항 버튼 목록 */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '10px', flexWrap: 'wrap', width: '100%' }}>
+        {/* 미분 항 선택 버튼 */}
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', width: '100%' }}>
           {[
             { key: 'dL_dyHat' },
             { key: 'dyHat_dz2' },
@@ -837,62 +1101,69 @@ export const BackpropSimulator = () => {
             return (
               <React.Fragment key={item.key}>
                 {idx > 0 && <span style={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '15px' }}>×</span>}
-                <button
-                  onClick={() => setActiveTermKey(item.key)}
+                <motion.button
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  onClick={() => handleTermClick(item.key)}
                   style={{
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '9px 18px',
+                    padding: '8px 16px',
                     borderRadius: '10px',
                     border: isSelected ? `2px solid ${info.themeColor}` : '1px solid #cbd5e1',
                     backgroundColor: isSelected ? info.bgColor : '#ffffff',
                     color: isSelected ? info.themeColor : '#334155',
                     fontWeight: '800',
                     cursor: 'pointer',
-                    boxShadow: isSelected ? `0 4px 12px ${info.themeColor}33` : '0 1px 3px rgba(0,0,0,0.04)',
-                    transition: 'all 0.2s ease'
+                    boxShadow: isSelected ? `0 4px 12px ${info.accentGlow}` : '0 1px 2px rgba(0,0,0,0.04)'
                   }}
                 >
-                  <MathView math={info.symbol} style={{ fontSize: '15.5px' }} />
-                </button>
+                  <MathView math={info.symbol} style={{ fontSize: '15px' }} />
+                </motion.button>
               </React.Fragment>
             );
           })}
         </div>
 
-        {/* 3. 선택된 미분 항 통합 상세 내역 (수식 유도 & 개념 2열 통합 카드) */}
-        <div style={{ padding: '16px', backgroundColor: activeTerm.bgColor, borderRadius: '14px', border: `1.5px solid ${activeTerm.themeColor}40`, display: 'flex', flexDirection: 'column', gap: '12px', transition: 'all 0.2s ease' }}>
-          {/* 하이라이트 요약 헤더 (중앙 정렬) */}
-          <div style={{ fontSize: '13px', fontWeight: '700', color: '#1e1b4b', backgroundColor: '#ffffff', padding: '10px 16px', borderRadius: '10px', border: `1px solid ${activeTerm.themeColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '6px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-            <MathView math={`\\left( ${activeTerm.symbol} \\right) = `} style={{ fontSize: '13px' }} />
-            <MathView math={activeTerm.calcFormulaMath} style={{ fontSize: '13px' }} />
-          </div>
-
-          {/* 개념 & 수식 유도 2열 세련된 카드 그리드 (위치 교체: 개념 1열, 수식유도 2열) */}
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
-            <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-              <span style={{ fontSize: '12px', fontWeight: '800', color: activeTerm.themeColor, display: 'block', marginBottom: '4px' }}>
-                개념 : {activeTerm.name}
-              </span>
-              <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6', display: 'block' }}>
-                {activeTerm.descriptionNode}
-              </div>
+        {/* 상세 설명 내역 */}
+        <AnimatePresence mode="wait">
+          <motion.div 
+            key={activeTermKey}
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2 }}
+            style={{ padding: '18px', backgroundColor: activeTerm.bgColor, borderRadius: '16px', border: `1.5px solid ${activeTerm.themeColor}35`, display: 'flex', flexDirection: 'column', gap: '14px' }}
+          >
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', backgroundColor: '#ffffff', padding: '10px 16px', borderRadius: '10px', border: `1px solid ${activeTerm.themeColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '6px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+              <MathView math={`\\left( ${activeTerm.symbol} \\right) = `} style={{ fontSize: '13px' }} />
+              <MathView math={activeTerm.calcFormulaMath} style={{ fontSize: '13px' }} />
             </div>
 
-            <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '10px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-              <span style={{ fontSize: '12px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '4px' }}>
-                수식 유도
-              </span>
-              <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6' }}>
-                {activeTerm.mathReasonNode}
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
+              <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                <span style={{ fontSize: '12px', fontWeight: '800', color: activeTerm.themeColor, display: 'block', marginBottom: '4px' }}>
+                  개념 : {activeTerm.name}
+                </span>
+                <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6' }}>
+                  {activeTerm.descriptionNode}
+                </div>
+              </div>
+
+              <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+                <span style={{ fontSize: '12px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '4px' }}>
+                  수식 유도
+                </span>
+                <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6' }}>
+                  {activeTerm.mathReasonNode}
+                </div>
               </div>
             </div>
-          </div>
-        </div>
+          </motion.div>
+        </AnimatePresence>
       </div>
-
-    </div>
+    </motion.div>
   );
 };
 
