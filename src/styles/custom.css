@@ -38,18 +38,58 @@
 
   /* 본문 컨테이너 가로폭을 60rem으로 확장 */
   --sl-content-width: 60rem !important;
+
+  /* Starlight 전역 제목 폰트 변수 지정 */
+  --sl-font-heading: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
 }
 
 body {
   font-family: 'Plus Jakarta Sans', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
 }
 
-/* 아티클 메인 제목 (h1) 텍스트 크기 조절 (슬림하고 단정하게) */
+/* 1. 아티클 메인 제목 (h1) 및 본문 소제목 (h2, h3, h4) 폰트 크기 계층별 슬림화 조율 */
 .custom-page-title-wrapper h1,
 h1#_top {
-  font-size: 2.25rem !important;
+  font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 1.75rem !important; /* 약 28px */
   line-height: 1.3 !important;
   letter-spacing: -0.02em !important;
+}
+
+.sl-markdown-content h2 {
+  font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 1.35rem !important; /* 약 21px */
+  line-height: 1.35 !important;
+  letter-spacing: -0.015em !important;
+  margin-top: 1.5rem !important;
+  margin-bottom: 0.75rem !important;
+}
+
+.sl-markdown-content h3 {
+  font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 1.15rem !important; /* 약 18px */
+  line-height: 1.4 !important;
+  letter-spacing: -0.01em !important;
+  margin-top: 1rem !important;
+  margin-bottom: 0.5rem !important;
+}
+
+.sl-markdown-content h4 {
+  font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
+  font-weight: 700 !important;
+  font-size: 1.05rem !important; /* 약 16.8px */
+  line-height: 1.4 !important;
+}
+
+/* 2. 좌측 네비게이션 사이드바 및 우측 목차 (TOC) GmarketSans 폰트 적용 */
+.sidebar-content,
+.starlight-toc,
+.starlight-toc a,
+.sidebar-pane a {
+  font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
 }
 
 /* Tailwind Preflight에 의해 리셋된 Starlight Markdown 리스트(ul, ol, li) 불릿 포인트 복원 */
@@ -127,6 +167,7 @@ dialog[data-pagefind-ui] .pagefind-ui {
   padding: 0.75rem 1.25rem !important;
   gap: 0.5rem !important;
   border-radius: 14px !important;
+  font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
 }
 
 .pagination-links .link-kind {
