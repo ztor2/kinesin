@@ -1,5 +1,5 @@
 ---
-// SectionSlider.astro - Card-Internal Integrated Frame & Fullscreen Zen Mode Layout (Orange Accent & Swapped Order)
+// SectionSlider.astro - Card-Internal Integrated Frame & Fullscreen Zen Mode Layout (iOS Safari Exit Fix & Zero Wobble Horizontal Scroll)
 ---
 
 <div class="section-slider-root" id="section-slider-root" style="width: 100%; position: relative; margin: 0;">
@@ -195,12 +195,13 @@
       background-color: #4338ca;
     }
 
-    /* 전체화면 보기 전용 모드 CSS 스타일 (Zen Fullscreen Overlay - iOS Safari 호환) */
+    /* 전체화면 보기 전용 모드 CSS 스타일 (Zen Fullscreen Overlay - iOS Safari 호환 및 가로 흔들림 차단) */
     .section-slider-root.is-fullscreen {
       position: fixed !important;
       top: 0 !important;
       left: 0 !important;
       width: 100vw !important;
+      max-width: 100vw !important;
       height: 100vh !important;
       height: -webkit-fill-available !important;
       z-index: 999999 !important;
@@ -208,6 +209,7 @@
       padding: 24px 16px !important;
       box-sizing: border-box !important;
       overflow-y: auto !important;
+      overflow-x: hidden !important; /* 가로 스크롤 및 흔들림 100% 방지 */
       -webkit-overflow-scrolling: touch;
     }
 
@@ -216,6 +218,14 @@
       margin: 0 auto !important;
       padding: 32px 36px !important;
       box-shadow: 0 20px 50px rgba(0, 0, 0, 0.3) !important;
+    }
+
+    /* 전체 스크롤 모드 뷰포트 넘침 가두기 */
+    #slider-scroll-view {
+      width: 100% !important;
+      max-width: 100% !important;
+      overflow-x: hidden !important;
+      box-sizing: border-box !important;
     }
 
     @media (max-width: 50rem) {
@@ -482,12 +492,11 @@
       }
 
       // -------------------------------------------------------------
-      // 📱 전체화면 해제 및 텍스트 전환 엔진
+      // 📱 iOS Safari 호환 100% 보장 전체화면 진입/종료 엔진
       // -------------------------------------------------------------
       function toggleFullscreen() {
-        isFullscreenMode = !isFullscreenMode;
-
-        if (isFullscreenMode) {
+        if (!isFullscreenMode) {
+          isFullscreenMode = true;
           sliderRoot.classList.add('is-fullscreen');
           document.body.classList.add('is-zen-fullscreen');
           if (fullscreenBtnLabel) fullscreenBtnLabel.textContent = '전체화면 종료';
@@ -507,17 +516,18 @@
       }
 
       function exitFullscreenState() {
-        if (!isFullscreenMode) return;
         isFullscreenMode = false;
         sliderRoot.classList.remove('is-fullscreen');
         document.body.classList.remove('is-zen-fullscreen');
         if (fullscreenBtnLabel) fullscreenBtnLabel.textContent = '전체화면';
 
-        if (document.exitFullscreen && document.fullscreenElement) {
-          document.exitFullscreen().catch(() => {});
-        } else if (document.webkitExitFullscreen && document.webkitFullscreenElement) {
-          document.webkitExitFullscreen();
-        }
+        try {
+          if (document.exitFullscreen && document.fullscreenElement) {
+            document.exitFullscreen().catch(() => {});
+          } else if (document.webkitExitFullscreen && document.webkitFullscreenElement) {
+            document.webkitExitFullscreen();
+          }
+        } catch(e) {}
       }
 
       // 모바일 네이티브 뒤로가기 제스처 연동
@@ -529,7 +539,7 @@
 
       // 브라우저 네이티브 ESC 전체화면 해제 이벤트 연동
       document.addEventListener('fullscreenchange', function() {
-        if (!document.fullscreenElement) {
+        if (!document.fullscreenElement && isFullscreenMode) {
           exitFullscreenState();
         }
       });
