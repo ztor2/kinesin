@@ -1,5 +1,5 @@
 ---
-// SectionSlider.astro - Card-Internal Integrated Frame & Filled Centered 'Restart' Button
+// SectionSlider.astro - Card-Internal Integrated Frame & Smart Scroll-Ignored Touch Swipe Guard
 ---
 
 <div class="section-slider-root" id="section-slider-root" style="width: 100%; position: relative; margin: 0;">
@@ -660,26 +660,41 @@
       // TOC 링크 터치/클릭 역방향 스위칭 바인딩
       bindTocClickEvents();
 
-      // 모바일 스마트 터치 스와이프
+      // -------------------------------------------------------------
+      // 📱 스마트 터치 스와이프 (스크롤 가능 요소 및 시뮬레이터 제외 가드)
+      // -------------------------------------------------------------
       let touchStartX = 0;
       let touchStartY = 0;
+      let shouldIgnoreSwipe = false;
 
       if (cardElement) {
         cardElement.addEventListener('touchstart', function(e) {
           if (!isSlideMode) return;
+
+          // 시뮬레이터, 슬라이더Range, 스크롤 가능 컨테이너 내부 터치는 카드 스와이프에서 제외
+          const target = e.target;
+          const isScrollable = target.closest('input[type="range"], select, .overflow-x-auto, svg, button, table, .not-content');
+          
+          if (isScrollable) {
+            shouldIgnoreSwipe = true;
+            return;
+          }
+
+          shouldIgnoreSwipe = false;
           touchStartX = e.changedTouches[0].screenX;
           touchStartY = e.changedTouches[0].screenY;
         }, { passive: true });
 
         cardElement.addEventListener('touchend', function(e) {
-          if (!isSlideMode) return;
+          if (!isSlideMode || shouldIgnoreSwipe) return;
+
           const touchEndX = e.changedTouches[0].screenX;
           const touchEndY = e.changedTouches[0].screenY;
 
           const diffX = touchEndX - touchStartX;
           const diffY = touchEndY - touchStartY;
 
-          if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+          if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 55) {
             if (diffX < 0) handleNext();
             else handlePrev();
           }

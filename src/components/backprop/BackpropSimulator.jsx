@@ -521,8 +521,8 @@ export const BackpropSimulator = () => {
           overflow: 'hidden'
         }}
       >
-        <div style={{ width: '100%', overflowX: 'auto', display: 'flex', justifyContent: 'center' }}>
-          <svg viewBox="0 0 760 250" style={{ width: '100%', maxWidth: '760px', height: 'auto', minWidth: '360px' }}>
+        <div style={{ width: '100%', overflowX: 'auto', display: 'flex', justifyContent: 'flex-start', WebkitOverflowScrolling: 'touch' }}>
+          <svg viewBox="0 0 760 250" style={{ width: '100%', maxWidth: '760px', height: 'auto', minWidth: '580px', flexShrink: 0 }}>
             <defs>
               {/* 은은한 배경 도트 패턴 & 메시 라인 */}
               <pattern id="grid-dots" width="24" height="24" patternUnits="userSpaceOnUse">

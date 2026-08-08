@@ -280,5 +280,22 @@ React/MDX 기반 대화형 시각화 모듈(예: `BackpropSimulator.jsx`, `PEnRO
 - **Plus Jakarta Sans / Noto Sans KR (본문 및 수식 유도문)**:
   설명 텍스트와 본문은 가독성이 검증된 `Plus Jakarta Sans` 및 `Noto Sans KR`을 기본 폰트 스택으로 선언하여 깔끔한 리서치 대시보드 룩을 형성합니다.
 
+### 10. 모바일 대화형 시각화 컴포넌트 터치 및 스크롤 UX 방어 규칙 (CRITICAL)
+
+MDX 내 대화형 시각화 컴포넌트(SVG 다이어그램, 캔버스, Range 슬라이더, 스크롤 테이블)를 모바일 및 카드 모드(`SectionSlider.astro`) 환경에서 렌더링할 때 발생하는 **터치 제스처 충돌 및 모바일 찌그러짐 현상을 방지하기 위한 필수상수 규칙**입니다.
+
+- **스마트 터치 스와이프 차단 가드 (`Smart Scroll-Ignored Touch Guard`)**:
+  카드 슬라이더 모드(`SectionSlider.astro`)에서 사용자가 시뮬레이터 내부의 `input[type="range"]`, `.overflow-x-auto`, `svg`, `table` 등을 손가락으로 드래그하거나 조정할 때, 카드 전체의 좌우 스와이프 이벤트가 감지되어 슬라이드 페이지가 엉뚱하게 넘어가는 현상을 방지합니다.
+  - **규칙**: `SectionSlider.astro`의 `touchstart` 감지부에서 시뮬레이터 조작 요소(`e.target.closest('input[type="range"], select, .overflow-x-auto, svg, button, table, .not-content')`)를 판별하여 터치가 내부 시뮬레이터에서 시작된 경우 슬라이드 넘김을 자동으로 지능 제외시킵니다.
+
+- **SVG 다이어그램 모바일 좌측 정렬 및 가로 스크롤 패널 (`justifyContent: 'flex-start'`)**:
+  다이어그램 캔버스가 가로로 긴 시뮬레이터(예: 신경망 4개 층 다이어그램)를 모바일에서 중앙 정렬(`justifyContent: 'center'`)하면 왼쪽 층(입력층)이 뷰포트 바깥으로 잘린 채 나타나 사용자가 왼쪽으로 스크롤하다 페이지가 넘어가버리는 문제가 발생합니다.
+  - **규칙**: 모바일 뷰포트 가로 스크롤 래퍼에는 반드시 `justifyContent: 'flex-start'` 및 `-webkit-overflow-scrolling: touch`를 지정하여 **화면 접속 시 왼쪽(입력층/시작 노드)부터 안전하게 정렬되어 시작**되도록 보장합니다.
+
+- **SVG `<foreignObject>` 수학 수식 글자 안전 구역 및 `whiteSpace: 'nowrap'`**:
+  SVG 캔버스 내부에서 KaTeX 수식이나 수치 캡슐을 표기하기 위해 `<foreignObject>`를 사용할 때, 고정 너비가 좁으면 모바일 비율 축소 시 수식이 두 줄로 꺾이거나 찌그러집니다.
+  - **규칙**: `<foreignObject>`의 `width`를 넉넉하게 확장(`150px` 이상)하고, 내부 `<div>` 래퍼에 `whiteSpace: 'nowrap'`, `lineHeight: 1`을 명시하여 모바일에서도 수식 글자가 두 줄로 깨지지 않도록 가둡니다.
+
+
 
 
