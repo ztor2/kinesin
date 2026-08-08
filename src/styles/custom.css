@@ -155,6 +155,19 @@ dialog[data-pagefind-ui] .pagefind-ui {
   width: 100% !important;
 }
 
+/* 모바일 KaTeX / LaTeX 수식 잘림 방지 & 가로 스크롤 허용 전역 규칙 */
+.katex-display {
+  overflow-x: auto !important;
+  overflow-y: hidden !important;
+  max-width: 100% !important;
+  -webkit-overflow-scrolling: touch;
+  padding-block: 0.25rem;
+}
+
+.katex {
+  max-width: 100%;
+}
+
 /* 하단 페이지 이동 버튼 (Pagination Links) 너비 및 스타일 정밀 맞춤 */
 .pagination-links {
   width: 100% !important;

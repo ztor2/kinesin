@@ -285,8 +285,8 @@ React/MDX 기반 대화형 시각화 모듈(예: `BackpropSimulator.jsx`, `PEnRO
 MDX 내 대화형 시각화 컴포넌트(SVG 다이어그램, 캔버스, Range 슬라이더, 스크롤 테이블)를 모바일 및 카드 모드(`SectionSlider.astro`) 환경에서 렌더링할 때 발생하는 **터치 제스처 충돌 및 모바일 찌그러짐 현상을 방지하기 위한 필수상수 규칙**입니다.
 
 - **스마트 터치 스와이프 차단 가드 (`Smart Scroll-Ignored Touch Guard`)**:
-  카드 슬라이더 모드(`SectionSlider.astro`)에서 사용자가 시뮬레이터 내부의 `input[type="range"]`, `.overflow-x-auto`, `svg`, `table` 등을 손가락으로 드래그하거나 조정할 때, 카드 전체의 좌우 스와이프 이벤트가 감지되어 슬라이드 페이지가 엉뚱하게 넘어가는 현상을 방지합니다.
-  - **규칙**: `SectionSlider.astro`의 `touchstart` 감지부에서 시뮬레이터 조작 요소(`e.target.closest('input[type="range"], select, .overflow-x-auto, svg, button, table, .not-content')`)를 판별하여 터치가 내부 시뮬레이터에서 시작된 경우 슬라이드 넘김을 자동으로 지능 제외시킵니다.
+  카드 슬라이더 모드(`SectionSlider.astro`)에서 사용자가 시뮬레이터 내부의 `input[type="range"]`, `.overflow-x-auto`, `svg`, `table`, 그리고 **KaTeX 수식 영역(`.katex`, `.katex-display`, `.katex-html`)**을 손가락으로 드래그하거나 스크롤할 때, 카드 전체의 좌우 스와이프 이벤트가 감지되어 슬라이드 페이지가 엉뚱하게 넘어가는 현상을 지능 차단합니다.
+  - **규칙**: `SectionSlider.astro`의 `touchstart` 감지부에서 `e.target.closest('input[type="range"], select, .overflow-x-auto, svg, button, table, .not-content, .katex, .katex-display, .katex-html')`를 판별하여 해당 수식/조작 영역에서 시작된 터치는 슬라이드 넘김 대상에서 감지 제외합니다.
 
 - **SVG 다이어그램 모바일 좌측 정렬 및 가로 스크롤 패널 (`justifyContent: 'flex-start'`)**:
   다이어그램 캔버스가 가로로 긴 시뮬레이터(예: 신경망 4개 층 다이어그램)를 모바일에서 중앙 정렬(`justifyContent: 'center'`)하면 왼쪽 층(입력층)이 뷰포트 바깥으로 잘린 채 나타나 사용자가 왼쪽으로 스크롤하다 페이지가 넘어가버리는 문제가 발생합니다.
@@ -295,6 +295,10 @@ MDX 내 대화형 시각화 컴포넌트(SVG 다이어그램, 캔버스, Range �
 - **SVG `<foreignObject>` 내 KaTeX 사용 시 `<g transform>` 대신 직접 `x`, `y` 좌표 명시 (iOS Safari 겹침 방지 - CRITICAL)**:
   SVG 캔버스 내부에서 KaTeX 수식(`W_1`, `z_1`, `\mathbf{x}`)을 넣기 위해 `<foreignObject>`를 사용할 때, 부모 `<g transform="translate(x, y)">`로 좌표를 이동시키면 iOS Safari(WebKit) 모바일 엔진이 좌표를 `(0, 0)`으로 잘못 처리하여 **모든 수식 글자가 SVG 좌상단 구석으로 몽땅 몰려 겹치고 깨지는 좌표 렌더링 버그**를 유발합니다.
   - **해결 규칙**: `<foreignObject>`를 부모 `<g transform="...">` 그룹 안에 넣지 않고, `<foreignObject x="135" y="61" width="120" height="28" style={{ overflow: 'visible' }}>` 처럼 **SVG 픽셀 절대 좌표 `x`, `y`를 직접 명시**합니다. 이렇게 하면 KaTeX의 우아한 수학 폰트 및 심미성을 100% 유지하면서 iOS Safari에서도 글자 쏠림 및 깨짐 없이 정상 위치에 렌더링됩니다.
+
+- **긴 KaTeX 수식 모바일 잘림 방지 전역 스크롤 규칙 (`.katex-display`)**:
+  긴 수식 블록이나 분수/수열/체인 룰 곱셈식이 모바일 화면 폭을 넘을 때 잘려서 잘 안 보이는 현상을 보정합니다.
+  - **규칙**: `src/styles/custom.css` 내 전역 `.katex-display { overflow-x: auto !important; max-width: 100% !important; -webkit-overflow-scrolling: touch; }` 규칙을 명시하여 모바일 환경에서 수식이 잘리지 않고 손가락 터치로 쓱 가로 스크롤하여 전체 식을 확인할 수 있도록 처리합니다.
 
 
 
