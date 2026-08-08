@@ -1,5 +1,5 @@
 ---
-// SectionSlider.astro - Card-Internal Integrated Frame & Fullscreen Zen Mode Layout (Zero-Pixel Perfect Baseline Alignment)
+// SectionSlider.astro - Card-Internal Integrated Frame & Fullscreen Zen Mode Layout (iOS Safari Header Masking Supported)
 ---
 
 <div class="section-slider-root" id="section-slider-root" style="width: 100%; position: relative; margin: 0;">
@@ -185,18 +185,20 @@
       background-color: #4338ca;
     }
 
-    /* 전체화면 보기 전용 모드 CSS 스타일 (Zen Fullscreen Overlay) */
+    /* 전체화면 보기 전용 모드 CSS 스타일 (Zen Fullscreen Overlay - iOS Safari 호환) */
     .section-slider-root.is-fullscreen {
       position: fixed !important;
       top: 0 !important;
       left: 0 !important;
       width: 100vw !important;
       height: 100vh !important;
+      height: -webkit-fill-available !important; /* iOS Safari 뷰포트 완전 밀착 */
       z-index: 999999 !important;
       background-color: var(--sl-color-bg, #0f172a) !important;
       padding: 24px 16px !important;
       box-sizing: border-box !important;
       overflow-y: auto !important;
+      -webkit-overflow-scrolling: touch;
     }
 
     .section-slider-root.is-fullscreen .section-slider-card {
@@ -223,6 +225,23 @@
       .section-slider-root.is-fullscreen .section-slider-card {
         padding: 16px 12px !important;
       }
+    }
+  </style>
+
+  {/* iOS Safari 전역 Stacking Context 덮침 방지: body 마스킹 글로벌 스타일 */}
+  <style is:global>
+    body.is-zen-fullscreen header.header,
+    body.is-zen-fullscreen header,
+    body.is-zen-fullscreen nav,
+    body.is-zen-fullscreen .sidebar-pane,
+    body.is-zen-fullscreen .right-sidebar {
+      display: none !important;
+      visibility: hidden !important;
+      opacity: 0 !important;
+    }
+
+    body.is-zen-fullscreen {
+      overflow: hidden !important;
     }
   </style>
 
@@ -453,13 +472,14 @@
       }
 
       // -------------------------------------------------------------
-      // 📱 전체화면 해제 및 텍스트 전환 엔진
+      // 📱 iOS Safari 대응 전체화면 해제 및 텍스트 전환 엔진
       // -------------------------------------------------------------
       function toggleFullscreen() {
         isFullscreenMode = !isFullscreenMode;
 
         if (isFullscreenMode) {
           sliderRoot.classList.add('is-fullscreen');
+          document.body.classList.add('is-zen-fullscreen');
           if (fullscreenBtnLabel) fullscreenBtnLabel.textContent = '전체화면 종료';
 
           try {
@@ -477,9 +497,9 @@
       }
 
       function exitFullscreenState() {
-        if (!isFullscreenMode) return;
         isFullscreenMode = false;
         sliderRoot.classList.remove('is-fullscreen');
+        document.body.classList.remove('is-zen-fullscreen');
         if (fullscreenBtnLabel) fullscreenBtnLabel.textContent = '전체화면';
 
         if (document.exitFullscreen && document.fullscreenElement) {
