@@ -1,5 +1,5 @@
 ---
-// SectionSlider.astro - Card-Internal Integrated Frame & Fullscreen Zen Mode Layout (iOS Safari Header Masking Supported)
+// SectionSlider.astro - Card-Internal Integrated Frame & Fullscreen Zen Mode Layout (Orange Accent & Swapped Order)
 ---
 
 <div class="section-slider-root" id="section-slider-root" style="width: 100%; position: relative; margin: 0;">
@@ -49,14 +49,24 @@
       user-select: none;
     }
 
-    /* 전체화면 텍스트 클릭 버튼 (span 기반으로 button 태그 기본 마진/패딩 차단) */
+    /* 주황색 계열 Accent 적용된 전체화면 텍스트 클릭 버튼 */
     .fullscreen-action-btn {
       cursor: pointer;
-      transition: color 0.15s ease;
+      color: #f97316 !important; /* Orange 500 대표 주황색 */
+      transition: all 0.15s ease;
     }
 
     .fullscreen-action-btn:hover {
-      color: #6366f1;
+      color: #ea580c !important; /* Orange 600 진한 주황색 */
+      opacity: 0.9;
+    }
+
+    :root[data-theme='dark'] .fullscreen-action-btn {
+      color: #fb923c !important; /* Dark 모드 화사한 Orange 400 */
+    }
+
+    :root[data-theme='dark'] .fullscreen-action-btn:hover {
+      color: #fdba74 !important; /* Dark 모드 호버 Orange 300 */
     }
 
     .fullscreen-action-btn svg {
@@ -64,7 +74,7 @@
       height: 13px;
       fill: none;
       stroke: currentColor;
-      stroke-width: 2;
+      stroke-width: 2.2;
       stroke-linecap: round;
       stroke-linejoin: round;
     }
@@ -192,7 +202,7 @@
       left: 0 !important;
       width: 100vw !important;
       height: 100vh !important;
-      height: -webkit-fill-available !important; /* iOS Safari 뷰포트 완전 밀착 */
+      height: -webkit-fill-available !important;
       z-index: 999999 !important;
       background-color: var(--sl-color-bg, #0f172a) !important;
       padding: 24px 16px !important;
@@ -250,23 +260,23 @@
     <slot />
   </div>
 
-  <!-- 카드 외부 우측 상단 조작 그룹: 전체화면 텍스트 클릭 & 카드모드 토글 스위치 (1:1 완전 정렬) -->
+  <!-- 카드 외부 우측 상단 조작 그룹: 위치 교체된 카드모드 토글 & 주황색 전체화면 버튼 -->
   <div class="section-slider-top-bar">
-    {/* 1. 전체화면 텍스트 조작 (Span 기반 단일 아이템) */}
-    <span id="fullscreen-toggle-btn" class="top-bar-action-item fullscreen-action-btn gmarket-font" title="전체화면 집중 독서 모드">
-      <span id="fullscreen-btn-label">전체화면</span>
-      <svg viewBox="0 0 24 24">
-        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-      </svg>
-    </span>
-
-    {/* 2. 카드 모드 슬라이딩 토글 */}
+    {/* 1. 카드 모드 슬라이딩 토글 (좌측 배치) */}
     <div class="top-bar-action-item gmarket-font">
       <span>카드 모드</span>
       <div id="mode-toggle-switch" class="toggle-switch-track card-mode" title="카드 모드 / 전체 스크롤 모드 전환">
         <div class="toggle-switch-thumb"></div>
       </div>
     </div>
+
+    {/* 2. 주황색 포인트 전체화면 텍스트 조작 (우측 배치) */}
+    <span id="fullscreen-toggle-btn" class="top-bar-action-item fullscreen-action-btn gmarket-font" title="전체화면 집중 독서 모드">
+      <span id="fullscreen-btn-label">전체화면</span>
+      <svg viewBox="0 0 24 24">
+        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+      </svg>
+    </span>
   </div>
 
   <!-- 슬라이드 메인 뷰포트 영역 (카드 모드) -->
@@ -472,7 +482,7 @@
       }
 
       // -------------------------------------------------------------
-      // 📱 iOS Safari 대응 전체화면 해제 및 텍스트 전환 엔진
+      // 📱 전체화면 해제 및 텍스트 전환 엔진
       // -------------------------------------------------------------
       function toggleFullscreen() {
         isFullscreenMode = !isFullscreenMode;
@@ -497,6 +507,7 @@
       }
 
       function exitFullscreenState() {
+        if (!isFullscreenMode) return;
         isFullscreenMode = false;
         sliderRoot.classList.remove('is-fullscreen');
         document.body.classList.remove('is-zen-fullscreen');
