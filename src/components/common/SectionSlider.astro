@@ -1,5 +1,5 @@
 ---
-// SectionSlider.astro - Astro Native Slide Reader Component
+// SectionSlider.astro - Astro Native Slide Reader Component (Desktop & Mobile Perfect Layout)
 ---
 
 <div class="section-slider-root" style="width: 100%; position: relative; margin: 0;">
@@ -22,37 +22,7 @@
       position: relative;
       min-height: 280px;
       transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
-    }
-
-    /* CSS Grid 3열 통합 헤더 바 (1줄 레이아웃 + 1/6 중앙 고정) */
-    .section-slider-header {
-      display: grid;
-      grid-template-columns: 1fr auto 1fr;
-      align-items: center;
-      margin-bottom: 1.25rem !important;
-      padding: 2px 0;
-      width: 100%;
-      height: 38px;
-      box-sizing: border-box;
-    }
-
-    .hdr-slot-left {
-      display: flex;
-      align-items: center;
-      justify-content: flex-start;
-    }
-
-    .hdr-slot-center {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-    }
-
-    .hdr-slot-right {
-      display: flex;
-      align-items: center;
-      justify-content: flex-end;
-      gap: 10px;
+      touch-action: pan-y;
     }
 
     .view-mode-toggle-wrapper {
@@ -87,7 +57,7 @@
       transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
     }
 
-    /* 카드 모드 ON (왼쪽 위치: 쨍한 보라색 트랙 + 백색 노브) */
+    /* 카드 모드 ON */
     .toggle-switch-track.card-mode {
       background-color: #6366f1;
       border: 1px solid #4f46e5;
@@ -97,7 +67,7 @@
       background-color: #ffffff;
     }
 
-    /* 스크롤 모드 OFF (오른쪽 위치: 어두운 OFF 트랙) */
+    /* 스크롤 모드 OFF */
     .toggle-switch-track.scroll-mode {
       background-color: #94a3b8;
       border: 1px solid #64748b;
@@ -162,6 +132,91 @@
     .hdr-btn-primary:hover:not(:disabled) {
       background-color: #4338ca;
     }
+
+    /* 카드 하단 미니 네비게이션 바 (모바일 완독 후 즉시 넘김용) */
+    .section-slider-footer-nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-top: 1rem;
+      padding-top: 0.875rem;
+      border-top: 1px dashed var(--sl-color-hairline, #e2e8f0);
+      width: 100%;
+    }
+
+    /* ------------------------------------------------------------- */
+    /* 💻 데스크톱 레이아웃 (50.01rem 이상): 1줄 3열 CSS Grid 완벽 대칭  */
+    /* ------------------------------------------------------------- */
+    @media (min-width: 50.01rem) {
+      .section-slider-header-desktop {
+        display: grid !important;
+        grid-template-columns: 1fr auto 1fr;
+        align-items: center;
+        margin-bottom: 1.25rem !important;
+        padding: 2px 0;
+        width: 100%;
+        height: 38px;
+        box-sizing: border-box;
+      }
+      .section-slider-header-mobile {
+        display: none !important;
+      }
+      .hdr-slot-left {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+      }
+      .hdr-slot-center {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .hdr-slot-right {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 10px;
+      }
+    }
+
+    /* ------------------------------------------------------------- */
+    /* 📱 모바일 반응형 헤더 규격 (max-width: 50rem): 2단 터치 최적화   */
+    /* ------------------------------------------------------------- */
+    @media (max-width: 50rem) {
+      .section-slider-header-desktop {
+        display: none !important;
+      }
+      .section-slider-header-mobile {
+        display: flex !important;
+        flex-direction: column;
+        gap: 10px;
+        height: auto;
+        margin-bottom: 1rem !important;
+        width: 100%;
+      }
+      .hdr-mobile-nav-bar {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        width: 100%;
+      }
+      .hdr-mobile-toggle-bar {
+        display: flex;
+        align-items: center;
+        justify-content: flex-end;
+        width: 100%;
+      }
+      .section-slider-card {
+        padding: 16px 14px !important;
+        border-radius: 14px !important;
+        min-height: 220px;
+      }
+      .hdr-nav-btn {
+        height: 32px;
+        padding: 0 12px;
+        font-size: 11.5px;
+      }
+    }
   </style>
 
   <!-- 파싱용 원본 슬롯 컨테이너 (숨김) -->
@@ -169,47 +224,88 @@
     <slot />
   </div>
 
-  <!-- 통합 1줄 3열 대칭 헤더 바 (항상 정갈하게 유지) -->
-  <div class="section-slider-header">
-    {/* 1. Left Slot: '이전' 버튼 */}
+  <!-- 1. 💻 데스크톱 전용 1줄 3열 대칭 헤더 바 -->
+  <div class="section-slider-header-desktop">
+    {/* Left: '이전' 버튼 */}
     <div class="hdr-slot-left">
-      <button id="header-btn-prev" class="gmarket-font hdr-nav-btn hdr-btn-subtle">
+      <button class="gmarket-font hdr-nav-btn hdr-btn-subtle header-btn-prev">
         ◀ 이전
       </button>
     </div>
 
-    {/* 2. Center Slot: 진행 상황 (수학적 절대 중앙 고정) */}
+    {/* Center: 진행 상황 (수학적 절대 중앙 고정) */}
     <div class="hdr-slot-center">
-      <span id="slider-num-indicator" class="num-font" style="font-size: 14px; font-weight: 800; color: var(--sl-color-text, #0f172a); letter-spacing: 0.05em; display: inline-flex; align-items: center; line-height: 1;">
+      <span class="num-font slider-num-indicator" style="font-size: 14px; font-weight: 800; color: var(--sl-color-text, #0f172a); letter-spacing: 0.05em; display: inline-flex; align-items: center; line-height: 1;">
         1 / 1
       </span>
     </div>
 
-    {/* 3. Right Slot: '카드 모드' 토글 스위치 ('다음' 버튼 바로 왼쪽) + '다음' 버튼 */}
+    {/* Right: '카드 모드' 토글 스위치 ('다음' 버튼 바로 왼쪽) + '다음' 버튼 */}
     <div class="hdr-slot-right">
       <div class="view-mode-toggle-wrapper gmarket-font">
-        <span id="view-mode-label">카드 모드</span>
-        <div id="mode-toggle-switch" class="toggle-switch-track card-mode" title="카드 모드 / 전체 스크롤 모드 전환">
+        <span>카드 모드</span>
+        <div class="toggle-switch-track card-mode mode-toggle-switch" title="카드 모드 / 전체 스크롤 모드 전환">
           <div class="toggle-switch-thumb"></div>
         </div>
       </div>
 
-      <button id="header-btn-next" class="gmarket-font hdr-nav-btn hdr-btn-primary">
+      <button class="gmarket-font hdr-nav-btn hdr-btn-primary header-btn-next">
         다음 ▶
       </button>
     </div>
   </div>
 
+  <!-- 2. 📱 모바일 전용 2단 터치 최적화 헤더 바 -->
+  <div class="section-slider-header-mobile">
+    {/* 1단: 이전 | 1/7 | 다음 이동 네비게이션 */}
+    <div class="hdr-mobile-nav-bar">
+      <button class="gmarket-font hdr-nav-btn hdr-btn-subtle header-btn-prev">
+        ◀ 이전
+      </button>
+
+      <span class="num-font slider-num-indicator" style="font-size: 14px; font-weight: 800; color: var(--sl-color-text, #0f172a); letter-spacing: 0.05em; display: inline-flex; align-items: center; line-height: 1;">
+        1 / 1
+      </span>
+
+      <button class="gmarket-font hdr-nav-btn hdr-btn-primary header-btn-next">
+        다음 ▶
+      </button>
+    </div>
+
+    {/* 2단: 모드 변환 슬라이딩 토글 (우측 배치) */}
+    <div class="hdr-mobile-toggle-bar">
+      <div class="view-mode-toggle-wrapper gmarket-font">
+        <span>카드 모드</span>
+        <div class="toggle-switch-track card-mode mode-toggle-switch" title="카드 모드 / 전체 스크롤 모드 전환">
+          <div class="toggle-switch-thumb"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- 슬라이드 메인 뷰포트 영역 (카드 모드) -->
-  <div id="slider-card-view" style="position: relative; margin-top: 1.25rem;">
+  <div id="slider-card-view" style="position: relative; margin-top: 0.5rem;">
     <!-- 상단 프로그레스 바 -->
-    <div style="height: 4px; width: 100%; background-color: var(--sl-color-hairline, #e2e8f0); border-radius: 2px; margin-bottom: 1.25rem; overflow: hidden;">
+    <div style="height: 4px; width: 100%; background-color: var(--sl-color-hairline, #e2e8f0); border-radius: 2px; margin-bottom: 0.875rem; overflow: hidden;">
       <div id="slider-progress-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #3b82f6, #6366f1); transition: width 0.3s ease;"></div>
     </div>
 
     <!-- 카드 실물 컨테이너 -->
-    <div className="sl-markdown-content" class="section-slider-card">
+    <div id="slider-card-element" className="sl-markdown-content" class="section-slider-card">
       <div id="slider-rendered-viewport"></div>
+
+      {/* 카드 하단 미니 네비게이션 (독서 후 즉시 넘김용) */}
+      <div class="section-slider-footer-nav">
+        <button id="footer-btn-prev" class="gmarket-font hdr-nav-btn hdr-btn-subtle">
+          ◀ 이전
+        </button>
+        <span id="slider-footer-num-indicator" class="num-font" style="font-size: 13px; font-weight: 700; color: var(--sl-color-text, #64748b);">
+          1 / 1
+        </span>
+        <button id="footer-btn-next" class="gmarket-font hdr-nav-btn hdr-btn-primary">
+          다음 ▶
+        </button>
+      </div>
     </div>
   </div>
 
@@ -224,14 +320,19 @@
       const rawContent = document.getElementById('slider-raw-content');
       const renderedViewport = document.getElementById('slider-rendered-viewport');
       const scrollView = document.getElementById('slider-scroll-view');
-      const numIndicator = document.getElementById('slider-num-indicator');
+      
+      const numIndicators = document.querySelectorAll('.slider-num-indicator');
+      const footerNumIndicator = document.getElementById('slider-footer-num-indicator');
       const progressBar = document.getElementById('slider-progress-bar');
       
-      const headerBtnPrev = document.getElementById('header-btn-prev');
-      const headerBtnNext = document.getElementById('header-btn-next');
-      const toggleSwitch = document.getElementById('mode-toggle-switch');
+      const headerBtnsPrev = document.querySelectorAll('.header-btn-prev');
+      const headerBtnsNext = document.querySelectorAll('.header-btn-next');
+      const footerBtnPrev = document.getElementById('footer-btn-prev');
+      const footerBtnNext = document.getElementById('footer-btn-next');
+      const toggleSwitches = document.querySelectorAll('.mode-toggle-switch');
       
       const cardView = document.getElementById('slider-card-view');
+      const cardElement = document.getElementById('slider-card-element');
 
       if (!rawContent || !renderedViewport) return;
 
@@ -274,76 +375,141 @@
 
       scrollView.innerHTML = rawContent.innerHTML;
 
-      function updateControls() {
+      function updateControls(shouldScrollToTop = false) {
         if (isSlideMode) {
           // 카드 모드 ON 상태
           const slide = slides[currentIndex];
           renderedViewport.innerHTML = slide.html;
 
-          numIndicator.textContent = `${currentIndex + 1} / ${slides.length}`;
+          const numText = `${currentIndex + 1} / ${slides.length}`;
+          numIndicators.forEach(el => el.textContent = numText);
+          if (footerNumIndicator) footerNumIndicator.textContent = numText;
+
           progressBar.style.width = `${((currentIndex + 1) / slides.length) * 100}%`;
 
           const isFirst = currentIndex === 0;
           const isLast = currentIndex === slides.length - 1;
 
-          headerBtnPrev.disabled = isFirst;
-          headerBtnPrev.style.opacity = isFirst ? '0.4' : '1';
-          headerBtnPrev.style.cursor = isFirst ? 'not-allowed' : 'pointer';
+          // 이전 버튼들 업데이트
+          const prevBtns = [...headerBtnsPrev];
+          if (footerBtnPrev) prevBtns.push(footerBtnPrev);
+          prevBtns.forEach(btn => {
+            btn.disabled = isFirst;
+            btn.style.opacity = isFirst ? '0.4' : '1';
+            btn.style.cursor = isFirst ? 'not-allowed' : 'pointer';
+          });
 
-          headerBtnNext.disabled = isLast;
-          headerBtnNext.style.opacity = isLast ? '0.4' : '1';
-          headerBtnNext.style.cursor = isLast ? 'not-allowed' : 'pointer';
-          headerBtnNext.style.backgroundColor = isLast ? 'var(--sl-color-hairline, #cbd5e1)' : '#4f46e5';
-          headerBtnNext.style.boxShadow = isLast ? 'none' : '0 4px 12px rgba(79, 70, 229, 0.25)';
+          // 다음 버튼들 업데이트
+          const nextBtns = [...headerBtnsNext];
+          if (footerBtnNext) nextBtns.push(footerBtnNext);
+          nextBtns.forEach(btn => {
+            btn.disabled = isLast;
+            btn.style.opacity = isLast ? '0.4' : '1';
+            btn.style.cursor = isLast ? 'not-allowed' : 'pointer';
+            btn.style.backgroundColor = isLast ? 'var(--sl-color-hairline, #cbd5e1)' : '#4f46e5';
+            btn.style.boxShadow = isLast ? 'none' : '0 4px 12px rgba(79, 70, 229, 0.25)';
+          });
+
+          // 페이지 전환 시 카드 상단으로 자동 매끄러운 스크롤 이동
+          if (shouldScrollToTop && cardElement) {
+            const rect = cardElement.getBoundingClientRect();
+            const scrollTop = window.pageYOffset || document.documentElement.scrollTop;
+            const targetY = rect.top + scrollTop - 80;
+            window.scrollTo({ top: Math.max(0, targetY), behavior: 'smooth' });
+          }
         } else {
-          // 스크롤 모드 OFF 상태 (헤더 조작버튼 그대로 비활성화 유지 + 1/1 표시)
-          numIndicator.textContent = '1 / 1';
+          // 스크롤 모드 OFF 상태
+          numIndicators.forEach(el => el.textContent = '1 / 1');
+          if (footerNumIndicator) footerNumIndicator.textContent = '1 / 1';
           
-          headerBtnPrev.disabled = true;
-          headerBtnPrev.style.opacity = '0.35';
-          headerBtnPrev.style.cursor = 'not-allowed';
+          const prevBtns = [...headerBtnsPrev];
+          if (footerBtnPrev) prevBtns.push(footerBtnPrev);
+          prevBtns.forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.35';
+            btn.style.cursor = 'not-allowed';
+          });
 
-          headerBtnNext.disabled = true;
-          headerBtnNext.style.opacity = '0.35';
-          headerBtnNext.style.cursor = 'not-allowed';
-          headerBtnNext.style.backgroundColor = 'var(--sl-color-hairline, #cbd5e1)';
-          headerBtnNext.style.boxShadow = 'none';
+          const nextBtns = [...headerBtnsNext];
+          if (footerBtnNext) nextBtns.push(footerBtnNext);
+          nextBtns.forEach(btn => {
+            btn.disabled = true;
+            btn.style.opacity = '0.35';
+            btn.style.cursor = 'not-allowed';
+            btn.style.backgroundColor = 'var(--sl-color-hairline, #cbd5e1)';
+            btn.style.boxShadow = 'none';
+          });
         }
       }
 
       function handlePrev() {
         if (isSlideMode && currentIndex > 0) {
           currentIndex--;
-          updateControls();
+          updateControls(true);
         }
       }
 
       function handleNext() {
         if (isSlideMode && currentIndex < slides.length - 1) {
           currentIndex++;
-          updateControls();
+          updateControls(true);
         }
       }
 
       function toggleMode() {
         isSlideMode = !isSlideMode;
+        toggleSwitches.forEach(sw => {
+          if (isSlideMode) {
+            sw.classList.add('card-mode');
+            sw.classList.remove('scroll-mode');
+          } else {
+            sw.classList.remove('card-mode');
+            sw.classList.add('scroll-mode');
+          }
+        });
+
         if (isSlideMode) {
           cardView.style.display = 'block';
           scrollView.style.display = 'none';
-          toggleSwitch.classList.add('card-mode');
-          toggleSwitch.classList.remove('scroll-mode');
         } else {
           cardView.style.display = 'none';
           scrollView.style.display = 'flex';
-          toggleSwitch.classList.remove('card-mode');
-          toggleSwitch.classList.add('scroll-mode');
         }
-        updateControls();
+        updateControls(false);
       }
 
-      headerBtnPrev.addEventListener('click', handlePrev);
-      headerBtnNext.addEventListener('click', handleNext);
-      toggleSwitch.addEventListener('click', toggleMode);
+      // 이벤트 바인딩
+      headerBtnsPrev.forEach(btn => btn.addEventListener('click', handlePrev));
+      headerBtnsNext.forEach(btn => btn.addEventListener('click', handleNext));
+      if (footerBtnPrev) footerBtnPrev.addEventListener('click', handlePrev);
+      if (footerBtnNext) footerBtnNext.addEventListener('click', handleNext);
+      toggleSwitches.forEach(sw => sw.addEventListener('click', toggleMode));
+
+      // 모바일 스마트 터치 스와이프 (Touch Swipe)
+      let touchStartX = 0;
+      let touchStartY = 0;
+
+      if (cardElement) {
+        cardElement.addEventListener('touchstart', function(e) {
+          if (!isSlideMode) return;
+          touchStartX = e.changedTouches[0].screenX;
+          touchStartY = e.changedTouches[0].screenY;
+        }, { passive: true });
+
+        cardElement.addEventListener('touchend', function(e) {
+          if (!isSlideMode) return;
+          const touchEndX = e.changedTouches[0].screenX;
+          const touchEndY = e.changedTouches[0].screenY;
+
+          const diffX = touchEndX - touchStartX;
+          const diffY = touchEndY - touchStartY;
+
+          if (Math.abs(diffX) > Math.abs(diffY) && Math.abs(diffX) > 50) {
+            if (diffX < 0) handleNext();
+            else handlePrev();
+          }
+        }, { passive: true });
+      }
 
       // 키보드 방향키
       document.addEventListener('keydown', function(e) {
@@ -352,7 +518,7 @@
         else if (e.key === 'ArrowLeft') handlePrev();
       });
 
-      updateControls();
+      updateControls(false);
     }
 
     if (document.readyState === 'loading') {
