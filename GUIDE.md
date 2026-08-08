@@ -292,9 +292,9 @@ MDX 내 대화형 시각화 컴포넌트(SVG 다이어그램, 캔버스, Range �
   다이어그램 캔버스가 가로로 긴 시뮬레이터(예: 신경망 4개 층 다이어그램)를 모바일에서 중앙 정렬(`justifyContent: 'center'`)하면 왼쪽 층(입력층)이 뷰포트 바깥으로 잘린 채 나타나 사용자가 왼쪽으로 스크롤하다 페이지가 넘어가버리는 문제가 발생합니다.
   - **규칙**: 모바일 뷰포트 가로 스크롤 래퍼에는 반드시 `justifyContent: 'flex-start'` 및 `-webkit-overflow-scrolling: touch`를 지정하여 **화면 접속 시 왼쪽(입력층/시작 노드)부터 안전하게 정렬되어 시작**되도록 보장합니다.
 
-- **SVG `<foreignObject>` 수학 수식 글자 안전 구역 및 `whiteSpace: 'nowrap'`**:
-  SVG 캔버스 내부에서 KaTeX 수식이나 수치 캡슐을 표기하기 위해 `<foreignObject>`를 사용할 때, 고정 너비가 좁으면 모바일 비율 축소 시 수식이 두 줄로 꺾이거나 찌그러집니다.
-  - **규칙**: `<foreignObject>`의 `width`를 넉넉하게 확장(`150px` 이상)하고, 내부 `<div>` 래퍼에 `whiteSpace: 'nowrap'`, `lineHeight: 1`을 명시하여 모바일에서도 수식 글자가 두 줄로 깨지지 않도록 가둡니다.
+- **SVG `<foreignObject>` 대신 순수 SVG `<text textAnchor="middle">` 포맷 사용 (iOS Safari 겹침 방지 - CRITICAL)**:
+  SVG 캔버스 내부에서 `<foreignObject>`를 `transform="translate(...)"`와 함께 사용할 때, iOS Safari(WebKit) 모바일 엔진은 좌표 기준점`(0, 0)`을 SVG 전체 좌상단으로 오인하여 **모든 글자(`W₁`, `z₁`, `Loss`, `= 0.80`)가 SVG 좌상단`(0, 0)`으로 몽땅 몰려 겹치고 깨지는 치명적인 좌표 렌더링 버그**를 유발합니다.
+  - **규칙**: SVG 내부 수치 표기 및 라벨에는 `<foreignObject>` 대신 순수 SVG `<text textAnchor="middle" y="...">`와 `<rect>` 하이라이트 뱃지를 결합하여 선언합니다. 이를 통해 모바일 Safari를 포함한 모든 환경에서 글자 위치 쏠림이나 깨짐 없이 100% 깔끔하게 표현됩니다.
 
 
 
