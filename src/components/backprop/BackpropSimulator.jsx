@@ -574,39 +574,53 @@ export const BackpropSimulator = () => {
               markerStart={step === 3 ? 'url(#arrow-orange)' : undefined}
             />
 
-            {/* W1 텍스트 (195, 75) */}
-            <g transform="translate(195, 75)">
-              <rect 
-                x="-45" y="-14" width="90" height="24" rx="12" 
-                fill={step === 4 ? '#d1fae5' : step === 3 ? '#fef3c7' : diagramHL.w1Edge ? '#e0f2fe' : 'transparent'} 
-              />
-              <text 
-                textAnchor="middle" y="3" 
-                className="num-font"
-                fontSize="13.5" 
-                fontWeight={step === 4 || step === 3 || diagramHL.w1Edge ? '800' : '700'}
-                fill={step === 4 ? '#047857' : step === 3 ? '#b45309' : diagramHL.w1Edge ? '#0284c7' : '#334155'}
-              >
-                W₁ = {w1.toFixed(2)}
-              </text>
-            </g>
+            {/* W1 텍스트 (195, 75) - direct x, y coordinates for iOS Safari compatibility */}
+            <foreignObject x="135" y="61" width="120" height="28" style={{ overflow: 'visible' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', whiteSpace: 'nowrap' }}>
+                <div 
+                  style={{
+                    padding: '2px 10px',
+                    borderRadius: '12px',
+                    backgroundColor: step === 4 ? '#d1fae5' : step === 3 ? '#fef3c7' : diagramHL.w1Edge ? '#e0f2fe' : 'transparent',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <MathView 
+                    math={`W_1 = ${w1.toFixed(2)}`} 
+                    style={{ 
+                      fontSize: '13.5px', 
+                      color: step === 4 ? '#047857' : step === 3 ? '#b45309' : diagramHL.w1Edge ? '#0284c7' : '#334155', 
+                      fontWeight: step === 4 || step === 3 || diagramHL.w1Edge ? '800' : '700'
+                    }} 
+                  />
+                </div>
+              </div>
+            </foreignObject>
 
             {/* z1 텍스트 (195, 165) */}
-            <g transform="translate(195, 165)">
-              <rect 
-                x="-45" y="-14" width="90" height="24" rx="12" 
-                fill={step === 1 ? '#e0f2fe' : diagramHL.z1 ? '#e0f2fe' : 'transparent'} 
-              />
-              <text 
-                textAnchor="middle" y="3" 
-                className="num-font"
-                fontSize="13.5" 
-                fontWeight={step === 1 || diagramHL.z1 ? '800' : '600'}
-                fill={step === 1 ? '#0369a1' : diagramHL.z1 ? '#0369a1' : '#64748b'}
-              >
-                z₁ = {z1.toFixed(3)}
-              </text>
-            </g>
+            <foreignObject x="135" y="151" width="120" height="28" style={{ overflow: 'visible' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', whiteSpace: 'nowrap' }}>
+                <div 
+                  style={{
+                    padding: '2px 10px',
+                    borderRadius: '12px',
+                    backgroundColor: step === 1 ? '#e0f2fe' : diagramHL.z1 ? '#e0f2fe' : 'transparent',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <MathView 
+                    math={`z_1 = ${z1.toFixed(3)}`} 
+                    style={{ 
+                      fontSize: '13.5px', 
+                      color: step === 1 ? '#0369a1' : diagramHL.z1 ? '#0369a1' : '#64748b',
+                      fontWeight: step === 1 || diagramHL.z1 ? '800' : '600'
+                    }} 
+                  />
+                </div>
+              </div>
+            </foreignObject>
 
             {/* --- W2 연결선 (h1 -> yHat) --- */}
             <line 
@@ -620,38 +634,52 @@ export const BackpropSimulator = () => {
             />
 
             {/* W2 텍스트 (405, 75) */}
-            <g transform="translate(405, 75)">
-              <rect 
-                x="-45" y="-14" width="90" height="24" rx="12" 
-                fill={step === 4 ? '#d1fae5' : step === 3 ? '#fef3c7' : diagramHL.w2Edge ? '#fef3c7' : 'transparent'} 
-              />
-              <text 
-                textAnchor="middle" y="3" 
-                className="num-font"
-                fontSize="13.5" 
-                fontWeight={step === 4 || step === 3 || diagramHL.w2Edge ? '800' : '700'}
-                fill={step === 4 ? '#047857' : step === 3 ? '#b45309' : diagramHL.w2Edge ? '#b45309' : '#334155'}
-              >
-                W₂ = {w2.toFixed(2)}
-              </text>
-            </g>
+            <foreignObject x="345" y="61" width="120" height="28" style={{ overflow: 'visible' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', whiteSpace: 'nowrap' }}>
+                <div 
+                  style={{
+                    padding: '2px 10px',
+                    borderRadius: '12px',
+                    backgroundColor: step === 4 ? '#d1fae5' : step === 3 ? '#fef3c7' : diagramHL.w2Edge ? '#fef3c7' : 'transparent',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <MathView 
+                    math={`W_2 = ${w2.toFixed(2)}`} 
+                    style={{ 
+                      fontSize: '13.5px', 
+                      color: step === 4 ? '#047857' : step === 3 ? '#b45309' : diagramHL.w2Edge ? '#b45309' : '#334155', 
+                      fontWeight: step === 4 || step === 3 || diagramHL.w2Edge ? '800' : '700'
+                    }} 
+                  />
+                </div>
+              </div>
+            </foreignObject>
 
             {/* z2 텍스트 (405, 165) */}
-            <g transform="translate(405, 165)">
-              <rect 
-                x="-45" y="-14" width="90" height="24" rx="12" 
-                fill={step === 1 ? '#e0f2fe' : diagramHL.z2 ? '#e0f2fe' : 'transparent'} 
-              />
-              <text 
-                textAnchor="middle" y="3" 
-                className="num-font"
-                fontSize="13.5" 
-                fontWeight={step === 1 || diagramHL.z2 ? '800' : '600'}
-                fill={step === 1 ? '#0369a1' : diagramHL.z2 ? '#0369a1' : '#64748b'}
-              >
-                z₂ = {z2.toFixed(3)}
-              </text>
-            </g>
+            <foreignObject x="345" y="151" width="120" height="28" style={{ overflow: 'visible' }}>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', whiteSpace: 'nowrap' }}>
+                <div 
+                  style={{
+                    padding: '2px 10px',
+                    borderRadius: '12px',
+                    backgroundColor: step === 1 ? '#e0f2fe' : diagramHL.z2 ? '#e0f2fe' : 'transparent',
+                    transition: 'all 0.2s ease',
+                    whiteSpace: 'nowrap'
+                  }}
+                >
+                  <MathView 
+                    math={`z_2 = ${z2.toFixed(3)}`} 
+                    style={{ 
+                      fontSize: '13.5px', 
+                      color: step === 1 ? '#0369a1' : diagramHL.z2 ? '#0369a1' : '#64748b',
+                      fontWeight: step === 1 || diagramHL.z2 ? '800' : '600'
+                    }} 
+                  />
+                </div>
+              </div>
+            </foreignObject>
 
             {/* --- Loss 연결선 (yHat -> Loss) --- */}
             <line 
@@ -663,26 +691,32 @@ export const BackpropSimulator = () => {
             />
 
             {/* === 노드 1: x (90, 120) === */}
-            <g transform="translate(90, 120)">
-              <circle r="46" fill="none" stroke="#0284c7" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.6" />
-              <circle r="40" fill="#ffffff" stroke="#0284c7" strokeWidth="3.5" filter="drop-shadow(0 4px 10px rgba(2, 132, 199, 0.18))" />
+            <g>
+              <circle cx="90" cy="120" r="46" fill="none" stroke="#0284c7" strokeWidth="1.5" strokeDasharray="4 3" opacity="0.6" />
+              <circle cx="90" cy="120" r="40" fill="#ffffff" stroke="#0284c7" strokeWidth="3.5" filter="drop-shadow(0 4px 10px rgba(2, 132, 199, 0.18))" />
               
-              {/* 노드 중심 텍스트 */}
-              <text textAnchor="middle" y="7" fontSize="22" fontWeight="800" fill="#0369a1">x</text>
+              {/* KaTeX 노드 라벨 */}
+              <foreignObject x="60" y="100" width="60" height="40" style={{ overflow: 'visible' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <MathView math="\mathbf{x}" style={{ fontSize: '22px', color: '#0369a1' }} />
+                </div>
+              </foreignObject>
               
               {/* 노드 상단 라벨 */}
-              <text className="gmarket-font" textAnchor="middle" y="-60" fontSize="14" fontWeight="700" fill="#475569">입력층</text>
+              <text className="gmarket-font" textAnchor="middle" x="90" y="60" fontSize="14" fontWeight="700" fill="#475569">입력층</text>
 
-              {/* 하단 수치 표식 */}
-              <text textAnchor="middle" y="68" className="num-font" fontSize="13" fontWeight="700" fill="#0284c7">
-                = {x.toFixed(2)}
-              </text>
+              {/* 하단 KaTeX 수치 표식 */}
+              <foreignObject x="45" y="176" width="90" height="24" style={{ overflow: 'visible' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', whiteSpace: 'nowrap' }}>
+                  <MathView math={`= \\mathbf{${x.toFixed(2)}}`} style={{ fontSize: '13px', color: '#0284c7' }} />
+                </div>
+              </foreignObject>
             </g>
 
             {/* === 노드 2: h1 (300, 120) === */}
-            <g transform="translate(300, 120)">
+            <g>
               <circle 
-                r="46" 
+                cx="300" cy="120" r="46" 
                 fill="none" 
                 stroke={step === 1 ? '#0284c7' : diagramHL.h1Node ? '#7c3aed' : '#cbd5e1'} 
                 strokeWidth="1.5" 
@@ -690,31 +724,37 @@ export const BackpropSimulator = () => {
                 opacity="0.6" 
               />
               <circle 
-                r="40" 
+                cx="300" cy="120" r="40" 
                 fill={step === 1 ? '#e0f2fe' : diagramHL.h1Node ? '#f5f3ff' : '#ffffff'} 
                 stroke={step === 1 ? '#0284c7' : diagramHL.h1Node ? '#7c3aed' : step === 3 ? '#d97706' : '#cbd5e1'} 
                 strokeWidth={step === 1 || diagramHL.h1Node ? '4' : '3'} 
                 filter="drop-shadow(0 4px 10px rgba(0, 0, 0, 0.08))"
               />
 
-              <use href="#sigmoid-curve" />
+              <use href="#sigmoid-curve" x="300" y="120" />
 
-              {/* 노드 중심 텍스트 */}
-              <text textAnchor="middle" y="6" fontSize="21" fontWeight="800" fill="#1e293b">h₁</text>
+              {/* KaTeX 노드 라벨 */}
+              <foreignObject x="270" y="100" width="60" height="40" style={{ overflow: 'visible' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <MathView math="\mathbf{h_1}" style={{ fontSize: '21px', color: '#1e293b' }} />
+                </div>
+              </foreignObject>
 
               {/* 노드 상단 라벨 */}
-              <text className="gmarket-font" textAnchor="middle" y="-60" fontSize="14" fontWeight="700" fill="#0284c7">은닉층</text>
+              <text className="gmarket-font" textAnchor="middle" x="300" y="60" fontSize="14" fontWeight="700" fill="#0284c7">은닉층</text>
 
-              {/* 하단 수치 표식 */}
-              <text textAnchor="middle" y="68" className="num-font" fontSize="13" fontWeight="700" fill={step === 1 ? '#0284c7' : '#334155'}>
-                {hasLearned || step > 0 ? `= ${h1.toFixed(3)}` : '= ?'}
-              </text>
+              {/* 하단 KaTeX 수치 표식 */}
+              <foreignObject x="250" y="176" width="100" height="24" style={{ overflow: 'visible' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', whiteSpace: 'nowrap' }}>
+                  <MathView math={hasLearned || step > 0 ? `= \\mathbf{${h1.toFixed(3)}}` : '= ?'} style={{ fontSize: '13px', color: step === 1 ? '#0284c7' : '#334155' }} />
+                </div>
+              </foreignObject>
             </g>
 
             {/* === 노드 3: yHat (510, 120) === */}
-            <g transform="translate(510, 120)">
+            <g>
               <circle 
-                r="46" 
+                cx="510" cy="120" r="46" 
                 fill="none" 
                 stroke={step === 1 || diagramHL.yHatNode ? '#0284c7' : '#cbd5e1'} 
                 strokeWidth="1.5" 
@@ -722,49 +762,63 @@ export const BackpropSimulator = () => {
                 opacity="0.6" 
               />
               <circle 
-                r="40" 
+                cx="510" cy="120" r="40" 
                 fill={step === 1 ? '#e0f2fe' : diagramHL.yHatNode ? '#e0f2fe' : '#ffffff'} 
                 stroke={step === 1 || diagramHL.yHatNode ? '#0284c7' : step === 3 ? '#d97706' : '#cbd5e1'} 
                 strokeWidth={step === 1 || diagramHL.yHatNode ? '4' : '3'} 
                 filter="drop-shadow(0 4px 10px rgba(0, 0, 0, 0.08))"
               />
 
-              <use href="#sigmoid-curve" />
+              <use href="#sigmoid-curve" x="510" y="120" />
 
-              {/* 노드 중심 텍스트 */}
-              <text textAnchor="middle" y="6" fontSize="21" fontWeight="800" fill="#1e293b">ŷ</text>
+              {/* KaTeX 노드 라벨 */}
+              <foreignObject x="480" y="100" width="60" height="40" style={{ overflow: 'visible' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <MathView math="\mathbf{\hat{y}}" style={{ fontSize: '21px', color: '#1e293b' }} />
+                </div>
+              </foreignObject>
 
               {/* 노드 상단 라벨 */}
-              <text className="gmarket-font" textAnchor="middle" y="-60" fontSize="14" fontWeight="700" fill="#0284c7">출력층</text>
+              <text className="gmarket-font" textAnchor="middle" x="510" y="60" fontSize="14" fontWeight="700" fill="#0284c7">출력층</text>
 
-              {/* 하단 수치 표식 */}
-              <text textAnchor="middle" y="68" className="num-font" fontSize="13" fontWeight="700" fill={step === 1 ? '#0284c7' : '#334155'}>
-                {hasLearned || step > 0 ? `= ${yHat.toFixed(3)}` : '= ?'}
-              </text>
+              {/* 하단 KaTeX 수치 표식 */}
+              <foreignObject x="460" y="176" width="100" height="24" style={{ overflow: 'visible' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', whiteSpace: 'nowrap' }}>
+                  <MathView math={hasLearned || step > 0 ? `= \\mathbf{${yHat.toFixed(3)}}` : '= ?'} style={{ fontSize: '13px', color: step === 1 ? '#0284c7' : '#334155' }} />
+                </div>
+              </foreignObject>
             </g>
 
             {/* === 노드 4: Loss (670, 120) === */}
-            <g transform="translate(670, 120)">
+            <g>
               <rect 
-                x="-38" y="-28" width="76" height="56" rx="14" 
+                x="632" y="92" width="76" height="56" rx="14" 
                 fill={step === 2 ? '#ffe4e6' : '#ffffff'} 
                 stroke={step === 2 ? '#e11d48' : '#f43f5e'} 
                 strokeWidth={step === 2 ? '4' : '2.5'} 
                 filter="drop-shadow(0 4px 10px rgba(225, 29, 72, 0.15))"
               />
 
-              {/* Loss 노드 라벨 */}
-              <text textAnchor="middle" y="5" fontSize="15" fontWeight="800" fill="#be123c">Loss</text>
+              {/* KaTeX Loss 노드 라벨 */}
+              <foreignObject x="632" y="92" width="76" height="56" style={{ overflow: 'visible' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <MathView math="\mathbf{\text{Loss}}" style={{ fontSize: '15px', color: '#be123c' }} />
+                </div>
+              </foreignObject>
 
-              {/* 상단 정답 목표 표식 */}
-              <text textAnchor="middle" y="-60" className="num-font" fontSize="13" fontWeight="700" fill="#be123c">
-                y = {target.toFixed(2)}
-              </text>
+              {/* 상단 KaTeX 정답 목표 표식 */}
+              <foreignObject x="620" y="56" width="100" height="24" style={{ overflow: 'visible' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
+                  <MathView math={`y = \\mathbf{${target.toFixed(2)}}`} style={{ fontSize: '13px', color: '#be123c' }} />
+                </div>
+              </foreignObject>
 
-              {/* 하단 손실 값 표식 */}
-              <text textAnchor="middle" y="68" className="num-font" fontSize="12.5" fontWeight="700" fill={step >= 2 ? '#e11d48' : '#64748b'}>
-                {hasLearned || step >= 2 ? `= ${loss.toFixed(4)}` : '= ?'}
-              </text>
+              {/* 하단 KaTeX 손실 값 표식 */}
+              <foreignObject x="620" y="176" width="100" height="24" style={{ overflow: 'visible' }}>
+                <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%', whiteSpace: 'nowrap' }}>
+                  <MathView math={hasLearned || step >= 2 ? `= \\mathbf{${loss.toFixed(4)}}` : '= ?'} style={{ fontSize: '12.5px', color: step >= 2 ? '#e11d48' : '#64748b' }} />
+                </div>
+              </foreignObject>
             </g>
           </svg>
         </div>
