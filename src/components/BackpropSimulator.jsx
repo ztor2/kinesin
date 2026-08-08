@@ -298,24 +298,8 @@ export const BackpropSimulator = () => {
         fontFamily: '"Plus Jakarta Sans", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif'
       }}
     >
-      {/* 폰트 및 커스텀 스타일 주입 */}
+      {/* 폰트 및 커스텀 스타일 유틸리티 */}
       <style>{`
-        @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff');
-        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Noto+Sans+KR:wght@400;500;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
-
-        @font-face {
-          font-family: 'GmarketSans';
-          src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
-          font-weight: 500;
-          font-style: normal;
-        }
-        @font-face {
-          font-family: 'GmarketSans';
-          src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
-          font-weight: 700;
-          font-style: normal;
-        }
-
         .gmarket-font {
           font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
         }
