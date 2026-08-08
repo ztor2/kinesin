@@ -1,0 +1,120 @@
+---
+title: "기술 문서 템플릿 (Article Template)"
+description: "새로운 기술 아티클 작성 시 활용하는 표준 템플릿 양식"
+---
+
+import SectionSlider from '../../../components/common/SectionSlider.astro';
+
+<SectionSlider>
+
+### Intro
+
+> <i><strong>핵심 요약 메시지</strong>를 이곳 인용구 태그(blockquote)로 명시하여 독자에게 강력한 첫인상을 전달합니다.</i>
+<br/>
+
+- **개념 배경**: 기술/개념의 도입 배경 및 해결하고자 하는 문제 정의를 작성합니다.
+- **핵심 특징**: 이전 기술과의 차별점 및 기술적 가치를 요약합니다.
+- **적용 현황**: 현재 주요 LLM / 딥러닝 아키텍처에서의 표준 채택 현황을 명시합니다.
+
+<br/>
+
+본 문서에서는 기술의 기본 원리와 수학적 정명, 그리고 인터랙티브 시각화를 통해 개념을 직관적으로 이해해보고자 한다.
+
+<br/>
+
+### Theoretical Background
+
+> <i>수학적/구조적 핵심 정의 및 주요 수식을 설명하는 구간입니다.</i> <br/>
+<br/>
+
+입력 데이터 $\mathbf{x}$가 전달될 때, 특정 연산 과정은 다음과 같이 수식화된다.
+
+<br/>
+$$
+\mathbf{y} = f(\mathbf{x}; W) + b
+$$
+<br/>
+
+이 연산의 주요 목적은 예측값과 실제값 간의 손실(Loss, $L$)을 최소화하는 파라미터 $W$를 최적화하는 데 있다.
+
+<br/>
+
+### Core Mechanics & Equations
+
+<br/>
+
+다층 구조 및 중첩 함수 연산에 대한 미분 및 핵심 알고리즘 원리를 상세히 기술합니다.
+
+<br/>
+$$
+\frac{\partial L}{\partial W} = \frac{\partial L}{\partial \mathbf{y}} \cdot \frac{\partial \mathbf{y}}{\partial W}
+$$
+<br/>
+
+- **수식 항 1 ($\frac{\partial L}{\partial \mathbf{y}}$)** : 상위 레이어에서 전달된 전역 오차 신호 (Global Error Signal).
+- **수식 항 2 ($\frac{\partial \mathbf{y}}{\partial W}$)** : 현재 레이어의 국소적 기울기 (Local Gradient).
+
+<br/>
+
+### Simulator & Interactive Visualization
+
+<br/>
+
+아래 시뮬레이터를 통해 파라미터 조절 시 내부 상태 및 수치의 실시간 변화 양상을 직관적으로 관찰할 수 있다.
+
+<br/>
+
+<div className="not-content my-8 w-full clear-both">
+  <blockquote className="not-content">
+    💡 <strong>시뮬레이터 컴포넌트 위치</strong>: React 인터랙티브 컴포넌트(예: <code>&lt;YourSimulator client:visible /&gt;</code>)를 이 래퍼 내부에 배치하세요.
+  </blockquote>
+</div>
+
+<br/>
+
+### Code Implementation
+
+PyTorch / Python 등 실제 프레임워크를 활용한 최소 동작 예제 코드(Minimal Code Example)를 제공합니다:
+
+<br/>
+
+```python
+import torch
+import torch.nn as nn
+
+# 1. 입력 데이터 및 파라미터 정의
+x = torch.tensor([[1.0, 2.0]], requires_grad=True)
+
+# 2. 순전파 패스 (Forward Pass)
+layer = nn.Linear(2, 1)
+output = layer(x)
+loss = output.pow(2).sum()
+
+# 3. 역전파 수행 (Backward Pass)
+loss.backward()
+
+print(f"Gradient: {x.grad}")
+```
+
+<br/>
+
+### Comparison & Summary
+
+본 문서에서 다룬 개념 및 관련 기술들의 특징을 정리하여 요약하면 다음과 같다.
+
+| 구분 | 방안 A (기존 기술) | 방안 B (개선 기술) |
+| :--- | :--- | :--- |
+| **적용 시점** | 입력 단계 | 연산 중간 단계 |
+| **시간 복잡도** | $\mathcal{O}(N^2)$ | $\mathcal{O}(N \log N)$ |
+| **주요 장점** | 단순한 구조 | 초장기 컨텍스트 안정적 유지 |
+
+<br/>
+
+### References
+
+<br/>
+
+- **Paper Title 1** - Author et al. (Year) [(Link)](https://arxiv.org)
+- **Paper Title 2** - Author et al. (Year) [(Link)](https://arxiv.org)
+
+</SectionSlider>
