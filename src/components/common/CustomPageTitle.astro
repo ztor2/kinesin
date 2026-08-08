@@ -16,18 +16,22 @@ import LastUpdated from '@astrojs/starlight/components/LastUpdated.astro';
 		display: flex;
 		flex-direction: column;
 		gap: 0.25rem;
-		margin-bottom: 1.5rem;
+		margin-bottom: 0rem;
 	}
 	.page-title-meta {
 		font-size: var(--sl-text-xs);
 		color: var(--sl-color-gray-3);
 		display: flex;
 		align-items: center;
+		justify-content: flex-end;
 		gap: 0.5rem;
+		width: 100%;
+		text-align: right;
 	}
 	.page-title-meta :global(p) {
 		margin: 0;
 		font-size: var(--sl-text-xs);
 		color: var(--sl-color-gray-3);
+		text-align: right;
 	}
 </style>

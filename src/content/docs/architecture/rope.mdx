@@ -3,7 +3,10 @@ title: "RoPE(Rotary Position Embedding)"
 description: "위치 인코딩(PE)과 RoPE의 수학적 원리, 상대 위치 보존 및 통합 시각화"
 ---
 
-import { PESimulator } from '../../../components/PESimulator.jsx';
+import { PESimulator } from '../../../components/rope/PESimulator.jsx';
+import SectionSlider from '../../../components/common/SectionSlider.astro';
+
+<SectionSlider>
 
 ### Intro
 > <i> <strong>PE</strong>는 LLM의 창발성(Emergent Properties) 발현의 구조적 기반이며, <strong>RoPE</strong>는 초장기 컨텍스트 처리를 가능하게 하여 LLM 대중화를 가속화했다. </i> <br/>
@@ -18,7 +21,6 @@ import { PESimulator } from '../../../components/PESimulator.jsx';
 - 이 때 위치 정보를 기하학적으로 부여하는 <strong>회전 위치 임베딩(Rotary Position Embedding, RoPE)</strong>이 제안되어 사용되기 시작했다. <br/>
 - RoPE는 장기 컨텍스트에서도 토큰 간 상대적 위치 정보를 잘 보존하는 강점을 보였다.
 - 현재는 RoPE를 기반으로 학습되어 1M 토큰 이상의 입력을 처리할 수 있는 모델들도 널리 쓰이고 있다. <br/><br/>
-
 
 본 문서에서는 초기의 PE와 이후 PE의 개선된 버전인 RoPE의 원리를 비교하며 간단히 살펴본다.
 
@@ -115,7 +117,7 @@ $$
 
 <br/>
 
-### PE & RoPE Visualization
+### PE & RoPE Simulator
 <br/>
 
 PE와 RoPE에 사용되는 수많은 2차원 평면의 원을,
@@ -147,10 +149,10 @@ PE와 RoPE의 특징 및 차이점을 정리하여 요약해보면 다음과 같
 
 <br/>
 
----
-
 ### References
 <br/>
 
 - **Attention Is All You Need (Absolute PE)** - Vaswani et al. (2017) [(Link)](https://arxiv.org/abs/1706.03762)
 - **RoFormer: Enhanced Transformer with Rotary Position Embedding (RoPE)** - Su et al. (2021) [(Link)](https://arxiv.org/abs/2104.09864)
+
+</SectionSlider>

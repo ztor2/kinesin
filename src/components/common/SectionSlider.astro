@@ -1,0 +1,364 @@
+---
+// SectionSlider.astro - Astro Native Slide Reader Component
+---
+
+<div class="section-slider-root" style="width: 100%; position: relative; margin: 0;">
+  <!-- 폰트 및 테마 스타일 -->
+  <style>
+    .gmarket-font {
+      font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
+    }
+    .num-font {
+      font-family: 'JetBrains Mono', monospace !important;
+    }
+    
+    .section-slider-card {
+      background-color: var(--sl-color-bg-nav, #ffffff);
+      color: var(--sl-color-text, #0f172a);
+      border: 1px solid var(--sl-color-hairline, #e2e8f0);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08);
+      border-radius: 20px;
+      padding: 24px 28px;
+      position: relative;
+      min-height: 280px;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    /* CSS Grid 3열 통합 헤더 바 (1줄 레이아웃 + 1/6 중앙 고정) */
+    .section-slider-header {
+      display: grid;
+      grid-template-columns: 1fr auto 1fr;
+      align-items: center;
+      margin-bottom: 1.25rem !important;
+      padding: 2px 0;
+      width: 100%;
+      height: 38px;
+      box-sizing: border-box;
+    }
+
+    .hdr-slot-left {
+      display: flex;
+      align-items: center;
+      justify-content: flex-start;
+    }
+
+    .hdr-slot-center {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .hdr-slot-right {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+    }
+
+    .view-mode-toggle-wrapper {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--sl-color-text, #475569);
+      user-select: none;
+    }
+
+    /* 다크/라이트 테마 자동 대응 슬림 슬라이딩 토글 스위치 */
+    .toggle-switch-track {
+      width: 42px;
+      height: 22px;
+      border-radius: 11px;
+      padding: 2px;
+      cursor: pointer;
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      box-sizing: border-box;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .toggle-switch-thumb {
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.25);
+      transition: transform 0.2s cubic-bezier(0.4, 0, 0.2, 1), background-color 0.2s ease;
+    }
+
+    /* 카드 모드 ON (왼쪽 위치: 쨍한 보라색 트랙 + 백색 노브) */
+    .toggle-switch-track.card-mode {
+      background-color: #6366f1;
+      border: 1px solid #4f46e5;
+    }
+    .toggle-switch-track.card-mode .toggle-switch-thumb {
+      transform: translateX(0px);
+      background-color: #ffffff;
+    }
+
+    /* 스크롤 모드 OFF (오른쪽 위치: 어두운 OFF 트랙) */
+    .toggle-switch-track.scroll-mode {
+      background-color: #94a3b8;
+      border: 1px solid #64748b;
+    }
+    .toggle-switch-track.scroll-mode .toggle-switch-thumb {
+      transform: translateX(18px);
+      background-color: #f1f5f9;
+    }
+
+    :root[data-theme='dark'] .toggle-switch-track.scroll-mode {
+      background-color: #1e293b;
+      border-color: #334155;
+    }
+    :root[data-theme='dark'] .toggle-switch-track.scroll-mode .toggle-switch-thumb {
+      background-color: #64748b;
+    }
+
+    :root[data-theme='dark'] .toggle-switch-track.card-mode {
+      background-color: #6366f1;
+      border-color: #818cf8;
+    }
+    :root[data-theme='dark'] .toggle-switch-track.card-mode .toggle-switch-thumb {
+      background-color: #ffffff;
+    }
+
+    /* 미니멀 헤더 버튼 표준 규격 */
+    .hdr-nav-btn {
+      height: 34px;
+      padding: 0 16px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12.5px;
+      font-weight: 700;
+      border-radius: 10px;
+      cursor: pointer;
+      box-sizing: border-box;
+      line-height: 1;
+      margin: 0;
+      transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+    }
+
+    .hdr-btn-subtle {
+      background-color: var(--sl-color-bg-nav, #ffffff);
+      color: var(--sl-color-text, #334155);
+      border: 1px solid var(--sl-color-hairline, #cbd5e1);
+      box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    }
+
+    .hdr-btn-subtle:hover:not(:disabled) {
+      border-color: #6366f1;
+      color: #4f46e5;
+    }
+
+    .hdr-btn-primary {
+      background-color: #4f46e5;
+      color: #ffffff;
+      border: 1px solid transparent;
+      box-shadow: 0 4px 12px rgba(79, 70, 229, 0.25);
+    }
+
+    .hdr-btn-primary:hover:not(:disabled) {
+      background-color: #4338ca;
+    }
+  </style>
+
+  <!-- 파싱용 원본 슬롯 컨테이너 (숨김) -->
+  <div id="slider-raw-content" style="display: none;">
+    <slot />
+  </div>
+
+  <!-- 통합 1줄 3열 대칭 헤더 바 (항상 정갈하게 유지) -->
+  <div class="section-slider-header">
+    {/* 1. Left Slot: '이전' 버튼 */}
+    <div class="hdr-slot-left">
+      <button id="header-btn-prev" class="gmarket-font hdr-nav-btn hdr-btn-subtle">
+        ◀ 이전
+      </button>
+    </div>
+
+    {/* 2. Center Slot: 진행 상황 (수학적 절대 중앙 고정) */}
+    <div class="hdr-slot-center">
+      <span id="slider-num-indicator" class="num-font" style="font-size: 14px; font-weight: 800; color: var(--sl-color-text, #0f172a); letter-spacing: 0.05em; display: inline-flex; align-items: center; line-height: 1;">
+        1 / 1
+      </span>
+    </div>
+
+    {/* 3. Right Slot: '카드 모드' 토글 스위치 ('다음' 버튼 바로 왼쪽) + '다음' 버튼 */}
+    <div class="hdr-slot-right">
+      <div class="view-mode-toggle-wrapper gmarket-font">
+        <span id="view-mode-label">카드 모드</span>
+        <div id="mode-toggle-switch" class="toggle-switch-track card-mode" title="카드 모드 / 전체 스크롤 모드 전환">
+          <div class="toggle-switch-thumb"></div>
+        </div>
+      </div>
+
+      <button id="header-btn-next" class="gmarket-font hdr-nav-btn hdr-btn-primary">
+        다음 ▶
+      </button>
+    </div>
+  </div>
+
+  <!-- 슬라이드 메인 뷰포트 영역 (카드 모드) -->
+  <div id="slider-card-view" style="position: relative; margin-top: 1.25rem;">
+    <!-- 상단 프로그레스 바 -->
+    <div style="height: 4px; width: 100%; background-color: var(--sl-color-hairline, #e2e8f0); border-radius: 2px; margin-bottom: 1.25rem; overflow: hidden;">
+      <div id="slider-progress-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #3b82f6, #6366f1); transition: width 0.3s ease;"></div>
+    </div>
+
+    <!-- 카드 실물 컨테이너 -->
+    <div className="sl-markdown-content" class="section-slider-card">
+      <div id="slider-rendered-viewport"></div>
+    </div>
+  </div>
+
+  <!-- 전체 스크롤 뷰포트 (초기 숨김) -->
+  <div id="slider-scroll-view" className="sl-markdown-content" style="display: none; flex-direction: column; gap: 16px;">
+  </div>
+</div>
+
+<script is:inline>
+  (function() {
+    function initSlider() {
+      const rawContent = document.getElementById('slider-raw-content');
+      const renderedViewport = document.getElementById('slider-rendered-viewport');
+      const scrollView = document.getElementById('slider-scroll-view');
+      const numIndicator = document.getElementById('slider-num-indicator');
+      const progressBar = document.getElementById('slider-progress-bar');
+      
+      const headerBtnPrev = document.getElementById('header-btn-prev');
+      const headerBtnNext = document.getElementById('header-btn-next');
+      const toggleSwitch = document.getElementById('mode-toggle-switch');
+      
+      const cardView = document.getElementById('slider-card-view');
+
+      if (!rawContent || !renderedViewport) return;
+
+      // H2, H3 헤딩 탐색
+      const headings = Array.from(rawContent.querySelectorAll('h3, h2'));
+      const slides = [];
+
+      if (headings.length > 0) {
+        headings.forEach((heading, idx) => {
+          const titleText = heading.textContent ? heading.textContent.replace('¶', '').trim() : `Part ${idx + 1}`;
+          
+          let topBlock = heading;
+          while (topBlock.parentElement && topBlock.parentElement !== rawContent && topBlock.parentElement.id !== 'slider-raw-content') {
+            topBlock = topBlock.parentElement;
+          }
+
+          let htmlChunk = topBlock.outerHTML;
+
+          let nextBlock = topBlock.nextElementSibling;
+          while (nextBlock) {
+            const hasNextHeading = nextBlock.tagName === 'H2' || nextBlock.tagName === 'H3' || nextBlock.querySelector('h2, h3');
+            if (hasNextHeading) break;
+            htmlChunk += nextBlock.outerHTML;
+            nextBlock = nextBlock.nextElementSibling;
+          }
+
+          slides.push({
+            title: titleText,
+            html: htmlChunk
+          });
+        });
+      }
+
+      if (slides.length === 0) {
+        slides.push({ title: '전체 문서', html: rawContent.innerHTML });
+      }
+
+      let currentIndex = 0;
+      let isSlideMode = true;
+
+      scrollView.innerHTML = rawContent.innerHTML;
+
+      function updateControls() {
+        if (isSlideMode) {
+          // 카드 모드 ON 상태
+          const slide = slides[currentIndex];
+          renderedViewport.innerHTML = slide.html;
+
+          numIndicator.textContent = `${currentIndex + 1} / ${slides.length}`;
+          progressBar.style.width = `${((currentIndex + 1) / slides.length) * 100}%`;
+
+          const isFirst = currentIndex === 0;
+          const isLast = currentIndex === slides.length - 1;
+
+          headerBtnPrev.disabled = isFirst;
+          headerBtnPrev.style.opacity = isFirst ? '0.4' : '1';
+          headerBtnPrev.style.cursor = isFirst ? 'not-allowed' : 'pointer';
+
+          headerBtnNext.disabled = isLast;
+          headerBtnNext.style.opacity = isLast ? '0.4' : '1';
+          headerBtnNext.style.cursor = isLast ? 'not-allowed' : 'pointer';
+          headerBtnNext.style.backgroundColor = isLast ? 'var(--sl-color-hairline, #cbd5e1)' : '#4f46e5';
+          headerBtnNext.style.boxShadow = isLast ? 'none' : '0 4px 12px rgba(79, 70, 229, 0.25)';
+        } else {
+          // 스크롤 모드 OFF 상태 (헤더 조작버튼 그대로 비활성화 유지 + 1/1 표시)
+          numIndicator.textContent = '1 / 1';
+          
+          headerBtnPrev.disabled = true;
+          headerBtnPrev.style.opacity = '0.35';
+          headerBtnPrev.style.cursor = 'not-allowed';
+
+          headerBtnNext.disabled = true;
+          headerBtnNext.style.opacity = '0.35';
+          headerBtnNext.style.cursor = 'not-allowed';
+          headerBtnNext.style.backgroundColor = 'var(--sl-color-hairline, #cbd5e1)';
+          headerBtnNext.style.boxShadow = 'none';
+        }
+      }
+
+      function handlePrev() {
+        if (isSlideMode && currentIndex > 0) {
+          currentIndex--;
+          updateControls();
+        }
+      }
+
+      function handleNext() {
+        if (isSlideMode && currentIndex < slides.length - 1) {
+          currentIndex++;
+          updateControls();
+        }
+      }
+
+      function toggleMode() {
+        isSlideMode = !isSlideMode;
+        if (isSlideMode) {
+          cardView.style.display = 'block';
+          scrollView.style.display = 'none';
+          toggleSwitch.classList.add('card-mode');
+          toggleSwitch.classList.remove('scroll-mode');
+        } else {
+          cardView.style.display = 'none';
+          scrollView.style.display = 'flex';
+          toggleSwitch.classList.remove('card-mode');
+          toggleSwitch.classList.add('scroll-mode');
+        }
+        updateControls();
+      }
+
+      headerBtnPrev.addEventListener('click', handlePrev);
+      headerBtnNext.addEventListener('click', handleNext);
+      toggleSwitch.addEventListener('click', toggleMode);
+
+      // 키보드 방향키
+      document.addEventListener('keydown', function(e) {
+        if (!isSlideMode) return;
+        if (e.key === 'ArrowRight') handleNext();
+        else if (e.key === 'ArrowLeft') handlePrev();
+      });
+
+      updateControls();
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', initSlider);
+    } else {
+      initSlider();
+    }
+  })();
+</script>

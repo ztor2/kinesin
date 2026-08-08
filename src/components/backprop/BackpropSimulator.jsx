@@ -270,10 +270,10 @@ export const BackpropSimulator = () => {
   };
 
   const stepsList = [
-    { id: 1, label: '1. 순전파 (Forward)', activeBg: 'linear-gradient(135deg, #0284c7, #0369a1)', shadow: 'rgba(2, 132, 199, 0.3)' },
-    { id: 2, label: '2. 오차 산출 (Loss)', activeBg: 'linear-gradient(135deg, #e11d48, #be123c)', shadow: 'rgba(225, 29, 72, 0.3)' },
-    { id: 3, label: '3. 역전파 (Backward)', activeBg: 'linear-gradient(135deg, #d97706, #b45309)', shadow: 'rgba(217, 119, 6, 0.3)' },
-    { id: 4, label: '4. 가중치 갱신 (Update)', activeBg: 'linear-gradient(135deg, #059669, #047857)', shadow: 'rgba(5, 150, 105, 0.3)' }
+    { id: 1, label: '1. 순전파', activeBg: 'linear-gradient(135deg, #0284c7, #0369a1)', shadow: 'rgba(2, 132, 199, 0.3)' },
+    { id: 2, label: '2. 오차 산출', activeBg: 'linear-gradient(135deg, #e11d48, #be123c)', shadow: 'rgba(225, 29, 72, 0.3)' },
+    { id: 3, label: '3. 역전파', activeBg: 'linear-gradient(135deg, #d97706, #b45309)', shadow: 'rgba(217, 119, 6, 0.3)' },
+    { id: 4, label: '4. 가중치 갱신', activeBg: 'linear-gradient(135deg, #059669, #047857)', shadow: 'rgba(5, 150, 105, 0.3)' }
   ];
 
   return (
@@ -281,7 +281,7 @@ export const BackpropSimulator = () => {
       initial={{ opacity: 0, y: 15 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
-      className="not-content font-sans"
+      className="not-content"
       style={{
         display: 'flex',
         flexDirection: 'column',
@@ -294,90 +294,107 @@ export const BackpropSimulator = () => {
         borderRadius: '24px',
         backgroundColor: '#ffffff',
         border: '1px solid #e2e8f0',
-        boxShadow: '0 20px 40px -15px rgba(0, 0, 0, 0.07), 0 0 1px 1px rgba(0, 0, 0, 0.02)'
+        boxShadow: '0 20px 40px -15px rgba(15, 23, 42, 0.07), 0 0 1px 1px rgba(15, 23, 42, 0.02)',
+        fontFamily: '"Plus Jakarta Sans", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif'
       }}
     >
-      {/* 1. 상단 타이틀 & 컨트롤 헤더 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '6px', height: '19px', borderRadius: '5px', background: 'linear-gradient(180deg, #093348, #113c2e)' }} />
-            <h3 style={{ margin: 0, fontSize: '17px', fontWeight: '800', color: '#0f172a', letterSpacing: '-0.02em' }}>
-              Backpropagation Simulator
-            </h3>
-          </div>
+      {/* 폰트 및 커스텀 스타일 유틸리티 */}
+      <style>{`
+        .gmarket-font {
+          font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
+        }
 
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginLeft: 'auto' }}>
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setShowSettings(!showSettings)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 14px',
-                fontSize: '12.5px',
-                fontWeight: '700',
-                borderRadius: '10px',
-                border: '1px solid #cbd5e1',
-                backgroundColor: showSettings ? '#e2e8f0' : '#f8fafc',
-                color: '#334155',
-                cursor: 'pointer',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-              }}
-            >
-              <span>파라미터 조정</span>
-              <motion.span 
-                animate={{ rotate: showSettings ? 180 : 0 }} 
-                transition={{ duration: 0.2 }}
-                style={{ fontSize: '10px', color: '#64748b', display: 'inline-block' }}
-              >
-                ▼
-              </motion.span>
-            </motion.button>
-
-            <motion.button 
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={handleReset}
-              style={{
-                padding: '8px 14px',
-                fontSize: '12.5px',
-                fontWeight: '600',
-                borderRadius: '10px',
-                border: '1px solid #cbd5e1',
-                backgroundColor: '#ffffff',
-                color: '#475569',
-                cursor: 'pointer',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-              }}
-            >
-              초기화
-            </motion.button>
-
-            <motion.button 
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.96 }}
-              onClick={handleRunFullStep}
-              style={{
-                padding: '8px 18px',
-                fontSize: '12.5px',
-                fontWeight: '800',
-                borderRadius: '10px',
-                border: 'none',
-                background: 'linear-gradient(135deg, #059669, #047857)',
-                color: '#ffffff',
-                cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(5, 150, 105, 0.35)'
-              }}
-            >
-              ⚡ 1회 학습 실행
-            </motion.button>
-          </div>
+        .num-font {
+          font-family: 'JetBrains Mono', monospace !important;
+          font-feature-settings: "tnum";
+          font-variant-numeric: tabular-nums;
+        }
+      `}</style>
+      {/* 1. 상단 타이틀 & 컨트롤 헤더 (2줄 구조) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
+        {/* Row 1: 독립된 메인 타이틀 영역 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '6px', height: '22px', borderRadius: '5px', background: 'linear-gradient(180deg, #093348, #113c2e)' }} />
+          <h3 className="gmarket-font" style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.02em' }}>
+            Backpropagation Simulator
+          </h3>
         </div>
 
-        {/* 접이식 슬라이더 옵션 드로어 */}
+        {/* Row 2: 우측 정렬된 액션 버튼 그룹 */}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setShowSettings(!showSettings)}
+            className="gmarket-font"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              fontSize: '12.5px',
+              fontWeight: '700',
+              borderRadius: '10px',
+              border: '1px solid #cbd5e1',
+              backgroundColor: showSettings ? '#e2e8f0' : '#f8fafc',
+              color: '#334155',
+              cursor: 'pointer',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+            }}
+          >
+            <span>파라미터 조정</span>
+            <motion.span 
+              animate={{ rotate: showSettings ? 180 : 0 }} 
+              transition={{ duration: 0.2 }}
+              style={{ fontSize: '10px', color: '#64748b', display: 'inline-block' }}
+            >
+              ▼
+            </motion.span>
+          </motion.button>
+
+          <motion.button 
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={handleReset}
+            className="gmarket-font"
+            style={{
+              padding: '8px 14px',
+              fontSize: '12.5px',
+              fontWeight: '700',
+              borderRadius: '10px',
+              border: '1px solid #cbd5e1',
+              backgroundColor: '#ffffff',
+              color: '#475569',
+              cursor: 'pointer',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+            }}
+          >
+            초기화
+          </motion.button>
+
+          <motion.button 
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            onClick={handleRunFullStep}
+            className="gmarket-font"
+            style={{
+              padding: '8px 18px',
+              fontSize: '12.5px',
+              fontWeight: '700',
+              borderRadius: '10px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #059669, #047857)',
+              color: '#ffffff',
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(5, 150, 105, 0.35)'
+            }}
+          >
+            ⚡ 1회 학습 실행
+          </motion.button>
+        </div>
+      </div>
+
+      {/* 접이식 슬라이더 옵션 드로어 */}
         <AnimatePresence>
           {showSettings && (
             <motion.div 
@@ -426,7 +443,7 @@ export const BackpropSimulator = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: '800', color: '#1e293b' }}>
                     <span>편향 (<MathView math="b_2" style={{ fontSize: '13px' }} />)</span>
-                    <span style={{ fontFamily: 'monospace', color: '#475569', fontWeight: '800' }}>{b2.toFixed(2)}</span>
+                    <span className="num-font" style={{ color: '#475569', fontWeight: '800' }}>{b2.toFixed(2)}</span>
                   </div>
                   <input type="range" min="-1.0" max="1.0" step="0.05" value={b2} onChange={(e) => { setB2(Number(e.target.value)); setStep(0); }} style={{ width: '100%', cursor: 'pointer' }} />
                 </div>
@@ -434,7 +451,7 @@ export const BackpropSimulator = () => {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: '800', color: '#1e293b' }}>
                     <span>학습률 (<MathView math="\eta" style={{ fontSize: '13px' }} />)</span>
-                    <span style={{ fontFamily: 'monospace', color: '#059669', fontWeight: '800' }}>{lr.toFixed(1)}</span>
+                    <span className="num-font" style={{ color: '#059669', fontWeight: '800' }}>{lr.toFixed(1)}</span>
                   </div>
                   <input type="range" min="0.1" max="1.5" step="0.1" value={lr} onChange={(e) => setLr(Number(e.target.value))} style={{ width: '100%', cursor: 'pointer', accentColor: '#059669' }} />
                 </div>
@@ -442,27 +459,27 @@ export const BackpropSimulator = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
-      {/* 2. Step 탭 버튼 (중앙 정렬, 줄바꿈 없음: whiteSpace & flexWrap nowrap) */}
+      {/* 2. Step 탭 버튼 */}
       <div style={{ display: 'flex', justifyContent: 'center', width: '100%', overflowX: 'auto' }}>
-        <div style={{ display: 'flex', gap: '6px', backgroundColor: '#f1f5f9', padding: '6px', borderRadius: '16px', flexWrap: 'nowrap', whiteSpace: 'nowrap', minWidth: 'max-content' }}>
+        <div style={{ display: 'flex', gap: '8px', backgroundColor: '#f1f5f9', padding: '6px', borderRadius: '16px', flexWrap: 'nowrap', whiteSpace: 'nowrap', minWidth: 'max-content' }}>
           {stepsList.map((t) => {
             const isActive = step === t.id;
             return (
               <button
                 key={t.id}
                 onClick={() => setStep(t.id)}
+                className="gmarket-font"
                 style={{
                   position: 'relative',
-                  padding: '9px 18px',
+                  padding: '9px 20px',
                   fontSize: '13px',
-                  fontWeight: '800',
+                  fontWeight: '700',
                   borderRadius: '12px',
                   border: 'none',
                   cursor: 'pointer',
                   background: 'transparent',
-                  color: isActive ? '#ffffff' : '#64748b',
+                  color: isActive ? '#ffffff' : '#475569',
                   zIndex: 1,
                   whiteSpace: 'nowrap',
                   transition: 'color 0.2s ease'
@@ -507,10 +524,14 @@ export const BackpropSimulator = () => {
         <div style={{ width: '100%', overflowX: 'auto', display: 'flex', justifyContent: 'center' }}>
           <svg viewBox="0 0 760 250" style={{ width: '100%', maxWidth: '760px', height: 'auto', minWidth: '360px' }}>
             <defs>
-              {/* 은은한 배경 도트 패턴 */}
-              <pattern id="grid-dots" width="20" height="20" patternUnits="userSpaceOnUse">
-                <circle cx="2" cy="2" r="1.2" fill="#cbd5e1" opacity="0.45" />
+              {/* 은은한 배경 도트 패턴 & 메시 라인 */}
+              <pattern id="grid-dots" width="24" height="24" patternUnits="userSpaceOnUse">
+                <circle cx="3" cy="3" r="1.2" fill="#94a3b8" opacity="0.3" />
+                <path d="M 24 0 L 0 0 0 24" fill="none" stroke="#e2e8f0" strokeWidth="0.5" opacity="0.5" />
               </pattern>
+
+              {/* 활성화 함수 Sigmoid 미니 곡선 실루엣 */}
+              <path id="sigmoid-curve" d="M -24 16 C -8 16, -8 -16, 24 -16" fill="none" stroke="#94a3b8" strokeWidth="2" opacity="0.25" strokeLinecap="round" />
 
               {/* 깔끔한 화살표 마커 */}
               <marker id="arrow-blue" viewBox="0 0 10 10" refX="44" refY="5" markerWidth="4.5" markerHeight="4.5" orient="auto-start-reverse">
@@ -685,8 +706,8 @@ export const BackpropSimulator = () => {
                 </div>
               </foreignObject>
               
-              {/* 노드 상단 라벨 (간격 y=-60 확장 & 폰트크기 14.5px 업그레이드) */}
-              <text textAnchor="middle" y="-60" fontSize="14.5" fontWeight="800" fill="#475569">입력층</text>
+              {/* 노드 상단 라벨 */}
+              <text className="gmarket-font" textAnchor="middle" y="-60" fontSize="14" fontWeight="700" fill="#475569">입력층</text>
 
               {/* 하단 KaTeX 수치 표식 */}
               <foreignObject x="-40" y="56" width="80" height="24">
@@ -714,6 +735,9 @@ export const BackpropSimulator = () => {
                 filter="drop-shadow(0 4px 10px rgba(0, 0, 0, 0.08))"
               />
 
+              {/* Sigmoid 활성화 함수 미니 곡선 실루엣 배경 */}
+              <use href="#sigmoid-curve" />
+
               {/* KaTeX 노드 라벨 */}
               <foreignObject x="-30" y="-20" width="60" height="40">
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
@@ -721,8 +745,8 @@ export const BackpropSimulator = () => {
                 </div>
               </foreignObject>
 
-              {/* 노드 상단 라벨 (간격 y=-60 확장 & 폰트크기 14.5px 업그레이드) */}
-              <text textAnchor="middle" y="-60" fontSize="14.5" fontWeight="800" fill="#0284c7">은닉층</text>
+              {/* 노드 상단 라벨 */}
+              <text className="gmarket-font" textAnchor="middle" y="-60" fontSize="14" fontWeight="700" fill="#0284c7">은닉층</text>
 
               {/* 하단 KaTeX 수치 표식 */}
               <foreignObject x="-45" y="56" width="90" height="24">
@@ -750,6 +774,9 @@ export const BackpropSimulator = () => {
                 filter="drop-shadow(0 4px 10px rgba(0, 0, 0, 0.08))"
               />
 
+              {/* Sigmoid 활성화 함수 미니 곡선 실루엣 배경 */}
+              <use href="#sigmoid-curve" />
+
               {/* KaTeX 노드 라벨 */}
               <foreignObject x="-30" y="-20" width="60" height="40">
                 <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: '100%', height: '100%' }}>
@@ -757,8 +784,8 @@ export const BackpropSimulator = () => {
                 </div>
               </foreignObject>
 
-              {/* 노드 상단 라벨 (간격 y=-60 확장 & 폰트크기 14.5px 업그레이드) */}
-              <text textAnchor="middle" y="-60" fontSize="14.5" fontWeight="800" fill="#0284c7">출력층</text>
+              {/* 노드 상단 라벨 */}
+              <text className="gmarket-font" textAnchor="middle" y="-60" fontSize="14" fontWeight="700" fill="#0284c7">출력층</text>
 
               {/* 하단 KaTeX 수치 표식 */}
               <foreignObject x="-45" y="56" width="90" height="24">
@@ -815,12 +842,12 @@ export const BackpropSimulator = () => {
               transition={{ duration: 0.25 }}
               style={{ backgroundColor: '#f0f9ff', padding: '20px', borderRadius: '16px', border: '1.5px solid #bae6fd', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 14px -2px rgba(2,132,199,0.08)' }}
             >
-              <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#0369a1' }}>
+              <span className="gmarket-font" style={{ fontSize: '14.5px', fontWeight: '700', color: '#0369a1' }}>
                 1. 순전파 (Forward Pass)
               </span>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
                 <div style={{ backgroundColor: '#ffffff', padding: '14px 16px', borderRadius: '12px', border: '1px solid #bae6fd', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                  <span style={{ fontSize: '12px', fontWeight: '800', color: '#0284c7', display: 'block', marginBottom: '6px' }}>은닉층 (h₁)</span>
+                  <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: '#0284c7', display: 'block', marginBottom: '6px' }}>은닉층 (h₁)</span>
                   <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.7' }}>
                     <MathView math={`z_1 = W_1 x + b_1 = ${w1.toFixed(2)}\\times ${x.toFixed(2)} + ${b1.toFixed(2)} = \\mathbf{${z1.toFixed(3)}}`} /><br/>
                     <MathView math={`h_1 = \\sigma(z_1) = \\mathbf{${h1.toFixed(3)}}`} style={{ fontWeight: '800', color: '#0284c7' }} />
@@ -828,7 +855,7 @@ export const BackpropSimulator = () => {
                 </div>
 
                 <div style={{ backgroundColor: '#ffffff', padding: '14px 16px', borderRadius: '12px', border: '1px solid #bae6fd', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                  <span style={{ fontSize: '12px', fontWeight: '800', color: '#0284c7', display: 'block', marginBottom: '6px' }}>출력층 (ŷ)</span>
+                  <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: '#0284c7', display: 'block', marginBottom: '6px' }}>출력층 (ŷ)</span>
                   <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.7' }}>
                     <MathView math={`z_2 = W_2 h_1 + b_2 = ${w2.toFixed(2)}\\times ${h1.toFixed(3)} + (${b2.toFixed(2)}) = \\mathbf{${z2.toFixed(3)}}`} /><br/>
                     <MathView math={`\\hat{y} = \\sigma(z_2) = \\mathbf{${yHat.toFixed(3)}}`} style={{ fontWeight: '800', color: '#0284c7' }} />
@@ -847,17 +874,17 @@ export const BackpropSimulator = () => {
               transition={{ duration: 0.25 }}
               style={{ backgroundColor: '#fff1f2', padding: '20px', borderRadius: '16px', border: '1.5px solid #fecdd3', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 14px -2px rgba(225,29,72,0.08)' }}
             >
-              <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#be123c' }}>
+              <span className="gmarket-font" style={{ fontSize: '14.5px', fontWeight: '700', color: '#be123c' }}>
                 2. 오차 산출 (Loss Calculation)
               </span>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
                 <div style={{ backgroundColor: '#ffffff', padding: '14px 16px', borderRadius: '12px', border: '1px solid #fecdd3', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                  <span style={{ fontSize: '12px', fontWeight: '800', color: '#e11d48', display: 'block', marginBottom: '6px' }}>손실 함수 (MSE Loss)</span>
+                  <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: '#e11d48', display: 'block', marginBottom: '6px' }}>손실 함수 (MSE Loss)</span>
                   <MathView math={`L = \\frac{1}{2}(\\hat{y} - y)^2 = \\frac{1}{2}(${yHat.toFixed(4)} - ${target.toFixed(2)})^2 = \\mathbf{${loss.toFixed(4)}}`} style={{ color: '#be123c', fontWeight: '800' }} />
                 </div>
 
                 <div style={{ backgroundColor: '#ffffff', padding: '14px 16px', borderRadius: '12px', border: '1px solid #fecdd3', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                  <span style={{ fontSize: '12px', fontWeight: '800', color: '#e11d48', display: 'block', marginBottom: '6px' }}>출력 오차 민감도</span>
+                  <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: '#e11d48', display: 'block', marginBottom: '6px' }}>출력 오차 민감도</span>
                   <MathView math={`\\frac{\\partial L}{\\partial \\hat{y}} = \\hat{y} - y = ${yHat.toFixed(4)} - ${target.toFixed(2)} = \\mathbf{${dL_dyHat.toFixed(4)}}`} style={{ color: '#be123c', fontWeight: '800' }} />
                 </div>
               </div>
@@ -873,22 +900,22 @@ export const BackpropSimulator = () => {
               transition={{ duration: 0.25 }}
               style={{ backgroundColor: '#fffbeb', padding: '20px', borderRadius: '16px', border: '1.5px solid #fde68a', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 14px -2px rgba(217,119,6,0.08)' }}
             >
-              <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#b45309' }}>
+              <span className="gmarket-font" style={{ fontSize: '14.5px', fontWeight: '700', color: '#b45309' }}>
                 3. 역전파 (Backward Pass)
               </span>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
                 <div style={{ backgroundColor: '#ffffff', padding: '12px 14px', borderRadius: '12px', border: '1px solid #fde68a', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                  <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#d97706', display: 'block', marginBottom: '4px' }}>1. 출력층 기울기 (δ₂)</span>
+                  <span className="gmarket-font" style={{ fontSize: '12px', fontWeight: '700', color: '#d97706', display: 'block', marginBottom: '4px' }}>1. 출력층 기울기 (δ₂)</span>
                   <MathView math={`\\delta_2 = (\\hat{y}-y)\\sigma'(z_2) = \\mathbf{${delta2.toFixed(4)}}`} style={{ fontSize: '12.5px', color: '#92400e', fontWeight: '800' }} />
                 </div>
 
                 <div style={{ backgroundColor: '#ffffff', padding: '12px 14px', borderRadius: '12px', border: '1px solid #fde68a', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                  <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#d97706', display: 'block', marginBottom: '4px' }}>2. W₂ 기울기 (<MathView math="\frac{\partial L}{\partial W_2}" style={{ fontSize: '11px' }} />)</span>
+                  <span className="gmarket-font" style={{ fontSize: '12px', fontWeight: '700', color: '#d97706', display: 'block', marginBottom: '4px' }}>2. W₂ 기울기 (<MathView math="\frac{\partial L}{\partial W_2}" style={{ fontSize: '11px' }} />)</span>
                   <MathView math={`\\frac{\\partial L}{\\partial W_2} = \\delta_2 \\cdot h_1 = \\mathbf{${dL_dw2.toFixed(4)}}`} style={{ fontSize: '12.5px', color: '#92400e', fontWeight: '800' }} />
                 </div>
 
                 <div style={{ backgroundColor: '#ffffff', padding: '12px 14px', borderRadius: '12px', border: '1px solid #fde68a', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                  <span style={{ fontSize: '11.5px', fontWeight: '800', color: '#d97706', display: 'block', marginBottom: '4px' }}>3. W₁ 기울기 (<MathView math="\frac{\partial L}{\partial W_1}" style={{ fontSize: '11px' }} />)</span>
+                  <span className="gmarket-font" style={{ fontSize: '12px', fontWeight: '700', color: '#d97706', display: 'block', marginBottom: '4px' }}>3. W₁ 기울기 (<MathView math="\frac{\partial L}{\partial W_1}" style={{ fontSize: '11px' }} />)</span>
                   <MathView math={`\\frac{\\partial L}{\\partial W_1} = (\\delta_2 W_2)\\sigma'(z_1)x = \\mathbf{${dL_dw1.toFixed(4)}}`} style={{ fontSize: '12.5px', color: '#92400e', fontWeight: '800' }} />
                 </div>
               </div>
@@ -905,7 +932,7 @@ export const BackpropSimulator = () => {
               style={{ backgroundColor: '#ecfdf5', padding: '20px', borderRadius: '16px', border: '1.5px solid #a7f3d0', display: 'flex', flexDirection: 'column', gap: '14px', boxShadow: '0 4px 14px -2px rgba(5,150,105,0.08)' }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-                <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#047857' }}>
+                <span className="gmarket-font" style={{ fontSize: '14.5px', fontWeight: '700', color: '#047857' }}>
                   4. 가중치 갱신 (Gradient Descent)
                 </span>
                 <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: '700', color: '#059669', backgroundColor: '#ffffff', padding: '4px 10px', borderRadius: '8px', border: '1px solid #a7f3d0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
@@ -1010,8 +1037,8 @@ export const BackpropSimulator = () => {
       {/* 5. 연쇄 법칙(Chain Rule) 상세 내역 탐색기 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#ffffff', padding: '22px', borderRadius: '18px', border: '1px solid #cbd5e1', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.04)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
-          <span style={{ fontSize: '14.5px', fontWeight: '800', color: '#0f172a' }}>
-            연쇄 법칙을 사용한 <MathView math="W_1" style={{ fontSize: '14px' }} /> 기울기 상세 유도
+          <span className="gmarket-font" style={{ fontSize: '14.5px', fontWeight: '700', color: '#0f172a' }}>
+            <MathView math="W_1" style={{ fontSize: '14px' }} /> 기울기 계산 과정의 연쇄 법칙 분석
           </span>
         </div>
 
@@ -1045,10 +1072,11 @@ export const BackpropSimulator = () => {
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.96 }}
                   onClick={handleLearnConfirm}
+                  className="gmarket-font"
                   style={{
                     padding: '8px 22px',
                     fontSize: '13px',
-                    fontWeight: '800',
+                    fontWeight: '700',
                     borderRadius: '10px',
                     border: 'none',
                     background: 'linear-gradient(135deg, #d97706, #b45309)',
@@ -1063,6 +1091,7 @@ export const BackpropSimulator = () => {
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.96 }}
                   onClick={handleLearnCancel}
+                  className="gmarket-font"
                   style={{
                     padding: '8px 22px',
                     fontSize: '13px',
@@ -1083,8 +1112,8 @@ export const BackpropSimulator = () => {
         </AnimatePresence>
 
         {/* 수치 곱셈식 */}
-        <div style={{ fontSize: '13px', color: '#0f172a', overflowX: 'auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: '#f1f5f9', padding: '12px 18px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
-          <MathView math={`\\frac{\\partial L}{\\partial W_1} = (${dL_dyHat.toFixed(4)}) \\times (${dyHat_dz2.toFixed(4)}) \\times (${w2.toFixed(2)}) \\times (${dh1_dz1.toFixed(4)}) \\times (${x.toFixed(2)}) = ${dL_dw1.toFixed(4)}`} style={{ fontSize: '13px' }} />
+        <div style={{ fontSize: '13px', color: '#0f172a', overflowX: 'auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: '#f8fafc', padding: '12px 18px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
+          <MathView math={`\\frac{\\partial L}{\\partial W_1} = (${dL_dyHat.toFixed(4)}) \\times (${dyHat_dz2.toFixed(4)}) \\times (${w2.toFixed(2)}) \\times (${dh1_dz1.toFixed(4)}) \\times (${x.toFixed(2)}) = ${dL_dw1.toFixed(4)}`} style={{ fontSize: '13.5px' }} />
         </div>
 
         {/* 미분 항 선택 버튼 */}
@@ -1143,8 +1172,8 @@ export const BackpropSimulator = () => {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
               <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '12px', fontWeight: '800', color: activeTerm.themeColor, display: 'block', marginBottom: '4px' }}>
-                  개념 : {activeTerm.name}
+                <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: activeTerm.themeColor, display: 'block', marginBottom: '4px' }}>
+                  항 의미 : {activeTerm.name}
                 </span>
                 <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6' }}>
                   {activeTerm.descriptionNode}
@@ -1152,7 +1181,7 @@ export const BackpropSimulator = () => {
               </div>
 
               <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                <span style={{ fontSize: '12px', fontWeight: '800', color: '#059669', display: 'block', marginBottom: '4px' }}>
+                <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: '#059669', display: 'block', marginBottom: '4px' }}>
                   수식 유도
                 </span>
                 <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6' }}>

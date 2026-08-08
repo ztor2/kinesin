@@ -188,53 +188,71 @@ export const PESimulator = () => {
       style={{
         display: 'flex',
         flexDirection: 'column',
-        gap: '20px',
+        gap: '24px',
         width: '100%',
         clear: 'both',
         boxSizing: 'border-box',
-        margin: '16px 0',
-        padding: '20px',
-        borderRadius: '16px',
+        margin: '24px 0',
+        padding: '28px',
+        borderRadius: '24px',
         backgroundColor: '#ffffff',
-        border: '1px solid #cbd5e1',
-        boxShadow: '0 4px 12px rgba(0, 0, 0, 0.05)'
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 20px 40px -15px rgba(15, 23, 42, 0.07), 0 0 1px 1px rgba(15, 23, 42, 0.02)',
+        fontFamily: '"Plus Jakarta Sans", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif'
       }}
     >
-      {/* 1. Header View Switcher (중앙 정렬) */}
-      <div 
-        style={{
-          display: 'flex',
-          justifyContent: 'center',
-          alignItems: 'center',
-          borderBottom: '1px solid #f1f5f9',
-          paddingBottom: '12px'
-        }}
-      >
-        <div style={{ display: 'flex', gap: '6px', backgroundColor: '#f1f5f9', padding: '4px', borderRadius: '8px' }}>
-          {[
-            { id: 'split', label: 'PE & RoPE' },
-            { id: 'pe', label: 'PE Only' },
-            { id: 'rope', label: 'RoPE Only' }
-          ].map((mode) => (
-            <button
-              key={mode.id}
-              onClick={() => setViewMode(mode.id)}
-              style={{
-                padding: '6px 14px',
-                fontSize: '12px',
-                fontWeight: '700',
-                borderRadius: '6px',
-                border: 'none',
-                cursor: 'pointer',
-                backgroundColor: viewMode === mode.id ? '#ffffff' : 'transparent',
-                color: viewMode === mode.id ? '#0f172a' : '#64748b',
-                boxShadow: viewMode === mode.id ? '0 1px 3px rgba(0,0,0,0.1)' : 'none',
-                transition: 'all 0.15s ease'
-              }}
-            >
-              {mode.label}
-            </button>
-          ))}
+      {/* 폰트 유틸리티 */}
+      <style>{`
+        .gmarket-font {
+          font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
+        }
+
+        .num-font {
+          font-family: 'JetBrains Mono', monospace !important;
+          font-feature-settings: "tnum";
+          font-variant-numeric: tabular-nums;
+        }
+      `}</style>
+
+      {/* 1. 상단 타이틀 & 컨트롤 헤더 (2줄 구조) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
+        {/* Row 1: 독립된 메인 타이틀 영역 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '6px', height: '22px', borderRadius: '5px', background: 'linear-gradient(180deg, #4f46e5, #3730a3)' }} />
+          <h3 className="gmarket-font" style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.02em' }}>
+            PE & RoPE Simulator
+          </h3>
+        </div>
+
+        {/* Row 2: 우측 정렬된 뷰 스위처 버튼 그룹 */}
+        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '6px', backgroundColor: '#f1f5f9', padding: '5px', borderRadius: '12px' }}>
+            {[
+              { id: 'split', label: 'PE & RoPE' },
+              { id: 'pe', label: 'PE Only' },
+              { id: 'rope', label: 'RoPE Only' }
+            ].map((mode) => (
+              <button
+                key={mode.id}
+                onClick={() => setViewMode(mode.id)}
+                className="gmarket-font"
+                style={{
+                  padding: '7px 16px',
+                  fontSize: '12.5px',
+                  fontWeight: '700',
+                  borderRadius: '9px',
+                  border: 'none',
+                  cursor: 'pointer',
+                  backgroundColor: viewMode === mode.id ? '#ffffff' : 'transparent',
+                  color: viewMode === mode.id ? '#4f46e5' : '#64748b',
+                  boxShadow: viewMode === mode.id ? '0 2px 6px rgba(79, 70, 229, 0.12)' : 'none',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                {mode.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -251,7 +269,7 @@ export const PESimulator = () => {
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b' }}>
+          <span className="gmarket-font" style={{ fontSize: '13.5px', fontWeight: '700', color: '#1e293b' }}>
             Query 토큰 선택 (위치 m 설정)
           </span>
           <div style={{ display: 'flex', gap: '6px' }}>
@@ -262,15 +280,16 @@ export const PESimulator = () => {
                   setSelectedSentenceIdx(idx);
                   setPosition(1);
                 }}
+                className="gmarket-font"
                 style={{
-                  padding: '4px 10px',
-                  fontSize: '11px',
+                  padding: '5px 12px',
+                  fontSize: '12px',
                   fontWeight: '700',
-                  borderRadius: '6px',
-                  border: 'none',
-                  cursor: 'pointer',
-                  backgroundColor: selectedSentenceIdx === idx ? '#2563eb' : '#e2e8f0',
-                  color: selectedSentenceIdx === idx ? '#ffffff' : '#475569'
+                  borderRadius: '7px',
+                  border: selectedSentenceIdx === idx ? '1px solid #6366f1' : '1px solid #cbd5e1',
+                  backgroundColor: selectedSentenceIdx === idx ? '#eef2ff' : '#ffffff',
+                  color: selectedSentenceIdx === idx ? '#4f46e5' : '#475569',
+                  cursor: 'pointer'
                 }}
               >
                 {s.label}
