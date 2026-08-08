@@ -242,4 +242,43 @@ React 기반 대화형 시각화 컴포넌트(예: `BackpropSimulator.jsx`)에�
   SVG 태그 내부의 `<g>`, `<rect>`, `<circle>` 요소를 `motion` 요소로 변환하고 `animate={{ scale: 1.08 }}`을 주면 기본 CSS `transform-origin`이 SVG 전체 좌상단`(0, 0)`으로 지정되어 다이어그램 노드가 밖으로 튀어나가거나 깨집니다.
   - **해결책**: SVG 내부 요소에 CSS `transform` 계열 변환을 줄 때는 반드시 `style={{ transformBox: 'fill-box', transformOrigin: 'center' }}`를 함께 선언하거나, 고정 좌표계 구조를 유지하고 내부 CSS 속성(`strokeWidth`, `opacity`)만 애니메이션합니다.
 
+### 9. 대화형 시각화 컴포넌트 폰트 시스템 및 가독성 디자인 컨벤션
+
+React/MDX 기반 대화형 시각화 모듈(예: `BackpropSimulator.jsx`, `PEnROPEVisualizer.jsx`)의 한글 가독성, 타이틀 시각적 시원함, 숫자가 바뀔 때의 레이아웃 안정성(Layout Shift 방지)을 위해 아래 폰트 스택 컨벤션을 준수합니다.
+
+- **Gmarket Sans (제목 & 탭 & 레이어 라벨)**:
+  컴포넌트 메인 타이틀, Step 탭 버튼, 시각화 노드/카드 제목에는 직곡선 비율이 명확하고 시원시원한 `Gmarket Sans` 폰트를 사용합니다. 별도 파일 다운로드 없이 CDN `@font-face`를 주입하여 사용합니다.
+
+  ```html
+  @font-face {
+    font-family: 'GmarketSans';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
+    font-weight: 500;
+  }
+  @font-face {
+    font-family: 'GmarketSans';
+    src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
+    font-weight: 700;
+  }
+
+  .gmarket-font {
+    font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
+  }
+  ```
+
+- **JetBrains Mono (수치 및 파라미터 고정폭 폰트)**:
+  슬라이더 조정, 수치 갱신, 벡터 표식(`[0.60, 0.30]`) 등 수치가 바뀔 때 글자 너비 변화로 인한 UI 떨림(Layout Shift)을 방지하기 위해 `JetBrains Mono` 고정폭 폰트를 `.num-font` 클래스로 지정합니다.
+
+  ```css
+  .num-font {
+    font-family: 'JetBrains Mono', monospace !important;
+    font-feature-settings: "tnum";
+    font-variant-numeric: tabular-nums;
+  }
+  ```
+
+- **Plus Jakarta Sans / Noto Sans KR (본문 및 수식 유도문)**:
+  설명 텍스트와 본문은 가독성이 검증된 `Plus Jakarta Sans` 및 `Noto Sans KR`을 기본 폰트 스택으로 선언하여 깔끔한 리서치 대시보드 룩을 형성합니다.
+
+
 

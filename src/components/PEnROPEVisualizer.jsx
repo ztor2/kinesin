@@ -8,7 +8,7 @@ const getAngle = (pos, i, d) => pos * Math.pow(BASE, -2 * i / d);
 
 const VectorInput = ({ vector, onChange, label }) => (
   <div className="flex items-center gap-2">
-    <span className="w-4 font-mono text-sm">{label}</span>
+    <span className="w-4 font-mono text-sm font-semibold">{label}</span>
     {vector.map((val, i) => (
       <input
         key={i}
@@ -22,7 +22,7 @@ const VectorInput = ({ vector, onChange, label }) => (
           newVec[i] = Number(e.target.value);
           onChange(newVec);
         }}
-        className="w-16 rounded border border-gray-300 bg-white p-1 text-center text-sm dark:border-gray-600 dark:bg-gray-700"
+        className="num-font w-16 rounded-md border border-slate-300 bg-white p-1 text-center text-sm font-bold text-slate-800 shadow-xs dark:border-slate-600 dark:bg-slate-800 dark:text-slate-100"
       />
     ))}
   </div>
@@ -39,13 +39,13 @@ const Clock = ({ angle, label, vector, rotated, isRoPE = false }) => {
 
   return (
     <div className="flex flex-col items-center">
-      <span className="mb-2 text-sm font-semibold text-gray-700 dark:text-gray-200">{label}</span>
+      <span className="gmarket-font mb-2 text-sm font-bold text-slate-700 dark:text-slate-200">{label}</span>
       <svg viewBox="0 0 100 100" style={{ width: '120px', height: '120px' }}>
-        <circle cx="50" cy="50" r="40" fill="#f9fafb" stroke="#e5e7eb" strokeWidth="1" className="dark:fill-gray-800/50 dark:stroke-gray-700" />
-        <line x1="50" y1="10" x2="50" y2="12" stroke="#9ca3af" strokeWidth="1" />
-        <line x1="90" y1="50" x2="88" y2="50" stroke="#9ca3af" strokeWidth="1" />
-        <line x1="50" y1="90" x2="50" y2="88" stroke="#9ca3af" strokeWidth="1" />
-        <line x1="10" y1="50" x2="12" y2="50" stroke="#9ca3af" strokeWidth="1" />
+        <circle cx="50" cy="50" r="40" fill="#f8fafc" stroke="#e2e8f0" strokeWidth="1.5" className="dark:fill-slate-800/50 dark:stroke-slate-700" />
+        <line x1="50" y1="10" x2="50" y2="13" stroke="#94a3b8" strokeWidth="1" />
+        <line x1="90" y1="50" x2="87" y2="50" stroke="#94a3b8" strokeWidth="1" />
+        <line x1="50" y1="90" x2="50" y2="87" stroke="#94a3b8" strokeWidth="1" />
+        <line x1="10" y1="50" x2="13" y2="50" stroke="#94a3b8" strokeWidth="1" />
 
         {isRoPE && (
           <>
@@ -58,7 +58,7 @@ const Clock = ({ angle, label, vector, rotated, isRoPE = false }) => {
         <circle cx={rotatedX} cy={rotatedY} r="4" fill="#4f46e5" />
         <circle cx="50" cy="50" r="2" fill="#3730a3" />
       </svg>
-      <div className="mt-2 text-center font-mono text-xs text-gray-500 dark:text-gray-400">
+      <div className="num-font mt-2 text-center text-xs font-semibold text-slate-600 dark:text-slate-400">
         {isRoPE ? (
           <>
             q'=[{rotated[0].toFixed(2)}, {rotated[1].toFixed(2)}]
@@ -74,10 +74,10 @@ const Clock = ({ angle, label, vector, rotated, isRoPE = false }) => {
 };
 
 const VisualizerSection = ({ title, description, children, formula }) => (
-  <div className="flex-1 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-    <h4 className="text-lg font-bold text-gray-800 dark:text-gray-100">{title}</h4>
-    <p className="mt-1 mb-3 text-sm text-gray-600 dark:text-gray-400">{description}</p>
-    <div className="my-4 rounded-md bg-gray-50 p-2 text-center font-mono text-sm text-gray-700 dark:bg-gray-800 dark:text-gray-300">
+  <div className="flex-1 rounded-xl border border-slate-200 bg-white p-5 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+    <h4 className="gmarket-font text-lg font-bold text-slate-800 dark:text-slate-100">{title}</h4>
+    <p className="mt-1 mb-3 text-sm text-slate-600 dark:text-slate-400">{description}</p>
+    <div className="num-font my-4 rounded-lg bg-slate-50 p-2.5 text-center text-sm font-semibold text-slate-700 dark:bg-slate-800 dark:text-slate-300">
       {formula}
     </div>
     {children}
@@ -106,14 +106,50 @@ export const PEnROPEVisualizer = () => {
   const clockLabels = Array.from({ length: DIM / 2 }, (_, i) => `시계 ${i} (dim ${i * 2}, ${i * 2 + 1})`);
 
   return (
-    <div className="not-content font-sans" style={{ display: 'flex', flexDirection: 'column', gap: '20px' }}>
+    <div 
+      className="not-content" 
+      style={{ 
+        display: 'flex', 
+        flexDirection: 'column', 
+        gap: '20px',
+        fontFamily: '"Plus Jakarta Sans", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif'
+      }}
+    >
+      {/* 폰트 주입 */}
+      <style>{`
+        @import url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff');
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@500;700;800&family=Noto+Sans+KR:wght@400;500;700;800;900&family=Plus+Jakarta+Sans:wght@500;600;700;800&display=swap');
+
+        @font-face {
+          font-family: 'GmarketSans';
+          src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff') format('woff');
+          font-weight: 500;
+          font-style: normal;
+        }
+        @font-face {
+          font-family: 'GmarketSans';
+          src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff') format('woff');
+          font-weight: 700;
+          font-style: normal;
+        }
+
+        .gmarket-font {
+          font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
+        }
+
+        .num-font {
+          font-family: 'JetBrains Mono', monospace !important;
+          font-feature-settings: "tnum";
+          font-variant-numeric: tabular-nums;
+        }
+      `}</style>
       
       {/* --- Global Controls --- */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-          <label htmlFor="pe-rope-pos" className="flex justify-between text-sm font-semibold text-gray-800 dark:text-gray-200">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <label htmlFor="pe-rope-pos" className="gmarket-font flex justify-between text-sm font-bold text-slate-800 dark:text-slate-200">
             <span>토큰 위치 (m)</span>
-            <span className="font-mono text-indigo-600 dark:text-indigo-400">{position}</span>
+            <span className="num-font font-bold text-indigo-600 dark:text-indigo-400">{position}</span>
           </label>
           <input
             id="pe-rope-pos"
@@ -122,18 +158,18 @@ export const PEnROPEVisualizer = () => {
             max={MAX_POS}
             value={position}
             onChange={(e) => setPosition(Number(e.target.value))}
-            className="mt-2 w-full"
+            className="mt-2 w-full accent-indigo-600"
           />
         </div>
-        <div className="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-          <label htmlFor="pe-rope-clock" className="block text-sm font-semibold text-gray-800 dark:text-gray-200">
+        <div className="rounded-xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-700 dark:bg-slate-900">
+          <label htmlFor="pe-rope-clock" className="gmarket-font block text-sm font-bold text-slate-800 dark:text-slate-200">
             시계(주파수) 선택
           </label>
           <select
             id="pe-rope-clock"
             value={clockIndex}
             onChange={(e) => setClockIndex(Number(e.target.value))}
-            className="mt-2 w-full rounded-md border-gray-300 bg-white text-sm dark:border-gray-600 dark:bg-gray-800"
+            className="gmarket-font mt-2 w-full rounded-md border-slate-300 bg-white text-sm font-medium dark:border-slate-600 dark:bg-slate-800"
           >
             {clockLabels.map((label, i) => (
               <option key={i} value={i}>{label}</option>
@@ -199,30 +235,30 @@ export const PEnROPEVisualizer = () => {
       </div>
 
       {/* --- Summary Table --- */}
-      <div className="overflow-x-auto">
+      <div className="overflow-x-auto rounded-xl border border-slate-200 bg-white p-2 shadow-sm dark:border-slate-700 dark:bg-slate-900">
         <table className="w-full min-w-full border-collapse text-left">
-          <thead className="border-b border-gray-200 text-sm font-semibold text-gray-700 dark:border-gray-700 dark:text-gray-200">
+          <thead className="gmarket-font border-b border-slate-200 text-sm font-bold text-slate-800 dark:border-slate-700 dark:text-slate-200">
             <tr>
-              <th className="p-2">구분</th>
-              <th className="p-2">PE (덧셈 방식)</th>
-              <th className="p-2">RoPE (곱셈 방식)</th>
+              <th className="p-3">구분</th>
+              <th className="p-3">PE (덧셈 방식)</th>
+              <th className="p-3">RoPE (곱셈 방식)</th>
             </tr>
           </thead>
-          <tbody className="text-sm text-gray-600 dark:text-gray-400">
-            <tr className="border-b border-gray-200/50 dark:border-gray-700/50">
-              <td className="p-2 font-medium">회전 대상</td>
-              <td className="p-2">기준 벡터 [0, 1]</td>
-              <td className="p-2">Query/Key 벡터 자체</td>
+          <tbody className="text-sm text-slate-600 dark:text-slate-400">
+            <tr className="border-b border-slate-200/50 dark:border-slate-700/50">
+              <td className="gmarket-font p-3 font-bold text-slate-700 dark:text-slate-300">회전 대상</td>
+              <td className="p-3">기준 벡터 [0, 1]</td>
+              <td className="p-3">Query/Key 벡터 자체</td>
             </tr>
-            <tr className="border-b border-gray-200/50 dark:border-gray-700/50">
-              <td className="p-2 font-medium">연산 방식</td>
-              <td className="p-2">토큰 임베딩에 덧셈</td>
-              <td className="p-2">회전 행렬 곱셈</td>
+            <tr className="border-b border-slate-200/50 dark:border-slate-700/50">
+              <td className="gmarket-font p-3 font-bold text-slate-700 dark:text-slate-300">연산 방식</td>
+              <td className="p-3">토큰 임베딩에 덧셈</td>
+              <td className="p-3">회전 행렬 곱셈</td>
             </tr>
             <tr>
-              <td className="p-2 font-medium">결과</td>
-              <td className="p-2">위치 정보가 담긴 벡터 생성</td>
-              <td className="p-2">내용과 위치 정보가 결합된 벡터</td>
+              <td className="gmarket-font p-3 font-bold text-slate-700 dark:text-slate-300">결과</td>
+              <td className="p-3">위치 정보가 담긴 벡터 생성</td>
+              <td className="p-3">내용과 위치 정보가 결합된 벡터</td>
             </tr>
           </tbody>
         </table>
