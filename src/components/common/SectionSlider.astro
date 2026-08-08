@@ -671,9 +671,9 @@
         cardElement.addEventListener('touchstart', function(e) {
           if (!isSlideMode) return;
 
-          // 시뮬레이터, 슬라이더Range, 스크롤 가능 컨테이너 내부 터치는 카드 스와이프에서 제외
+          // 시뮬레이터, 슬라이더Range, 스크롤 가능 컨테이너, KaTeX 수식 내부 터치는 카드 스와이프에서 제외
           const target = e.target;
-          const isScrollable = target.closest('input[type="range"], select, .overflow-x-auto, svg, button, table, .not-content');
+          const isScrollable = target.closest('input[type="range"], select, .overflow-x-auto, svg, button, table, .not-content, .katex, .katex-display, .katex-html');
           
           if (isScrollable) {
             shouldIgnoreSwipe = true;

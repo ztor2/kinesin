@@ -1029,7 +1029,7 @@ export const BackpropSimulator = () => {
       </div>
 
       {/* 5. 연쇄 법칙(Chain Rule) 상세 내역 탐색기 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#ffffff', padding: '22px', borderRadius: '18px', border: '1px solid #cbd5e1', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.04)' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#ffffff', padding: '16px', borderRadius: '18px', border: '1px solid #cbd5e1', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.04)', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
           <span className="gmarket-font" style={{ fontSize: '14.5px', fontWeight: '700', color: '#0f172a' }}>
             <MathView math="W_1" style={{ fontSize: '14px' }} /> 기울기 계산 과정의 연쇄 법칙 분석
@@ -1049,15 +1049,17 @@ export const BackpropSimulator = () => {
                 flexDirection: 'column',
                 alignItems: 'center',
                 gap: '14px',
-                padding: '20px 24px',
+                padding: '16px 18px',
                 borderRadius: '14px',
                 backgroundColor: '#fffbeb',
                 border: '1px solid #fde68a',
-                boxShadow: '0 4px 16px rgba(217, 119, 6, 0.1)'
+                boxShadow: '0 4px 16px rgba(217, 119, 6, 0.1)',
+                width: '100%',
+                boxSizing: 'border-box'
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#92400e', lineHeight: '1.5' }}>
+                <span style={{ fontSize: '13px', fontWeight: '700', color: '#92400e', lineHeight: '1.5', textAlign: 'center' }}>
                   실행된 학습이 없습니다. 현재 파라미터로 1회 학습을 자동 실행합니다.
                 </span>
               </div>
@@ -1106,12 +1108,12 @@ export const BackpropSimulator = () => {
         </AnimatePresence>
 
         {/* 수치 곱셈식 */}
-        <div style={{ fontSize: '13px', color: '#0f172a', overflowX: 'auto', width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', backgroundColor: '#f8fafc', padding: '12px 18px', borderRadius: '14px', border: '1px solid #e2e8f0' }}>
-          <MathView math={`\\frac{\\partial L}{\\partial W_1} = (${dL_dyHat.toFixed(4)}) \\times (${dyHat_dz2.toFixed(4)}) \\times (${w2.toFixed(2)}) \\times (${dh1_dz1.toFixed(4)}) \\times (${x.toFixed(2)}) = ${dL_dw1.toFixed(4)}`} style={{ fontSize: '13.5px' }} />
+        <div style={{ fontSize: '13px', color: '#0f172a', overflowX: 'auto', width: '100%', boxSizing: 'border-box', display: 'flex', alignItems: 'center', justifyContent: 'flex-start', gap: '6px', backgroundColor: '#f8fafc', padding: '12px 14px', borderRadius: '14px', border: '1px solid #e2e8f0', WebkitOverflowScrolling: 'touch' }}>
+          <MathView math={`\\frac{\\partial L}{\\partial W_1} = (${dL_dyHat.toFixed(4)}) \\times (${dyHat_dz2.toFixed(4)}) \\times (${w2.toFixed(2)}) \\times (${dh1_dz1.toFixed(4)}) \\times (${x.toFixed(2)}) = ${dL_dw1.toFixed(4)}`} style={{ fontSize: '13px' }} />
         </div>
 
         {/* 미분 항 선택 버튼 */}
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px', flexWrap: 'wrap', width: '100%' }}>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', flexWrap: 'wrap', width: '100%', boxSizing: 'border-box' }}>
           {[
             { key: 'dL_dyHat' },
             { key: 'dyHat_dz2' },
@@ -1123,7 +1125,7 @@ export const BackpropSimulator = () => {
             const isSelected = activeTermKey === item.key;
             return (
               <React.Fragment key={item.key}>
-                {idx > 0 && <span style={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '15px' }}>×</span>}
+                {idx > 0 && <span style={{ color: '#94a3b8', fontWeight: 'bold', fontSize: '13px' }}>×</span>}
                 <motion.button
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
@@ -1132,8 +1134,8 @@ export const BackpropSimulator = () => {
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    padding: '8px 16px',
-                    borderRadius: '10px',
+                    padding: '6px 12px',
+                    borderRadius: '9px',
                     border: isSelected ? `2px solid ${info.themeColor}` : '1px solid #cbd5e1',
                     backgroundColor: isSelected ? info.bgColor : '#ffffff',
                     color: isSelected ? info.themeColor : '#334155',
@@ -1142,14 +1144,14 @@ export const BackpropSimulator = () => {
                     boxShadow: isSelected ? `0 4px 12px ${info.accentGlow}` : '0 1px 2px rgba(0,0,0,0.04)'
                   }}
                 >
-                  <MathView math={info.symbol} style={{ fontSize: '15px' }} />
+                  <MathView math={info.symbol} style={{ fontSize: '14px' }} />
                 </motion.button>
               </React.Fragment>
             );
           })}
         </div>
 
-        {/* 상세 설명 내역 */}
+        {/* 상세 설명 내역 (모바일에서 1column으로 자연스럽게 축소) */}
         <AnimatePresence mode="wait">
           <motion.div 
             key={activeTermKey}
@@ -1157,15 +1159,15 @@ export const BackpropSimulator = () => {
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -6 }}
             transition={{ duration: 0.2 }}
-            style={{ padding: '18px', backgroundColor: activeTerm.bgColor, borderRadius: '16px', border: `1.5px solid ${activeTerm.themeColor}35`, display: 'flex', flexDirection: 'column', gap: '14px' }}
+            style={{ padding: '14px', backgroundColor: activeTerm.bgColor, borderRadius: '16px', border: `1.5px solid ${activeTerm.themeColor}35`, display: 'flex', flexDirection: 'column', gap: '12px', width: '100%', boxSizing: 'border-box' }}
           >
-            <div style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', backgroundColor: '#ffffff', padding: '10px 16px', borderRadius: '10px', border: `1px solid ${activeTerm.themeColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '6px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+            <div style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', backgroundColor: '#ffffff', padding: '10px 14px', borderRadius: '10px', border: `1px solid ${activeTerm.themeColor}30`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexWrap: 'wrap', gap: '6px', boxShadow: '0 2px 6px rgba(0,0,0,0.02)', overflowX: 'auto', width: '100%', boxSizing: 'border-box' }}>
               <MathView math={`\\left( ${activeTerm.symbol} \\right) = `} style={{ fontSize: '13px' }} />
               <MathView math={activeTerm.calcFormulaMath} style={{ fontSize: '13px' }} />
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
-              <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', width: '100%', boxSizing: 'border-box' }}>
+              <div style={{ padding: '12px 14px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)', boxSizing: 'border-box' }}>
                 <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: activeTerm.themeColor, display: 'block', marginBottom: '4px' }}>
                   항 의미 : {activeTerm.name}
                 </span>
@@ -1174,7 +1176,7 @@ export const BackpropSimulator = () => {
                 </div>
               </div>
 
-              <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
+              <div style={{ padding: '12px 14px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)', boxSizing: 'border-box' }}>
                 <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: '#059669', display: 'block', marginBottom: '4px' }}>
                   수식 유도
                 </span>
