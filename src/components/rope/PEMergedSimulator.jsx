@@ -84,7 +84,7 @@ const VisualizerSection = ({ title, description, children, formula }) => (
   </div>
 );
 
-export const PEnROPEVisualizer = () => {
+export const PEMergedSimulator = () => {
   const [position, setPosition] = useState(5);
   const [clockIndex, setClockIndex] = useState(0);
   const [qVec, setQVec] = useState([0.6, 0.3]);
@@ -111,7 +111,16 @@ export const PEnROPEVisualizer = () => {
       style={{ 
         display: 'flex', 
         flexDirection: 'column', 
-        gap: '20px',
+        gap: '24px',
+        width: '100%',
+        clear: 'both',
+        boxSizing: 'border-box',
+        margin: '24px 0',
+        padding: '28px',
+        borderRadius: '24px',
+        backgroundColor: '#ffffff',
+        border: '1px solid #e2e8f0',
+        boxShadow: '0 20px 40px -15px rgba(15, 23, 42, 0.07), 0 0 1px 1px rgba(15, 23, 42, 0.02)',
         fontFamily: '"Plus Jakarta Sans", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif'
       }}
     >
@@ -127,6 +136,14 @@ export const PEnROPEVisualizer = () => {
           font-variant-numeric: tabular-nums;
         }
       `}</style>
+      
+      {/* --- Header Title Section --- */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
+        <div style={{ width: '6px', height: '22px', borderRadius: '5px', background: 'linear-gradient(180deg, #4f46e5, #3730a3)' }} />
+        <h3 className="gmarket-font" style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.02em' }}>
+          Positional Encoding & RoPE Visualizer
+        </h3>
+      </div>
       
       {/* --- Global Controls --- */}
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -251,4 +268,4 @@ export const PEnROPEVisualizer = () => {
   );
 };
 
-export default PEnROPEVisualizer;
+export default PEMergedSimulator;

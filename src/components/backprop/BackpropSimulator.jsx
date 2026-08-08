@@ -310,87 +310,91 @@ export const BackpropSimulator = () => {
           font-variant-numeric: tabular-nums;
         }
       `}</style>
-      {/* 1. 상단 타이틀 & 컨트롤 헤더 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ width: '6px', height: '19px', borderRadius: '5px', background: 'linear-gradient(180deg, #093348, #113c2e)' }} />
-            <h3 className="gmarket-font" style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.02em' }}>
-              Backpropagation Simulator
-            </h3>
-          </div>
-
-          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', marginLeft: 'auto' }}>
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={() => setShowSettings(!showSettings)}
-              style={{
-                display: 'flex',
-                alignItems: 'center',
-                gap: '6px',
-                padding: '8px 14px',
-                fontSize: '12.5px',
-                fontWeight: '700',
-                borderRadius: '10px',
-                border: '1px solid #cbd5e1',
-                backgroundColor: showSettings ? '#e2e8f0' : '#f8fafc',
-                color: '#334155',
-                cursor: 'pointer',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-              }}
-            >
-              <span>파라미터 조정</span>
-              <motion.span 
-                animate={{ rotate: showSettings ? 180 : 0 }} 
-                transition={{ duration: 0.2 }}
-                style={{ fontSize: '10px', color: '#64748b', display: 'inline-block' }}
-              >
-                ▼
-              </motion.span>
-            </motion.button>
-
-            <motion.button 
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
-              onClick={handleReset}
-              style={{
-                padding: '8px 14px',
-                fontSize: '12.5px',
-                fontWeight: '600',
-                borderRadius: '10px',
-                border: '1px solid #cbd5e1',
-                backgroundColor: '#ffffff',
-                color: '#475569',
-                cursor: 'pointer',
-                boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
-              }}
-            >
-              초기화
-            </motion.button>
-
-            <motion.button 
-              whileHover={{ scale: 1.04 }}
-              whileTap={{ scale: 0.96 }}
-              onClick={handleRunFullStep}
-              style={{
-                padding: '8px 18px',
-                fontSize: '12.5px',
-                fontWeight: '800',
-                borderRadius: '10px',
-                border: 'none',
-                background: 'linear-gradient(135deg, #059669, #047857)',
-                color: '#ffffff',
-                cursor: 'pointer',
-                boxShadow: '0 4px 14px rgba(5, 150, 105, 0.35)'
-              }}
-            >
-              ⚡ 1회 학습 실행
-            </motion.button>
-          </div>
+      {/* 1. 상단 타이틀 & 컨트롤 헤더 (2줄 구조) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
+        {/* Row 1: 독립된 메인 타이틀 영역 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '6px', height: '22px', borderRadius: '5px', background: 'linear-gradient(180deg, #093348, #113c2e)' }} />
+          <h3 className="gmarket-font" style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.02em' }}>
+            Backpropagation Simulator
+          </h3>
         </div>
 
-        {/* 접이식 슬라이더 옵션 드로어 */}
+        {/* Row 2: 우측 정렬된 액션 버튼 그룹 */}
+        <div style={{ display: 'flex', gap: '8px', alignItems: 'center', justifyContent: 'flex-end', flexWrap: 'wrap' }}>
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={() => setShowSettings(!showSettings)}
+            className="gmarket-font"
+            style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              padding: '8px 14px',
+              fontSize: '12.5px',
+              fontWeight: '700',
+              borderRadius: '10px',
+              border: '1px solid #cbd5e1',
+              backgroundColor: showSettings ? '#e2e8f0' : '#f8fafc',
+              color: '#334155',
+              cursor: 'pointer',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+            }}
+          >
+            <span>파라미터 조정</span>
+            <motion.span 
+              animate={{ rotate: showSettings ? 180 : 0 }} 
+              transition={{ duration: 0.2 }}
+              style={{ fontSize: '10px', color: '#64748b', display: 'inline-block' }}
+            >
+              ▼
+            </motion.span>
+          </motion.button>
+
+          <motion.button 
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={handleReset}
+            className="gmarket-font"
+            style={{
+              padding: '8px 14px',
+              fontSize: '12.5px',
+              fontWeight: '700',
+              borderRadius: '10px',
+              border: '1px solid #cbd5e1',
+              backgroundColor: '#ffffff',
+              color: '#475569',
+              cursor: 'pointer',
+              boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
+            }}
+          >
+            초기화
+          </motion.button>
+
+          <motion.button 
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            onClick={handleRunFullStep}
+            className="gmarket-font"
+            style={{
+              padding: '8px 18px',
+              fontSize: '12.5px',
+              fontWeight: '700',
+              borderRadius: '10px',
+              border: 'none',
+              background: 'linear-gradient(135deg, #059669, #047857)',
+              color: '#ffffff',
+              cursor: 'pointer',
+              boxShadow: '0 4px 14px rgba(5, 150, 105, 0.35)'
+            }}
+          >
+            ⚡ 1회 학습 실행
+          </motion.button>
+        </div>
+      </div>
+
+      {/* 접이식 슬라이더 옵션 드로어 */}
         <AnimatePresence>
           {showSettings && (
             <motion.div 
@@ -455,7 +459,6 @@ export const BackpropSimulator = () => {
             </motion.div>
           )}
         </AnimatePresence>
-      </div>
 
       {/* 2. Step 탭 버튼 */}
       <div style={{ display: 'flex', justifyContent: 'center', width: '100%', overflowX: 'auto' }}>
@@ -1035,7 +1038,7 @@ export const BackpropSimulator = () => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#ffffff', padding: '22px', borderRadius: '18px', border: '1px solid #cbd5e1', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.04)' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
           <span className="gmarket-font" style={{ fontSize: '14.5px', fontWeight: '700', color: '#0f172a' }}>
-            연쇄 법칙을 사용한 <MathView math="W_1" style={{ fontSize: '14px' }} /> 기울기 상세 유도
+            <MathView math="W_1" style={{ fontSize: '14px' }} /> 기울기 계산 과정의 연쇄 법칙 분석
           </span>
         </div>
 
@@ -1069,10 +1072,11 @@ export const BackpropSimulator = () => {
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.96 }}
                   onClick={handleLearnConfirm}
+                  className="gmarket-font"
                   style={{
                     padding: '8px 22px',
                     fontSize: '13px',
-                    fontWeight: '800',
+                    fontWeight: '700',
                     borderRadius: '10px',
                     border: 'none',
                     background: 'linear-gradient(135deg, #d97706, #b45309)',
@@ -1087,6 +1091,7 @@ export const BackpropSimulator = () => {
                   whileHover={{ scale: 1.04 }}
                   whileTap={{ scale: 0.96 }}
                   onClick={handleLearnCancel}
+                  className="gmarket-font"
                   style={{
                     padding: '8px 22px',
                     fontSize: '13px',
@@ -1168,7 +1173,7 @@ export const BackpropSimulator = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '12px' }}>
               <div style={{ padding: '14px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
                 <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: activeTerm.themeColor, display: 'block', marginBottom: '4px' }}>
-                  개념 : {activeTerm.name}
+                  항 의미 : {activeTerm.name}
                 </span>
                 <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6' }}>
                   {activeTerm.descriptionNode}

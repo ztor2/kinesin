@@ -30,8 +30,8 @@ export default defineConfig({
         }
       ],
       components: {
-          Header: './src/components/CustomHeader.astro',
-          PageTitle: './src/components/CustomPageTitle.astro',
+          Header: './src/components/common/CustomHeader.astro',
+          PageTitle: './src/components/common/CustomPageTitle.astro',
       },
       sidebar: [
           {

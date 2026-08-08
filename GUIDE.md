@@ -95,10 +95,10 @@ export const MyComponent = () => {
 
 ### 5. Tooltip 컴포넌트 사용
 
-본문의 특정 용어에 짧은 부가 설명을 표시할 때 `src/components/Tooltip.astro`를 사용합니다.
+본문의 특정 용어에 짧은 부가 설명을 표시할 때 `src/components/common/Tooltip.astro`를 사용합니다.
 
 ```mdx
-import Tooltip from '../../../components/Tooltip.astro';
+import Tooltip from '../../../components/common/Tooltip.astro';
 
 <Tooltip id="self-attention" text="각 토큰이 다른 토큰들과 얼마나 관련 있는지를 계산하는 방식">Self-Attention</Tooltip>은 병렬로 관계를 계산한다.
 ```
