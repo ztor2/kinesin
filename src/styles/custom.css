@@ -223,7 +223,7 @@ footer .meta.sl-flex {
   display: none !important;
 }
 
-/* 슬라이더 카드와 하단 Pagination Links 너비 1:1 맞춤 */
+/* 데스크톱 슬라이더 카드와 하단 Pagination Links 너비 1:1 맞춤 */
 .section-slider-root {
   width: 100% !important;
   max-width: 100% !important;
@@ -231,10 +231,31 @@ footer .meta.sl-flex {
   margin-inline: 0 !important;
 }
 
-.main-pane,
-.content-panel,
-.sl-markdown-content {
-  --sl-content-margin-inline: 1.75rem !important;
-  margin-inline-start: 1.75rem !important;
-  padding-inline-start: 0.5rem !important;
+/* 데스크톱 본문 좌측 여백 적용 */
+@media (min-width: 50.01rem) {
+  .main-pane,
+  .content-panel,
+  .sl-markdown-content {
+    --sl-content-margin-inline: 1.75rem !important;
+    margin-inline-start: 1.75rem !important;
+    padding-inline-start: 0.5rem !important;
+  }
+}
+
+/* 모바일 화면 (50rem 이하): 좌측 치우침 방지 및 화면 중앙 정렬 복원 */
+@media (max-width: 50rem) {
+  .main-pane,
+  .content-panel,
+  .sl-markdown-content {
+    --sl-content-margin-inline: 0rem !important;
+    margin-inline-start: 0rem !important;
+    margin-inline-end: 0rem !important;
+    padding-inline-start: 0rem !important;
+    padding-inline-end: 0rem !important;
+  }
+
+  .custom-page-title-wrapper h1,
+  h1#_top {
+    font-size: 1.4rem !important;
+  }
 }
