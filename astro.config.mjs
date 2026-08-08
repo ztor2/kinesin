@@ -22,19 +22,11 @@ export default defineConfig({
       head: [
         {
           tag: 'link',
-          attrs: { rel: 'preconnect', href: 'https://cdn.jsdelivr.net', crossorigin: 'anonymous' }
+          attrs: { rel: 'preload', href: '/fonts/GmarketSansTTFMedium.woff2', as: 'font', type: 'font/woff2', crossorigin: 'anonymous' }
         },
         {
           tag: 'link',
-          attrs: { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossorigin: 'anonymous' }
-        },
-        {
-          tag: 'link',
-          attrs: { rel: 'preload', href: 'https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansMedium.woff', as: 'font', type: 'font/woff', crossorigin: 'anonymous' }
-        },
-        {
-          tag: 'link',
-          attrs: { rel: 'preload', href: 'https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_2001@1.1/GmarketSansBold.woff', as: 'font', type: 'font/woff', crossorigin: 'anonymous' }
+          attrs: { rel: 'preload', href: '/fonts/GmarketSansTTFBold.woff2', as: 'font', type: 'font/woff2', crossorigin: 'anonymous' }
         }
       ],
       components: {
