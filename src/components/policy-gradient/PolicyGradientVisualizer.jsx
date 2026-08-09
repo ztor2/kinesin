@@ -277,18 +277,20 @@ export const ProbabilityMassSimulator = () => {
       setEpisodeCount((prev) => prev + 1);
       setLastReward(reward);
 
+      // Baseline = 2.0 (Average return baseline)
       const baseline = 2.0;
       const advantage = reward - baseline;
-      const lr = 0.05;
+      const lr = 0.04;
 
-      const countR = (choice1 === 'R' ? 1 : 0) + (choice2 === 'R' ? 1 : 0);
-      let deltaP = 0;
+      // True Policy Gradient Score Function:
+      // grad log pi(Right) = 1 - probRight (if action was Right)
+      // grad log pi(Right) = -probRight (if action was Left)
+      const gradStep1 = choice1 === 'R' ? (1 - probRight) : (-probRight);
+      const gradStep2 = choice2 === 'R' ? (1 - probRight) : (-probRight);
+      const gradTotal = gradStep1 + gradStep2;
 
-      if (advantage > 0) {
-        deltaP = countR * lr * (advantage / 8.0);
-      } else {
-        deltaP = -((2 - countR) * lr * 0.5);
-      }
+      // Policy Update: ΔP = lr * Advantage * (∇ log π_1 + ∇ log π_2)
+      const deltaP = lr * advantage * gradTotal;
 
       setLastDelta(deltaP);
 
