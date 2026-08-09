@@ -165,7 +165,7 @@ export const ProbabilityMassSimulator = () => {
   const rLL = 0;
   const rLR = 1;
   const rRL = 1;
-  const rRR = 10;
+  const rRR = 5;
 
   const expectedReturn = pLL * rLL + pLR * rLR + pRL * rRL + pRR * rRR;
 
@@ -225,7 +225,7 @@ export const ProbabilityMassSimulator = () => {
       valStr: lastReward !== null ? `Reward = ${lastReward}점` : 'Reward = 0점',
       descNode: (
         <span>
-          환경이 돌려준 보상은 <strong className="num-font" style={{ color: lastReward === 10 ? '#059669' : '#d97706' }}>{lastReward !== null ? `${lastReward}점` : '0점'}</strong> 입니다. 보상 크기에 따라 기울기 업데이트의 가중치가 조율됩니다.
+          환경이 돌려준 보상은 <strong className="num-font" style={{ color: lastReward === 5 ? '#059669' : '#d97706' }}>{lastReward !== null ? `${lastReward}점` : '0점'}</strong> 입니다. 보상 크기에 따라 기울기 업데이트의 가중치가 조율됩니다.
         </span>
       )
     }
@@ -276,7 +276,7 @@ export const ProbabilityMassSimulator = () => {
     const finalTraj = choice1 + choice2;
 
     let reward = 0;
-    if (finalTraj === 'RR') reward = 10;
+    if (finalTraj === 'RR') reward = 5;
     else if (finalTraj === 'LR' || finalTraj === 'RL') reward = 1;
     else reward = 0;
 
@@ -459,7 +459,7 @@ export const ProbabilityMassSimulator = () => {
           RL: <strong className="num-font">1점</strong>
         </div>
         <div style={{ position: 'absolute', top: '84%', left: '87.5%', transform: 'translate(-50%, -50%)', padding: '6px 14px', borderRadius: '10px', backgroundColor: '#ecfdf5', border: '2px solid #10b981', fontSize: '12px', textAlign: 'center', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}>
-          <strong style={{ color: '#047857' }}>RR: 10점</strong>
+          <strong style={{ color: '#047857' }}>RR: 5점</strong>
         </div>
 
         <motion.div
@@ -517,7 +517,7 @@ export const ProbabilityMassSimulator = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '12.5px', fontWeight: '700', color: '#334155' }}>
-              <MathView math="J(\theta)" /> Baseline: <strong className="num-font" style={{ color: '#059669', fontSize: '14px' }}>{baseline.toFixed(2)}점</strong>
+              <MathView math="J(\theta)" /> (기대보상): <strong className="num-font" style={{ color: '#059669', fontSize: '14px' }}>{baseline.toFixed(2)}점</strong>
             </span>
           </div>
           <input
@@ -531,7 +531,7 @@ export const ProbabilityMassSimulator = () => {
           />
         </div>
 
-        {/* 슬라이더 3: KL Penalty 제약 계수 β (조절 범위: 0.0 ~ 0.5) */}
+        {/* 슬라이더 3: KL Penalty 제약 계수 β (조절 범위: 0.0 ~ 1.0) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '12.5px', fontWeight: '700', color: '#334155' }}>
@@ -541,8 +541,8 @@ export const ProbabilityMassSimulator = () => {
           <input
             type="range"
             min="0.0"
-            max="0.5"
-            step="0.02"
+            max="1.0"
+            step="0.05"
             value={klCoef}
             onChange={(e) => setKlCoef(parseFloat(e.target.value))}
             style={{ width: '100%', cursor: 'pointer', accentColor: '#7c3aed' }}
