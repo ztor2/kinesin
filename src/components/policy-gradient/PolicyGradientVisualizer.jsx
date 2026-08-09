@@ -336,7 +336,7 @@ export const ProbabilityMassSimulator = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '6px', height: '22px', borderRadius: '5px', background: 'linear-gradient(180deg, #10b981, #059669)' }} />
           <h3 className="gmarket-font" style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.02em' }}>
-            로봇 탐색 & Policy Gradient 학습 시뮬레이터
+            Policy Gradient Simulator
           </h3>
         </div>
 
@@ -373,7 +373,7 @@ export const ProbabilityMassSimulator = () => {
               boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)'
             }}
           >
-            1회 탐색 & Policy Gradient 학습 실행
+            1회 탐색 & 학습 실행
           </button>
         </div>
       </div>
@@ -474,7 +474,7 @@ export const ProbabilityMassSimulator = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>
-              Right 선택 정책 확률 <MathView math="P(\text{Right})" />: <strong className="num-font" style={{ color: '#2563eb', fontSize: '14.5px' }}>{probRight.toFixed(2)}</strong>
+              <MathView math="P(\text{Right})" />: <strong className="num-font" style={{ color: '#2563eb', fontSize: '14.5px' }}>{probRight.toFixed(2)}</strong>
             </span>
             {lastDelta !== null && (
               <span className="num-font" style={{ fontSize: '12px', color: lastDelta >= 0 ? '#059669' : '#dc2626', fontWeight: 'bold' }}>
@@ -497,7 +497,7 @@ export const ProbabilityMassSimulator = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>
-              기대보상 기준선 <MathView math="J(\theta)" /> Baseline: <strong className="num-font" style={{ color: '#059669', fontSize: '14.5px' }}>{baseline.toFixed(2)}점</strong>
+              <MathView math="J(\theta)" /> Baseline : <strong className="num-font" style={{ color: '#059669', fontSize: '14.5px' }}>{baseline.toFixed(2)}점</strong>
             </span>
           </div>
           <input
@@ -553,7 +553,7 @@ export const ProbabilityMassSimulator = () => {
         }}
       >
         <div style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a' }}>
-          Policy Gradient 수식 직접 터치 / 항별 미분 분석기
+          Policy Gradient 계산 프로세스
         </div>
 
         {/* 수식 문자열 하이라이트 블록 */}
@@ -672,7 +672,7 @@ export const ProbabilityMassSimulator = () => {
           </svg>
         </div>
 
-        {/* 군더더기를 뺀 담백한 항 상세 설명 카드 */}
+        {/* 상세 설명 카드 */}
         <AnimatePresence mode="wait">
           <motion.div
             key={activeMathTerm}
@@ -695,14 +695,10 @@ export const ProbabilityMassSimulator = () => {
               fontWeight: '700',
               color: activeTermInfo.themeColor,
               display: 'flex',
-              justifyContent: 'space-between',
               alignItems: 'center',
               overflowX: 'auto'
             }}>
-              <span>선택 항: <MathView math={activeTermInfo.formula} /></span>
-              <span className="num-font" style={{ fontSize: '12px', color: '#475569' }}>
-                {activeTermInfo.valStr}
-              </span>
+              <span><MathView math={activeTermInfo.formula} /></span>
             </div>
 
             <div style={{ fontSize: '13px', color: '#334155', lineHeight: '1.65' }}>
