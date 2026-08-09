@@ -51,20 +51,21 @@ export default defineConfig({
               items: [{ autogenerate: { directory: 'papers' } }]
           },
       ],
-      }), react()],
-markdown: {
+      expressiveCode: true,
+    }), react()],
+  markdown: {
     remarkPlugins: [remarkMath],
     rehypePlugins: [
-    rehypeKatex,
-    [
+      rehypeKatex,
+      [
         rehypeExternalLinks,
         {
-        target: '_blank',
-        rel: ['noopener', 'noreferrer'],
+          target: '_blank',
+          rel: ['noopener', 'noreferrer'],
         },
+      ],
     ],
-    ],
-},
+  },
   vite: {
     plugins: [tailwindcss()],
   },
