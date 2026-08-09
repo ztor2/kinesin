@@ -301,6 +301,21 @@ MDX 내 대화형 시각화 컴포넌트(SVG 다이어그램, 캔버스, Range �
   긴 수식 블록이나 분수/수열/체인 룰 곱셈식이 모바일 화면 폭을 넘을 때 잘려서 잘 안 보이는 현상을 보정합니다.
   - **규칙**: `src/styles/custom.css` 내 전역 `.katex-display { overflow-x: auto !important; max-width: 100% !important; -webkit-overflow-scrolling: touch; }` 규칙을 명시하여 모바일 환경에서 수식이 잘리지 않고 손가락 터치로 쓱 가로 스크롤하여 전체 식을 확인할 수 있도록 처리합니다.
 
+### 11. 아티클별 자산 및 시각화 컴포넌트 네임스페이스 경로 규칙 (CRITICAL)
+
+프로젝트 확장 시 자산 및 시각화 컴포넌트가 모호하게 섞이거나 파편화되는 현상을 방지하기 위해 **아티클 슬러그(제목) 기반 1:1 모듈 네임스페이스 규칙**을 엄격히 준수합니다.
+
+- **이미지 자산 경로 (`src/assets/<article-slug>/`)**:
+  특정 아티클에 사용되는 고유 이미지, 아바타, 다이어그램 리소스는 `public/`이나 임의 폴더가 아닌 **`src/assets/<article-slug>/` 하위 디렉토리를 생성하여 보관**합니다.
+  - **예시**: `src/assets/policy-gradient/robot_avatar.jpg`
+  - **효과**: 번들러(Vite/Astro)를 통한 이미지 정적 최적화 및 아티클 단위 자산 격리가 보장됩니다.
+
+- **시각화 컴포넌트 경로 (`src/components/<article-slug>/`)**:
+  특정 아티클을 지원하기 위해 작성된 대화형 React/Astro 시각화 컴포넌트는 `src/components/rl/` 등의 범용 디렉토리가 아닌 **`src/components/<article-slug>/` 하위 디렉토리에 1:1로 배치**합니다.
+  - **예시**: `src/components/policy-gradient/PolicyGradientVisualizer.jsx`
+  - **효과**: MDX 문서(`src/content/docs/architecture/policy-gradient.mdx`)와 시각화 컴포넌트 간의 직관적인 1:1 연동 및 유지보수 명확성이 확보됩니다.
+
+
 
 
 

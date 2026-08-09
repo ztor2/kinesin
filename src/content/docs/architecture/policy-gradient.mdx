@@ -1,0 +1,230 @@
+---
+title: "Policy Gradient"
+description: "LLM에서의 강화학습 도입 배경과 역사, 그리고 Policy Gradient가 확률 분포(Probability Mass)를 이동시켜 신경망을 최적화하는 수식적·기하학적 원리"
+---
+
+import SectionSlider from '../../../components/common/SectionSlider.astro';
+import { ProbabilityMassSimulator } from '../../../components/policy-gradient/PolicyGradientVisualizer.jsx';
+
+<SectionSlider>
+
+### Intro
+
+> <i><strong>Policy Gradient</strong>는 미분 불가능한 확률적 행동과 블랙박스 환경 보상 속에서, 보상을 많이 가져오는 행동의 <strong>확률 밀도(Probability Mass) 자체를 이동</strong>시켜 신경망을 최적화하는 핵심 수학적 원리이다.</i>
+<br/>
+
+- 언어 모델(LLM)의 진화 과정에서 사전 학습(Pre-training)과 지도 미세 조정(Supervised Fine-Tuning, SFT)은 모델에게 거대한 지식과 문장 구조를 가르치는 핵심 역할을 담당했다.
+- 하지만 모델이 점점 거대해지고 사람과의 실제 대화 상호작용에 투입되면서, 지도학습만으로는 해결할 수 없는 <strong>인간 선호도 정렬(Alignment)과 환각(Hallucination)</strong>의 한계에 직면하게 되었다.
+- 이를 해결하기 위해 인간의 피드백을 보상(Reward) 신호로 전환하고, <strong>강화학습(Reinforcement Learning)</strong>을 통해 모델의 응답 성향을 최적화하는 <strong>RLHF (Reinforcement Learning from Human Feedback)</strong> 및 <strong>PPO</strong> 기술이 LLM 정렬의 표준으로 자리 잡았다.
+- 그러나 강화학습 환경에서는 오차를 직접 역전파(Backpropagation)할 수 있는 미분 연산 길목이 차단된다.
+- 본 문서에서는 <strong>LLM에 강화학습이 도입된 역사적 배경</strong>과 <strong>Policy Gradient가 미분 불가능한 환경을 우회하여 확률 분포를 이동시키는 수학적·기하학적 원리</strong>를 다룬다.<br/><br/>
+
+본 아티클을 통해 Pre-training / SFT의 한계로부터 출발하여 Log-Derivative Trick, 확률 밀도 이동에 이르는 Policy Gradient의 핵심 원리를 탐구해본다.
+
+<br/>
+
+### Background & History: Why RL for LLMs?
+
+> <i>다음 토큰 예측(Pre-training)과 인간 답안 모방(SFT)의 한계를 극복하고, 모델의 응답을 인간의 의도와 가치관에 맞추기 위해 강화학습이 도입되었다.</i> <br/>
+<br/>
+
+LLM이 발전해 온 3단계 학습 파이프라인과 강화학습 도입 배경은 다음과 같다.
+
+1. <strong>사전 학습 (Pre-training)</strong>:
+   - <strong>목적</strong>: 인터넷의 거대한 텍스트 데이터셋에서 "다음 토큰 예측(Next-Token Prediction)"을 수행하여 언어적 지식과 문맥 이해 능력을 습득한다.
+   - <strong>한계</strong>: 모델은 인터넷 상의 훌륭한 글뿐만 아니라 편향, 오개념, 무의미한 텍스트도 함께 학습하며, 사용자의 지시나 질문에 단답형으로 대답하는 방법을 알지 못한다.
+
+2. <strong>지도 미세 조정 (Supervised Fine-Tuning, SFT)</strong>:
+   - <strong>목적</strong>: `[질문, 고품질 답변]` 형태의 정답 데이터셋을 구축하고, 지도학습 오차 역전파(Cross-Entropy Loss)를 통해 "지시를 수행하는 프롬프트 모드"로 정렬한다.
+   - <strong>한계 (SFT의 벽)</strong>:
+     - <strong>표면적 모방 (Surface-level Mimicry)</strong>: 모델은 작성자의 스타일이나 단어 조합을 모방할 뿐, 답변의 논리적 우수성을 스스로 평가하지 못한다.
+     - <strong>오류 누적 (Exposure Bias)</strong>: 생성 단계에서 한 번 잘못된 단어를 출력하면, 뒤이어 나오는 단어들도 도미노처럼 붕괴된다.
+     - <strong>단일 정답의 한계</strong>: 동일한 질문이라도 우수하고 친절한 답변의 방식은 수없이 다양하지만, SFT는 단 하나의 텍스트 라벨만을 정답으로 강제한다.
+
+3. <strong>인간 피드백 기반 강화학습 (RLHF & Policy Gradient의 등장)</strong>:
+   - OpenAI는 2017년 Deep RL from Human Preferences 연구를 시작으로, 2022년 InstructGPT와 ChatGPT에 <strong>RLHF</strong>를 성공적으로 도입했다.
+   - 사람이 두 개 이상의 모델 응답 중 더 유용하고 안전한 응답을 선택(Preference)하면, 이를 바탕으로 보상 모델(Reward Model, $R$)을 학습시킨다.
+   - LLM은 이 보상 모델의 보상을 최대화하는 방향으로 <strong>Policy Gradient (PPO 등)</strong> 알고리즘을 수행하여, 인간의 의도와 안전 가이드라인에 완벽히 부합하는 정렬(Alignment)을 완성하게 되었다.
+
+<br/>
+
+### The Fundamental Obstacle: Why Standard Backprop Fails
+
+> <i>강화학습에서는 확률적 샘플링과 블랙박스 보상 함수로 인해 일반적인 역전파 연쇄 법칙이 작동하지 않는다.</i> <br/>
+<br/>
+
+지도학습(SFT) 환경에서는 입력 단어 토큰부터 정답 확률, Cross-Entropy Loss까지 모든 연산이 미분 가능한 하나의 연결된 그래프이다.
+
+그러나 강화학습을 통해 LLM(Policy, $\pi_\theta$)을 학습시킬 때의 과정은 다음과 같다.
+
+<br/>
+$$
+\text{Prompt } s \longrightarrow \text{LLM } \pi_\theta(a|s) \xrightarrow{\text{Sampling}} \text{Response } a \longrightarrow \text{Reward Model } R(s, a)
+$$
+<br/>
+
+이 구조에는 일반적인 오차 역전파(Backpropagation)를 가로막는 <strong>두 가지 치명적인 벽</strong>이 존재한다.
+
+1. <strong>생성 텍스트 샘플링의 불연속성 (Discrete Sampling)</strong>:
+   - LLM은 다음 토큰들의 확률 분포(Softmax)를 계산하지만, 실제 문장 생성 시에는 이 분포에서 특정 토큰 $a$를 확률적으로 뽑는 <strong>샘플링(Sampling)</strong>을 수행한다.
+   - 샘플링 연산은 미분 불가능한 불연속 사건이므로, 생성된 문장 $a$로부터 언어 모델 파라미터 $\theta$로 기울기가 전파될 수 없다.
+
+2. <strong>보상 모델의 블랙박스성 (Black-box Reward Model)</strong>:
+   - 보상 모델 $R(s, a)$은 인간의 선호도를 딥러닝 스코어로 출력하는 함수이거나 실제 인간 평가자이다.
+   - 보상 값 $R$이 "8.5점"으로 주어졌을 때, 이 스코어를 생성된 단어 단위로 직접 미분하는 공식은 존재하지 않는다.
+
+결과적으로 보상 $R$을 오차 손실처럼 직접 미분하여 역전파하는 $\nabla_\theta R$ 방식은 수학적으로 수립될 수 없다.
+
+<br/>
+
+### Core Mechanics: Policy Gradient & Log-Derivative Trick
+
+> <i>보상을 미분할 수 없다면, 보상을 가져오는 행동의 확률 밀도(Probability Mass)를 미분하여 이동시킨다.</i> <br/>
+<br/>
+
+Policy Gradient는 이 차단된 미분 연산 길목을 우회하는 우아한 수학적 해결책이다.
+우리가 최적화하고자 하는 진짜 목표는 단일 응답의 보상이 아니라, 현재 언어 모델 정책 $\pi_\theta$가 생성하는 전체 응답 궤적 $\tau = (s, a_1, a_2, \dots, a_T)$의 <strong>기대 보상(Expected Return) $J(\theta)$</strong>이다.
+
+<br/>
+$$
+J(\theta) = \mathbb{E}_{\tau \sim p_\theta(\tau)} [R(\tau)] = \int p_\theta(\tau) R(\tau) \, d\tau
+$$
+<br/>
+
+목적함수 $J(\theta)$의 기울기 $\nabla_\theta J(\theta)$를 구하기 위해 적분 내부로 미분을 적용한다. 보상 함수 $R(\tau)$는 파라미터 $\theta$와 독립적이므로 미분 대상에서 제외된다.
+
+<br/>
+$$
+\nabla_\theta J(\theta) = \int \nabla_\theta p_\theta(\tau) R(\tau) \, d\tau
+$$
+<br/>
+
+여기서 <strong>로그 미분 트릭 (Log-Derivative Trick)</strong>을 적용한다.
+
+<br/>
+$$
+\nabla_x \log f(x) = \frac{\nabla_x f(x)}{f(x)} \quad \implies \quad \nabla_x f(x) = f(x) \nabla_x \log f(x)
+$$
+<br/>
+
+이를 미분식 $\nabla_\theta p_\theta(\tau)$에 적용하면 $p_\theta(\tau) \nabla_\theta \log p_\theta(\tau)$가 되며, 원래의 기댓값 적분 형태 $\mathbb{E}_{\tau \sim p_\theta}$로 성공적으로 되돌아온다!
+
+<br/>
+$$
+\begin{aligned}
+\nabla_\theta J(\theta) &= \int p_\theta(\tau) \nabla_\theta \log p_\theta(\tau) R(\tau) \, d\tau \\
+&= \mathbb{E}_{\tau \sim p_\theta(\tau)} \left[ \nabla_\theta \log p_\theta(\tau) R(\tau) \right]
+\end{aligned}
+$$
+<br/>
+
+응답 궤적의 확률 $\log p_\theta(\tau)$을 각 토큰 단위 생성 확률의 합으로 분해하면, 마침내 <strong>Policy Gradient의 핵심 수식</strong>이 완성된다.
+
+<br/>
+$$
+\nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim p_\theta(\tau)} \left[ \left( \sum_{t=1}^{T} \nabla_\theta \log \pi_\theta(a_t | s_t) \right) R(\tau) \right]
+$$
+<br/>
+
+<strong>수식의 기하학적·직관적 의미</strong>
+
+- <strong>보상을 미분한 것이 아니다</strong>: 미분 기호 $\nabla_\theta$는 오직 <strong>언어 모델 토큰 생성 로그 확률 $\log \pi_\theta(a_t|s_t)$</strong>에만 붙어 있다.
+- <strong>확률 밀도(Probability Mass)의 이동</strong>: 보상 $R(\tau)$는 미분 기울기의 크기와 방향을 조절하는 <strong>스칼라 가중치(Weight)</strong> 역할을 수행한다.
+  - $R(\tau)$가 높다면 (예: +9.0점): 해당 응답을 만든 토큰들의 로그 확률을 경사상승(Gradient Ascent)시켜 <strong>발생 확률 밀도를 높인다 ($\uparrow$)</strong>.
+  - $R(\tau)$가 낮다면 (예: -5.0점): 해당 응답을 만든 토큰들의 <strong>발생 확률 밀도를 낮춘다 ($\downarrow$)</strong>.
+- 즉, 보상 함수를 직접 깎아 나가는 것이 아니라, <strong>좋은 평가를 받은 응답 생성이 더 자주 일어나도록 언어 모델의 확률 분포 산맥 자체를 이동</strong>시키는 것이다!
+
+<br/>
+
+### Interactive Simulator: Robot Exploration & Mathematical Term Inspector
+
+> <i>로봇 2D 캔버스 탐색과 Policy Gradient 수식 항(Term) 정밀 분석기를 통해 확률 밀도 이동과 미분 원리를 실시간 관찰한다.</i> <br/>
+<br/>
+
+아래 시뮬레이터에서 <strong>로봇 캐릭터의 2D 경로 탐색</strong>과, 수식의 핵심 연산 항(<code>J(θ)</code>, <code>p_θ(τ)</code>, <code>∇_θ log π_θ(a|s)</code>, <code>R(τ)</code>)을 클릭하여 **미분 원리와 의미를 정밀 검증**할 수 있다.
+
+<br/>
+
+<div className="not-content my-6 w-full clear-both">
+  <ProbabilityMassSimulator client:visible />
+</div>
+
+<br/>
+
+### Code Implementation: PyTorch Policy Gradient
+
+PyTorch를 활용하여 Policy Gradient 알고리즘이 확률 로그 `log_prob`와 보상 `reward`의 곱을 통해 가중치 미분을 수행하는 핵심 코드를 살펴본다.
+
+<br/>
+
+```python
+import torch
+import torch.nn as nn
+import torch.optim as optim
+from torch.distributions import Categorical
+
+# 1. 언어 모델 / 정책 신경망 (Policy Network) 정의
+class PolicyNetwork(nn.Module):
+    def __init__(self, vocab_size=10, embed_dim=16):
+        super(PolicyNetwork, self).__init__()
+        self.fc = nn.Linear(embed_dim, vocab_size)
+
+    def forward(self, state):
+        logits = self.fc(state)
+        return Categorical(logits=logits)
+
+policy_net = PolicyNetwork()
+optimizer = optim.Adam(policy_net.parameters(), lr=0.01)
+
+# 2. 강화학습 1회 스텝 (Policy Gradient Step)
+def policy_gradient_step(state, reward_from_model):
+    # (1) 토큰 확률 분포 생성
+    dist = policy_net(state)
+    
+    # (2) 행동(토큰) 샘플링 - 미분 불가능한 사건
+    action = dist.sample()
+    
+    # (3) 샘플링된 토큰의 로그 확률 log π_θ(a|s) 계산
+    log_prob = dist.log_prob(action)
+    
+    # (4) Policy Gradient Loss 수식: - (log_prob * Reward)
+    # PyTorch optimizer는 기본적으로 최소화(Minimization)를 수행하므로,
+    # 기대 보상 최대화(Gradient Ascent)를 위해 마이너스(-) 부호를 붙임
+    loss = -(log_prob * reward_from_model)
+    
+    # (5) 역전파 실행 - 확률 밀도를 이동시키는 기울기 전파
+    optimizer.zero_grad()
+    loss.backward()
+    optimizer.step()
+    
+    print(f"Sampled Action: {action.item()}, Log Prob: {log_prob.item():.4f}, Loss: {loss.item():.4f}")
+
+# 테스트 실행: 보상이 높은 경우 (+10.0) 확률 밀도가 상승함
+sample_state = torch.randn(1, 16)
+policy_gradient_step(sample_state, reward_from_model=10.0)
+```
+
+<br/>
+
+### Summary
+
+본 문서에서 다룬 LLM 학습 파이프라인과 Policy Gradient의 핵심 특징을 요약하면 다음과 같다.
+
+| 구분 | 사전 학습 (Pre-training) | 지도 미세 조정 (SFT) | 강화학습 (Policy Gradient / RLHF) |
+| :--- | :--- | :--- | :--- |
+| <strong>학습 목표</strong> | 다음 토큰 예측 (Next Token) | 정답 대화 모방 (Instruction) | 인간 선호도 정렬 및 기대 보상 최대화 |
+| <strong>손실 / 보상 신호</strong> | Cross-Entropy Loss | Cross-Entropy Loss | 보상 모델 $R(s,a)$ 스칼라 스코어 |
+| <strong>역전파 메커니즘</strong> | 오차 $L$의 직접 역전파 ($\nabla_\theta L$) | 오차 $L$의 직접 역전파 ($\nabla_\theta L$) | 확률 밀도 로그 미분 ($\nabla_\theta \log \pi_\theta \cdot R$) |
+| <strong>핵심 한계 및 역할</strong> | 무분별한 텍스트 지식 습득 | 단일 정답 강제 & 표면적 모방 | 확률 분포 이동을 통한 답변 품질 최적화 |
+
+<br/>
+
+### References
+
+<br/>
+
+- **Policy Gradient Methods for Reinforcement Learning with Function Approximation** - Sutton et al. (1999) [(Link)](https://papers.nips.cc/paper/1721-policy-gradient-methods-for-reinforcement-learning-with-function-approximation.pdf)
+- **Deep Reinforcement Learning from Human Preferences** - Christiano et al. (2017) [(Link)](https://arxiv.org/abs/1706.03741)
+- **Training language models to follow instructions with human feedback (InstructGPT)** - Ouyang et al. (2022) [(Link)](https://arxiv.org/abs/2203.02155)
+
+</SectionSlider>
