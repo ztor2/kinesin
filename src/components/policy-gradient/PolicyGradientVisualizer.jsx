@@ -136,9 +136,17 @@ export const ProbabilityMassSimulator = () => {
   const [baseline, setBaseline] = useState(2.0);
   const baselineRef = useRef(baseline);
 
+  // KL Divergence Penalty Coefficient β State (0.0 ~ 0.5, default 0.0)
+  const [klCoef, setKlCoef] = useState(0.0);
+  const klCoefRef = useRef(klCoef);
+
   useEffect(() => {
     baselineRef.current = baseline;
   }, [baseline]);
+
+  useEffect(() => {
+    klCoefRef.current = klCoef;
+  }, [klCoef]);
 
   const containerRef = useRef(null);
   const termRefs = {
@@ -287,7 +295,7 @@ export const ProbabilityMassSimulator = () => {
       const currentBaseline = baselineRef.current;
       const advantage = reward - currentBaseline;
       
-      // Tuned Learning Rate to ensure smooth, realistic incremental updates (without exploding in 1 step)
+      // Tuned Learning Rate to ensure smooth, realistic incremental updates
       const lr = 0.015;
 
       // True Policy Gradient Score Function:
@@ -295,8 +303,20 @@ export const ProbabilityMassSimulator = () => {
       const gradStep2 = choice2 === 'R' ? (1 - probRight) : (-probRight);
       const gradTotal = gradStep1 + gradStep2;
 
-      // Policy Update: ΔP = lr * Advantage * (∇ log π_1 + ∇ log π_2)
-      const deltaP = lr * advantage * gradTotal;
+      // Pure Policy Gradient Update: ΔP_reward = lr * Advantage * gradTotal
+      const deltaP_reward = lr * advantage * gradTotal;
+
+      // KL Divergence Penalty Gradient w.r.t Reference Policy P_ref = 0.5:
+      // D_KL(P || P_ref) = P log(P / 0.5) + (1-P) log((1-P) / 0.5)
+      // ∇_P D_KL = log(P / (1-P)) [Logit difference]
+      // Penalty gradient resists deviation from P_ref = 0.5:
+      const currentBeta = klCoefRef.current;
+      const logitDiff = Math.log(probRight / (1 - probRight));
+      const klGrad = currentBeta * logitDiff;
+      const deltaP_kl = -lr * klGrad;
+
+      // Total Policy Update: ΔP = ΔP_reward + ΔP_kl
+      const deltaP = deltaP_reward + deltaP_kl;
 
       setLastDelta(deltaP);
 
@@ -468,16 +488,16 @@ export const ProbabilityMassSimulator = () => {
         </motion.div>
       </div>
 
-      {/* 3. 다이어그램 하단: P(Right) 정책 확률 슬라이더 & Baseline J(θ) 기대보상 슬라이더 나란히 (Side-by-side) 배치 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+      {/* 3. 다이어그램 하단: P(Right) 정책 확률, Baseline J(θ), KL Penalty 슬라이더 나란히 (3-Column Grid) 배치 */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
         {/* 슬라이더 1: P(Right) 정책 확률 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>
-              <MathView math="P(\text{Right})" />: <strong className="num-font" style={{ color: '#2563eb', fontSize: '14.5px' }}>{probRight.toFixed(2)}</strong>
+            <span style={{ fontSize: '12.5px', fontWeight: '700', color: '#334155' }}>
+              <MathView math="P(\text{Right})" />: <strong className="num-font" style={{ color: '#2563eb', fontSize: '14px' }}>{probRight.toFixed(2)}</strong>
             </span>
             {lastDelta !== null && (
-              <span className="num-font" style={{ fontSize: '12px', color: lastDelta >= 0 ? '#059669' : '#dc2626', fontWeight: 'bold' }}>
+              <span className="num-font" style={{ fontSize: '11.5px', color: lastDelta >= 0 ? '#059669' : '#dc2626', fontWeight: 'bold' }}>
                 ({lastDelta >= 0 ? `+${lastDelta.toFixed(3)}` : lastDelta.toFixed(3)})
               </span>
             )}
@@ -496,8 +516,8 @@ export const ProbabilityMassSimulator = () => {
         {/* 슬라이더 2: 기대보상 Baseline J(θ) (조절 범위: 0.5 ~ 2.0) */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-            <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>
-              <MathView math="J(\theta)" /> Baseline : <strong className="num-font" style={{ color: '#059669', fontSize: '14.5px' }}>{baseline.toFixed(2)}점</strong>
+            <span style={{ fontSize: '12.5px', fontWeight: '700', color: '#334155' }}>
+              <MathView math="J(\theta)" /> Baseline: <strong className="num-font" style={{ color: '#059669', fontSize: '14px' }}>{baseline.toFixed(2)}점</strong>
             </span>
           </div>
           <input
@@ -508,6 +528,24 @@ export const ProbabilityMassSimulator = () => {
             value={baseline}
             onChange={(e) => setBaseline(parseFloat(e.target.value))}
             style={{ width: '100%', cursor: 'pointer', accentColor: '#059669' }}
+          />
+        </div>
+
+        {/* 슬라이더 3: KL Penalty 제약 계수 β (조절 범위: 0.0 ~ 0.5) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '12.5px', fontWeight: '700', color: '#334155' }}>
+              <MathView math="\text{KL Penalty } \beta" />: <strong className="num-font" style={{ color: '#7c3aed', fontSize: '14px' }}>{klCoef.toFixed(2)}</strong>
+            </span>
+          </div>
+          <input
+            type="range"
+            min="0.0"
+            max="0.5"
+            step="0.02"
+            value={klCoef}
+            onChange={(e) => setKlCoef(parseFloat(e.target.value))}
+            style={{ width: '100%', cursor: 'pointer', accentColor: '#7c3aed' }}
           />
         </div>
       </div>

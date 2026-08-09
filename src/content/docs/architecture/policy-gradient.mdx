@@ -136,12 +136,46 @@ $$
 
 <br/>
 
-### Interactive Simulator: Robot Exploration & Mathematical Term Inspector
+### Advanced Mechanics: Advantage Baseline & KL Divergence Penalty
 
-> <i>로봇 2D 캔버스 탐색과 Policy Gradient 수식 항(Term) 정밀 분석기를 통해 확률 밀도 이동과 미분 원리를 실시간 관찰한다.</i> <br/>
+> <i>단순 보상 최대화가 유발하는 <strong>탐색 고갈(Exploration Collapse)</strong>과 <strong>모드 붕괴(Mode Collapse)</strong>를 막고, 다양한 고품질 응답을 유지하기 위한 두 가지 필수 수학적 안정화 메커니즘을 탐구한다.</i> <br/>
 <br/>
 
-아래 시뮬레이터에서 <strong>로봇 캐릭터의 2D 경로 탐색</strong>과, 수식의 핵심 연산 항(<code>J(θ)</code>, <code>p_θ(τ)</code>, <code>∇_θ log π_θ(a|s)</code>, <code>R(τ)</code>)을 클릭하여 **미분 원리와 의미를 정밀 검증**할 수 있다.
+강화학습을 언어 모델(LLM)에 적용할 때 단순히 보상 $R(\tau)$만 극대화하면 두 가지 치명적인 한계에 직면한다:
+
+1. **분산 폭발 및 어중간한 보상에 의한 왜곡**: 모든 보상이 양수인 경우, 비효율적인 답변조차 확률이 상승하거나 에피소드 간 기울기 편차(Variance)가 극심해진다.
+2. **모드 붕괴 (Mode Collapse / Reward Hacking)**: 특정 최고 보상 응답(예: 템플릿 답변) 하나에만 확률 밀도가 $95\%$ 이상으로 쏠려, 원래 언어 모델이 가졌던 풍부한 언어 표현 다양성과 탐색 능력이 상실된다.
+
+이를 해결하기 위해 현존하는 **InstructGPT, ChatGPT, Llama 3, DeepSeek (PPO / GRPO)** 등 모든 현대 RLHF 시스템은 아래 두 가지 제약 방정식을 반드시 결합한다.
+
+#### 1) Baseline $J(\theta)$ 차감을 통한 Advantage ($A_t$) 정의
+현재 정책의 평균 기대 보상 수준인 **기준선 Baseline $b = J(\theta)$**를 차감하여 행동의 상대적 우수성(**Advantage**)을 계산한다:
+
+$$
+A(\tau) = R(\tau) - b
+$$
+
+- $R(\tau) > b \implies A(\tau) > 0$: 기대치 이상인 훌륭한 행동이므로 확률을 **상승**시킨다.
+- $R(\tau) < b \implies A(\tau) < 0$: 기대치 이하인 행동이므로 보상이 플러스 점수라도 확률을 **하강**시킨다.
+
+#### 2) KL Divergence Penalty ($\beta$)를 통한 다양성 보존
+학습 중인 새로운 정책 $\pi_\theta$가 초기 기준 모델 $\pi_{\text{ref}}$(SFT 모델)의 원래 확률 분포에서 너무 멀어지지 않도록 **KL Divergence 불이익(Penalty)**을 부여한다:
+
+$$
+R_{\text{effective}}(\tau) = R(\tau) - \beta \cdot D_{\text{KL}}(\pi_\theta || \pi_{\text{ref}})
+$$
+
+- **미분 기울기**: $D_{\text{KL}}$의 미분 기울기는 현재 확률과 참조 확률 간의 로짓 차이 $\log \left( \frac{\pi_\theta}{1-\pi_\theta} \right)$에 비접촉 항으로 작용한다.
+- **역할**: $\beta > 0$로 설정하면特定 노드(`RR`)로 확률 밀도가 $90\%$ 이상 과도하게 쏠리려 할 때 **수학적 억제력(안전 밧줄)**이 발동하여, 최소한의 탐색 확률과 응답 다양성을 유지시킨다.
+
+<br/>
+
+### Interactive Simulator: Robot Exploration & Mathematical Term Inspector
+
+> <i>로봇 2D 캔버스 탐색과 Policy Gradient 수식 항(Term) 정밀 분석기를 통해 확률 밀도 이동, Baseline 이득, 그리고 KL Penalty 제약을 실시간 관찰한다.</i> <br/>
+<br/>
+
+아래 시뮬레이터에서 <strong>로봇 캐릭터의 2D 경로 탐색</strong>과, **$P(\text{Right})$ 확률 슬라이더**, **Baseline $J(\theta)$ 기준선 슬라이더**, 그리고 **KL Penalty 계수 $\beta$ 슬라이더**를 직접 조정하며 **정책 수렴과 다양성 보존 원리를 정밀 검증**할 수 있다.
 
 <br/>
 
