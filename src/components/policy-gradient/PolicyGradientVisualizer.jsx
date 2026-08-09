@@ -133,6 +133,7 @@ export const ProbabilityMassSimulator = () => {
   const [episodeCount, setEpisodeCount] = useState(0);
   const [lastReward, setLastReward] = useState(null);
   const [lastDelta, setLastDelta] = useState(null);
+  const [baseline, setBaseline] = useState(2.0); // Baseline J(θ) adjustable state [0.5 ~ 2.0]
 
   const containerRef = useRef(null);
   const termRefs = {
@@ -277,14 +278,11 @@ export const ProbabilityMassSimulator = () => {
       setEpisodeCount((prev) => prev + 1);
       setLastReward(reward);
 
-      // Baseline = 2.0 (Average return baseline)
-      const baseline = 2.0;
+      // Advantage using Baseline b (Adjustable via slider)
       const advantage = reward - baseline;
       const lr = 0.04;
 
       // True Policy Gradient Score Function:
-      // grad log pi(Right) = 1 - probRight (if action was Right)
-      // grad log pi(Right) = -probRight (if action was Left)
       const gradStep1 = choice1 === 'R' ? (1 - probRight) : (-probRight);
       const gradStep2 = choice2 === 'R' ? (1 - probRight) : (-probRight);
       const gradTotal = gradStep1 + gradStep2;
@@ -304,6 +302,7 @@ export const ProbabilityMassSimulator = () => {
   // Reset training episode & policy
   const resetTraining = () => {
     setProbRight(0.5);
+    setBaseline(2.0);
     setEpisodeCount(0);
     setLastReward(null);
     setLastDelta(null);
@@ -443,36 +442,51 @@ export const ProbabilityMassSimulator = () => {
         </motion.div>
       </div>
 
-      {/* 3. 다이어그램 하단: P(Right) 확률 슬라이더 + 에피소드 & 기대보상 상태 나란히 배치 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-          {/* 좌측: P(Right) 정책 확률 및 갱신 delta */}
-          <div style={{ fontSize: '13.5px', color: '#334155' }}>
-            Right 선택 정책 확률 <MathView math="P(\text{Right})" />: <strong className="num-font" style={{ color: '#2563eb', fontSize: '15px' }}>{probRight.toFixed(2)}</strong>
+      {/* 3. 다이어그램 하단: P(Right) 정책 확률 슬라이더 & Baseline J(θ) 기대보상 슬라이더 나란히 (Side-by-side) 배치 */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '16px', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+        {/* 슬라이더 1: P(Right) 정책 확률 */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>
+              Right 선택 정책 확률 <MathView math="P(\text{Right})" />: <strong className="num-font" style={{ color: '#2563eb', fontSize: '14.5px' }}>{probRight.toFixed(2)}</strong>
+            </span>
             {lastDelta !== null && (
-              <span className="num-font" style={{ fontSize: '12.5px', marginLeft: '10px', color: lastDelta >= 0 ? '#059669' : '#dc2626', fontWeight: 'bold' }}>
+              <span className="num-font" style={{ fontSize: '12px', color: lastDelta >= 0 ? '#059669' : '#dc2626', fontWeight: 'bold' }}>
                 ({lastDelta >= 0 ? `+${lastDelta.toFixed(3)}` : lastDelta.toFixed(3)})
               </span>
             )}
           </div>
-
-          {/* 우측: 나란히 배치된 에피소드 # 및 기대 보상 J(θ) 정보 */}
-          <div style={{ fontSize: '13px', color: '#475569', display: 'flex', alignItems: 'center', gap: '12px' }}>
-            <span>에피소드: <strong className="num-font" style={{ color: '#6d28d9' }}>#{episodeCount}</strong></span>
-            <span style={{ color: '#cbd5e1' }}>|</span>
-            <span>기대 보상 <MathView math="J(\theta)" />: <strong className="num-font" style={{ color: '#059669' }}>{expectedReturn.toFixed(2)}점</strong></span>
-          </div>
+          <input
+            type="range"
+            min="0.05"
+            max="0.95"
+            step="0.01"
+            value={probRight}
+            onChange={(e) => setProbRight(parseFloat(e.target.value))}
+            style={{ width: '100%', cursor: 'pointer', accentColor: '#2563eb' }}
+          />
         </div>
 
-        <input
-          type="range"
-          min="0.05"
-          max="0.95"
-          step="0.01"
-          value={probRight}
-          onChange={(e) => setProbRight(parseFloat(e.target.value))}
-          style={{ width: '100%', cursor: 'pointer', accentColor: '#2563eb', margin: '4px 0' }}
-        />
+        {/* 슬라이더 2: 기대보상 Baseline J(θ) (조절 범위: 0.5 ~ 2.0) */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>
+              기대보상 기준선 <MathView math="J(\theta)" /> Baseline: <strong className="num-font" style={{ color: '#059669', fontSize: '14.5px' }}>{baseline.toFixed(2)}점</strong>
+            </span>
+            <span style={{ fontSize: '12px', color: '#64748b' }}>
+              에피소드: <strong className="num-font" style={{ color: '#6d28d9' }}>#{episodeCount}</strong>
+            </span>
+          </div>
+          <input
+            type="range"
+            min="0.5"
+            max="2.0"
+            step="0.05"
+            value={baseline}
+            onChange={(e) => setBaseline(parseFloat(e.target.value))}
+            style={{ width: '100%', cursor: 'pointer', accentColor: '#059669' }}
+          />
+        </div>
       </div>
 
       {/* 4. Trajectory 확률 및 보상 상태 바 (테두리 피로감 해소) */}
