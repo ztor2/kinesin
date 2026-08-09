@@ -391,6 +391,24 @@ export const ProbabilityMassSimulator = () => {
           <line x1="75%" y1="48%" x2="87.5%" y2="82%" stroke="#10b981" strokeWidth={probRight * 5 + 1.5} />
         </svg>
 
+        {/* 다이어그램 우측 상단 내부에 위치하는 에피소드 뱃지 */}
+        <div style={{
+          position: 'absolute',
+          top: '12px',
+          right: '14px',
+          padding: '4px 10px',
+          borderRadius: '8px',
+          backgroundColor: '#ffffff',
+          border: '1px solid #cbd5e1',
+          fontSize: '11.5px',
+          fontWeight: '700',
+          color: '#6d28d9',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
+          zIndex: 5
+        }}>
+          Episode <strong className="num-font" style={{ color: '#6d28d9' }}>#{episodeCount}</strong>
+        </div>
+
         {/* 선명하게 커진 폰트와 여유 있는 노드 박스들 */}
         <div style={{ position: 'absolute', top: '14%', left: '50%', transform: 'translate(-50%, -50%)', padding: '6px 14px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1.5px solid #64748b', fontSize: '12px', fontWeight: '700', color: '#1e293b', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
           START
@@ -472,9 +490,6 @@ export const ProbabilityMassSimulator = () => {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155' }}>
               기대보상 기준선 <MathView math="J(\theta)" /> Baseline: <strong className="num-font" style={{ color: '#059669', fontSize: '14.5px' }}>{baseline.toFixed(2)}점</strong>
-            </span>
-            <span style={{ fontSize: '12px', color: '#64748b' }}>
-              에피소드: <strong className="num-font" style={{ color: '#6d28d9' }}>#{episodeCount}</strong>
             </span>
           </div>
           <input
