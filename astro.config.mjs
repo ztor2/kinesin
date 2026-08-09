@@ -36,19 +36,19 @@ export default defineConfig({
       sidebar: [
           {
               label: 'Architecture',
-              autogenerate: { directory: 'architecture' },
+              items: [{ autogenerate: { directory: 'architecture' } }]
           },
           {
               label: 'Datasets',
-              autogenerate: { directory: 'datasets' },
+              items: [{ autogenerate: { directory: 'datasets' } }]
           },
           {
               label: 'Benchmark',
-              autogenerate: { directory: 'benchmark' },
+              items: [{ autogenerate: { directory: 'benchmark' } }]
           },
           {
               label: 'Papers',
-              autogenerate: { directory: 'papers' },
+              items: [{ autogenerate: { directory: 'papers' } }]
           },
       ],
       }), react()],
