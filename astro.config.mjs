@@ -34,10 +34,22 @@ export default defineConfig({
           PageTitle: './src/components/common/CustomPageTitle.astro',
       },
       sidebar: [
-          { autogenerate: { directory: 'architecture' } },
-          { autogenerate: { directory: 'datasets' } },
-          { autogenerate: { directory: 'benchmark' } },
-          { autogenerate: { directory: 'papers' } },
+          {
+              label: 'Architecture',
+              items: [{ autogenerate: { directory: 'architecture' } }]
+          },
+          {
+              label: 'Datasets',
+              items: [{ autogenerate: { directory: 'datasets' } }]
+          },
+          {
+              label: 'Benchmark',
+              items: [{ autogenerate: { directory: 'benchmark' } }]
+          },
+          {
+              label: 'Papers',
+              items: [{ autogenerate: { directory: 'papers' } }]
+          },
       ],
       expressiveCode: true,
     }), react()],
