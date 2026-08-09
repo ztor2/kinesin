@@ -133,7 +133,12 @@ export const ProbabilityMassSimulator = () => {
   const [episodeCount, setEpisodeCount] = useState(0);
   const [lastReward, setLastReward] = useState(null);
   const [lastDelta, setLastDelta] = useState(null);
-  const [baseline, setBaseline] = useState(2.0); // Baseline J(θ) adjustable state [0.5 ~ 2.0]
+  const [baseline, setBaseline] = useState(2.0);
+  const baselineRef = useRef(baseline);
+
+  useEffect(() => {
+    baselineRef.current = baseline;
+  }, [baseline]);
 
   const containerRef = useRef(null);
   const termRefs = {
@@ -156,7 +161,7 @@ export const ProbabilityMassSimulator = () => {
 
   const expectedReturn = pLL * rLL + pLR * rLR + pRL * rRL + pRR * rRR;
 
-  // Simplified & Cleaned Math Terms Inspector Config
+  // Step term breakdown configuration with REAL-TIME Episode Gradient Value Sync
   const mathTerms = {
     grad_j: {
       symbol: '\\nabla_\\theta J(\\theta)',
@@ -278,9 +283,12 @@ export const ProbabilityMassSimulator = () => {
       setEpisodeCount((prev) => prev + 1);
       setLastReward(reward);
 
-      // Advantage using Baseline b (Adjustable via slider)
-      const advantage = reward - baseline;
-      const lr = 0.04;
+      // Advantage using current REAL-TIME Baseline b (via baselineRef.current)
+      const currentBaseline = baselineRef.current;
+      const advantage = reward - currentBaseline;
+      
+      // Tuned Learning Rate to ensure smooth, realistic incremental updates (without exploding in 1 step)
+      const lr = 0.015;
 
       // True Policy Gradient Score Function:
       const gradStep1 = choice1 === 'R' ? (1 - probRight) : (-probRight);
