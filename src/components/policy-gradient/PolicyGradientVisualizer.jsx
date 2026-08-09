@@ -323,22 +323,58 @@ export const ProbabilityMassSimulator = () => {
       flexDirection: 'column',
       gap: '24px' // 넓은 여유 간격
     }}>
-      {/* 1. 군더더기 없는 통합 헤더 (Episode 카운트 & 기대 보상 수치 인라인 통합) */}
-      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
-        <span className="gmarket-font" style={{ fontSize: '15.5px', fontWeight: '700', color: '#0f172a' }}>
-          로봇 탐색 & Policy Gradient 학습 시뮬레이터
-        </span>
-        <div style={{ fontSize: '13px', color: '#475569', display: 'flex', alignItems: 'center', gap: '12px' }}>
-          <span>에피소드: <strong className="num-font" style={{ color: '#6d28d9' }}>#{episodeCount}</strong></span>
-          <span style={{ color: '#cbd5e1' }}>|</span>
-          <span>기대 보상 <MathView math="J(\theta)" />: <strong className="num-font" style={{ color: '#059669' }}>{expectedReturn.toFixed(2)}점</strong></span>
+      {/* 1. 컴포넌트 헤더 영역 (Backprop 방식 세로 bar + 타이틀) */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
+        {/* Row 1: 세로형 컬러 바 + 메인 타이틀 */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+          <div style={{ width: '6px', height: '22px', borderRadius: '5px', background: 'linear-gradient(180deg, #10b981, #059669)' }} />
+          <h3 className="gmarket-font" style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.02em' }}>
+            로봇 탐색 & Policy Gradient 학습 시뮬레이터
+          </h3>
+        </div>
+
+        {/* Row 2: 우측 정렬된 컨트롤 버튼 그룹 [초기화] -> [1회 탐색 & Policy Gradient 학습 실행] */}
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
+          <button
+            onClick={resetTraining}
+            className="gmarket-font"
+            style={{
+              padding: '7px 14px',
+              fontSize: '12.5px',
+              fontWeight: '700',
+              borderRadius: '8px',
+              border: '1px solid #cbd5e1',
+              backgroundColor: '#ffffff',
+              color: '#64748b',
+              cursor: 'pointer'
+            }}
+          >
+            초기화
+          </button>
+          <button
+            onClick={runPolicyGradientStep}
+            className="gmarket-font"
+            style={{
+              padding: '7px 16px',
+              fontSize: '13px',
+              fontWeight: '700',
+              borderRadius: '8px',
+              border: 'none',
+              backgroundColor: '#2563eb',
+              color: '#ffffff',
+              cursor: 'pointer',
+              boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)'
+            }}
+          >
+            1회 탐색 & Policy Gradient 학습 실행
+          </button>
         </div>
       </div>
 
       {/* 2. 시인성이 향상된 크고 선명한 2D 로봇 탐색 다이어그램 캔버스 */}
       <div style={{
         position: 'relative',
-        height: '240px', // 캔버스 높이 확충 (210px -> 240px)
+        height: '240px',
         width: '100%',
         backgroundColor: '#f8fafc',
         borderRadius: '14px',
@@ -386,7 +422,7 @@ export const ProbabilityMassSimulator = () => {
           transition={{ type: 'spring', stiffness: 300, damping: 25 }}
           style={{
             position: 'absolute',
-            width: '42px', // 크고 선명해진 로봇 아바타
+            width: '42px',
             height: '42px',
             transform: 'translate(-50%, -50%)',
             zIndex: 10
@@ -407,9 +443,10 @@ export const ProbabilityMassSimulator = () => {
         </motion.div>
       </div>
 
-      {/* 3. 시각적 피로감을 뺀 깔끔한 컨트롤 & 슬라이더 패널 */}
+      {/* 3. 다이어그램 하단: P(Right) 확률 슬라이더 + 에피소드 & 기대보상 상태 나란히 배치 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px' }}>
+          {/* 좌측: P(Right) 정책 확률 및 갱신 delta */}
           <div style={{ fontSize: '13.5px', color: '#334155' }}>
             Right 선택 정책 확률 <MathView math="P(\text{Right})" />: <strong className="num-font" style={{ color: '#2563eb', fontSize: '15px' }}>{probRight.toFixed(2)}</strong>
             {lastDelta !== null && (
@@ -419,40 +456,11 @@ export const ProbabilityMassSimulator = () => {
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: '10px' }}>
-            <button
-              onClick={runPolicyGradientStep}
-              className="gmarket-font"
-              style={{
-                padding: '8px 16px',
-                fontSize: '13px',
-                fontWeight: '700',
-                borderRadius: '8px',
-                border: 'none',
-                backgroundColor: '#2563eb',
-                color: '#ffffff',
-                cursor: 'pointer',
-                boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)'
-              }}
-            >
-              1회 탐색 & Policy Gradient 학습 실행
-            </button>
-            <button
-              onClick={resetTraining}
-              className="gmarket-font"
-              style={{
-                padding: '8px 14px',
-                fontSize: '12.5px',
-                fontWeight: '700',
-                borderRadius: '8px',
-                border: '1px solid #cbd5e1',
-                backgroundColor: '#ffffff',
-                color: '#64748b',
-                cursor: 'pointer'
-              }}
-            >
-              초기화
-            </button>
+          {/* 우측: 나란히 배치된 에피소드 # 및 기대 보상 J(θ) 정보 */}
+          <div style={{ fontSize: '13px', color: '#475569', display: 'flex', alignItems: 'center', gap: '12px' }}>
+            <span>에피소드: <strong className="num-font" style={{ color: '#6d28d9' }}>#{episodeCount}</strong></span>
+            <span style={{ color: '#cbd5e1' }}>|</span>
+            <span>기대 보상 <MathView math="J(\theta)" />: <strong className="num-font" style={{ color: '#059669' }}>{expectedReturn.toFixed(2)}점</strong></span>
           </div>
         </div>
 
