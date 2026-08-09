@@ -488,8 +488,8 @@ export const ProbabilityMassSimulator = () => {
         </motion.div>
       </div>
 
-      {/* 3. 다이어그램 하단: P(Right) 정책 확률, Baseline J(θ), KL Penalty 슬라이더 나란히 (3-Column Grid) 배치 */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+      {/* 3. 다이어그램 하단: 반응형 3-Column 슬라이더 그리드 (화면 너비에 따라 깔끔하게 자동 응답) */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
         {/* 슬라이더 1: P(Right) 정책 확률 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
