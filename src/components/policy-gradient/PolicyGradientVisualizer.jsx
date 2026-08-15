@@ -419,22 +419,17 @@ export const ProbabilityMassSimulator = () => {
           <line x1="75%" y1="48%" x2="87.5%" y2="82%" stroke="#10b981" strokeWidth={probRight * 5 + 1.5} />
         </svg>
 
-        {/* 다이어그램 우측 상단 내부에 위치하는 에피소드 뱃지 */}
+        {/* 다이어그램 우측 상단 내부에 위치하는 에피소드 카운터 (배경 카드 제거 및 깔끔한 텍스트 처리) */}
         <div style={{
           position: 'absolute',
           top: '12px',
           right: '14px',
-          padding: '4px 10px',
-          borderRadius: '8px',
-          backgroundColor: '#ffffff',
-          border: '1px solid #cbd5e1',
-          fontSize: '11.5px',
+          fontSize: '12px',
           fontWeight: '700',
           color: '#6d28d9',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.03)',
           zIndex: 5
         }}>
-          Episode <strong className="num-font" style={{ color: '#6d28d9' }}>#{episodeCount}</strong>
+          Episode <strong className="num-font" style={{ color: '#6d28d9', fontSize: '13px' }}>#{episodeCount}</strong>
         </div>
 
         {/* 선명하게 커진 폰트와 여유 있는 노드 박스들 */}
