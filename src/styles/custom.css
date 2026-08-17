@@ -123,9 +123,20 @@ h1#_top {
 }
 
 :root[data-theme='dark'] .sl-markdown-content blockquote:not(:where(.not-content *)) {
-  border-inline-start-color: #818cf8 !important; /* Indigo 400 */
-  background-color: rgba(30, 27, 75, 0.6) !important; /* Indigo-950 */
-  color: #f1f5f9 !important;
+  border-inline-start-color: #a5b4fc !important; /* Brighter Indigo 300 for high visibility */
+  background-color: rgba(99, 102, 241, 0.15) !important; /* Slightly brighter, clearer Indigo tint */
+  color: #f8fafc !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* <strong> 핵심 강조 텍스트 전역 컬러 포인트 스타일 (에메랄드/그린 계열) */
+.sl-markdown-content strong:not(:where(.not-content *)) {
+  color: #059669 !important; /* 라이트 모드: 깊이감 있고 선명한 에메랄드 그린 (Emerald-600) */
+  font-weight: 700 !important;
+}
+
+:root[data-theme='dark'] .sl-markdown-content strong:not(:where(.not-content *)) {
+  color: #34d399 !important; /* 다크 모드: 어두운 배경에서 화사하게 빛나는 민트 에메랄드 (Emerald-400) */
 }
 
 /* 사이트 제목 타이틀 색상 및 폰트 변경 */

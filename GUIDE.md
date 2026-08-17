@@ -315,7 +315,17 @@ MDX 내 대화형 시각화 컴포넌트(SVG 다이어그램, 캔버스, Range �
   - **예시**: `src/components/policy-gradient/PolicyGradientVisualizer.jsx`
   - **효과**: MDX 문서(`src/content/docs/architecture/policy-gradient.mdx`)와 시각화 컴포넌트 간의 직관적인 1:1 연동 및 유지보수 명확성이 확보됩니다.
 
+### 12. 웹사이트 통일 컬러 팔레트 가이드 (Color Palette Design System)
 
+웹사이트 전반의 시각적 일관성과 아이덴티티를 유지하기 위해 정립된 표준 컬러 팔레트입니다. 새로운 컴포넌트, 텍스트 강조, UI 버튼 작성 시 본 색상 명세를 준수합니다.
 
+| 분류 | 역할 | 라이트 모드 (Light) | 다크 모드 (Dark) | 주요 사용처 |
+| :--- | :--- | :--- | :--- | :--- |
+| **Emerald Green** | 핵심 텍스트 강조 & 최적 보상 | `#059669` (Emerald-600) | `#34d399` (Emerald-400) | `<strong>` 본문 키워드, 최적 노드(`RR`), Kinesin 소포체 |
+| **Warm Orange** | 주요 액션 & 모드 조작 포인트 | `#f97316` (Orange-500) | `#fb923c` (Orange-400) | '전체화면' 액션 버튼, 슬라이더 조작 포인트, 핵심 알림 |
+| **Royal Indigo** | 인용구 & 정보 블록 강조선 | `#6366f1` (Indigo-500) | `#a5b4fc` (Indigo-300) | `<blockquote>` 좌측 수직 강조선, 배경 틴트 |
+| **Deep Blue** | 인터랙티브 링크 & 확률 파라미터 | `#2563eb` (Blue-600) | `#60a5fa` (Blue-400) | $P(\text{Right})$ 확률 슬라이더, 중간 보상 노드(`LR`, `RL`) |
+| **Purple / Violet** | 안전 제약 & 보조 파라미터 | `#7c3aed` (Violet-600) | `#a78bfa` (Violet-400) | KL Penalty ($\beta$) 슬라이더, 에피소드 카운터 `#Count` |
+| **Neutral Slate** | 본문 및 베이스 라인 | `#1e293b` (Slate-800) | `#f8fafc` (Slate-50) | 본문 텍스트, 카드 테두리(`border`), 비활성 트랙 |
 
-
+- **원칙**: 본문 텍스트 강조는 **Emerald Green**, 상단 액션 인터랙션은 **Warm Orange**, 정보성 인용구는 **Indigo**로 역할을 명확히 분리하여 색상 과다 사용을 방지합니다.

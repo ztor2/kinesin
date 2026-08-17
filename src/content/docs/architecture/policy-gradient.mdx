@@ -2,7 +2,6 @@
 title: "Policy Gradient"
 description: "LLM에서의 강화학습 도입 배경과 역사, 그리고 Policy Gradient가 확률 분포(Probability Mass)를 이동시켜 신경망을 최적화하는 수식적·기하학적 원리"
 ---
-
 import SectionSlider from '../../../components/common/SectionSlider.astro';
 import { ProbabilityMassSimulator } from '../../../components/policy-gradient/PolicyGradientVisualizer.jsx';
 
@@ -11,119 +10,122 @@ import { ProbabilityMassSimulator } from '../../../components/policy-gradient/Po
 ### Intro
 
 > <i><strong>Policy Gradient</strong>는 미분 불가능한 확률적 행동과 블랙박스 환경 보상 속에서, 보상을 많이 가져오는 행동의 <strong>확률 밀도(Probability Mass) 자체를 이동</strong>시켜 신경망을 최적화하는 핵심 수학적 원리이다.</i>
+>
+> <br/>
+
+- LLM(Large Language Model)은 처음에 사전 학습(Pre-training)으로 기본적인 문장 구조를 학습하고, 이후 SFT(Supervised Fine-Tuning)를 통해 좀 더 복잡성있는 맥락 기반의 지식을 학습한다.
+- 하지만 LLM이 실제 사람과의 대화에 적용되면, 설명하기 어려운 인간의 선호를 예측하기 어려워 각종 환각(Hallucination)이 발생하곤 했다.
+- 이를 개선하기 위해 인간의 피드백을 보상(Reward) 신호로 설정하고, <strong>강화학습(Reinforcement Learning)</strong>을 통해 모델의 응답 성향을 최적화하는 <strong>RLHF (Reinforcement Learning from Human Feedback)</strong> 및 <strong>PPO</strong> 기술이 LLM 학습 과정에 도입되었다.
+- 강화학습 보상 신호의 특성 상 역전파(Backpropagation)와는 다른 방식으로 학습된다.
+- 본 문서에서는 강화학습의 Policy Gradient가 확률 분포를 이동시키며 학습을 진행하는 프로세스를 알아보기로 한다.<br/><br/>
+
 <br/>
 
-- 언어 모델(LLM)의 진화 과정에서 사전 학습(Pre-training)과 지도 미세 조정(Supervised Fine-Tuning, SFT)은 모델에게 거대한 지식과 문장 구조를 가르치는 핵심 역할을 담당했다.
-- 하지만 모델이 점점 거대해지고 사람과의 실제 대화 상호작용에 투입되면서, 지도학습만으로는 해결할 수 없는 <strong>인간 선호도 정렬(Alignment)과 환각(Hallucination)</strong>의 한계에 직면하게 되었다.
-- 이를 해결하기 위해 인간의 피드백을 보상(Reward) 신호로 전환하고, <strong>강화학습(Reinforcement Learning)</strong>을 통해 모델의 응답 성향을 최적화하는 <strong>RLHF (Reinforcement Learning from Human Feedback)</strong> 및 <strong>PPO</strong> 기술이 LLM 정렬의 표준으로 자리 잡았다.
-- 그러나 강화학습 환경에서는 오차를 직접 역전파(Backpropagation)할 수 있는 미분 연산 길목이 차단된다.
-- 본 문서에서는 <strong>LLM에 강화학습이 도입된 역사적 배경</strong>과 <strong>Policy Gradient가 미분 불가능한 환경을 우회하여 확률 분포를 이동시키는 수학적·기하학적 원리</strong>를 다룬다.<br/><br/>
-
-본 아티클을 통해 Pre-training / SFT의 한계로부터 출발하여 Log-Derivative Trick, 확률 밀도 이동에 이르는 Policy Gradient의 핵심 원리를 탐구해본다.
-
-<br/>
-
-### Background & History: Why RL for LLMs?
-
-> <i>다음 토큰 예측(Pre-training)과 인간 답안 모방(SFT)의 한계를 극복하고, 모델의 응답을 인간의 의도와 가치관에 맞추기 위해 강화학습이 도입되었다.</i> <br/>
-<br/>
+### Backgrounds : 사전학습과 SFT, 그리고 RLHF
 
 LLM이 발전해 온 3단계 학습 파이프라인과 강화학습 도입 배경은 다음과 같다.
 
 1. <strong>사전 학습 (Pre-training)</strong>:
-   - <strong>목적</strong>: 인터넷의 거대한 텍스트 데이터셋에서 "다음 토큰 예측(Next-Token Prediction)"을 수행하여 언어적 지식과 문맥 이해 능력을 습득한다.
-   - <strong>한계</strong>: 모델은 인터넷 상의 훌륭한 글뿐만 아니라 편향, 오개념, 무의미한 텍스트도 함께 학습하며, 사용자의 지시나 질문에 단답형으로 대답하는 방법을 알지 못한다.
-
+  - <strong>목적</strong>: 인터넷의 거대한 텍스트 데이터셋에서 "다음 토큰 예측(Next-Token Prediction)"을 수행하여 언어적 지식과 문맥 이해 능력을 습득한다.
+  - <strong>한계</strong>: 모델은 인터넷 상의 훌륭한 글뿐만 아니라 편향, 오개념, 무의미한 텍스트도 함께 학습하며, 사용자의 지시나 질문에 단답형으로 대답하는 방법을 알지 못한다.
 2. <strong>지도 미세 조정 (Supervised Fine-Tuning, SFT)</strong>:
-   - <strong>목적</strong>: `[질문, 고품질 답변]` 형태의 정답 데이터셋을 구축하고, 지도학습 오차 역전파(Cross-Entropy Loss)를 통해 "지시를 수행하는 프롬프트 모드"로 정렬한다.
-   - <strong>한계 (SFT의 벽)</strong>:
-     - <strong>표면적 모방 (Surface-level Mimicry)</strong>: 모델은 작성자의 스타일이나 단어 조합을 모방할 뿐, 답변의 논리적 우수성을 스스로 평가하지 못한다.
-     - <strong>오류 누적 (Exposure Bias)</strong>: 생성 단계에서 한 번 잘못된 단어를 출력하면, 뒤이어 나오는 단어들도 도미노처럼 붕괴된다.
-     - <strong>단일 정답의 한계</strong>: 동일한 질문이라도 우수하고 친절한 답변의 방식은 수없이 다양하지만, SFT는 단 하나의 텍스트 라벨만을 정답으로 강제한다.
-
-3. <strong>인간 피드백 기반 강화학습 (RLHF & Policy Gradient의 등장)</strong>:
-   - OpenAI는 2017년 Deep RL from Human Preferences 연구를 시작으로, 2022년 InstructGPT와 ChatGPT에 <strong>RLHF</strong>를 성공적으로 도입했다.
-   - 사람이 두 개 이상의 모델 응답 중 더 유용하고 안전한 응답을 선택(Preference)하면, 이를 바탕으로 보상 모델(Reward Model, $R$)을 학습시킨다.
-   - LLM은 이 보상 모델의 보상을 최대화하는 방향으로 <strong>Policy Gradient (PPO 등)</strong> 알고리즘을 수행하여, 인간의 의도와 안전 가이드라인에 완벽히 부합하는 정렬(Alignment)을 완성하게 되었다.
+  - <strong>목적</strong>: `[질문, 고품질 답변]` 형태의 정답 데이터셋을 구축하고, 지도학습 오차 역전파(Cross-Entropy Loss)를 통해 "지시를 수행하는 프롬프트 모드"로 정렬한다.
+  - <strong>한계 (SFT의 벽)</strong>:
+    - <strong>표면적 모방 (Surface-level Mimicry)</strong>: 모델은 작성자의 스타일이나 단어 조합을 모방할 뿐, 답변의 논리적 우수성을 스스로 평가하지 못한다.
+    - <strong>단일 정답의 한계</strong>: 동일한 질문이라도 우수하고 친절한 답변의 방식은 수없이 다양하지만, SFT는 단 하나의 텍스트 라벨만을 정답으로 강제한다.
+3. <strong>인간 피드백 기반 강화학습 (RLHF)</strong>:
+  - OpenAI는 2017년 Deep RL from Human Preferences 연구를 시작으로, 2022년 InstructGPT와 ChatGPT에 <strong>RLHF</strong>를 성공적으로 도입했다.
+  - 사람이 두 개 이상의 모델 응답 중 더 유용하고 안전한 응답을 선택(Preference)하면, 이를 바탕으로 보상 모델(Reward Model, $R$)을 학습시킨다.
+  - LLM은 이 보상 모델의 보상을 최대화하는 방향으로 <strong>Policy Gradient (PPO 등)</strong> 알고리즘을 수행하여, 인간의 의도와 안전 가이드라인에 완벽히 부합하는 정렬(Alignment)을 완성하게 되었다.
 
 <br/>
 
-### The Fundamental Obstacle: Why Standard Backprop Fails
+### SFT와 RLHF의 학습 프로세스 비교
 
 > <i>강화학습에서는 확률적 샘플링과 블랙박스 보상 함수로 인해 일반적인 역전파 연쇄 법칙이 작동하지 않는다.</i> <br/>
-<br/>
+>
+> <br/>
 
-지도학습(SFT) 환경에서는 입력 단어 토큰부터 정답 확률, Cross-Entropy Loss까지 모든 연산이 미분 가능한 하나의 연결된 그래프이다.
+SFT 환경에서는 입력 단어 토큰부터 정답 확률, Cross-Entropy Loss까지 모든 연산이 미분 가능한 하나의 연결된 그래프이다.
 
 그러나 강화학습을 통해 LLM(Policy, $\pi_\theta$)을 학습시킬 때의 과정은 다음과 같다.
 
 <br/>
+
 $$
 \text{Prompt } s \longrightarrow \text{LLM } \pi_\theta(a|s) \xrightarrow{\text{Sampling}} \text{Response } a \longrightarrow \text{Reward Model } R(s, a)
 $$
+
 <br/>
 
 이 구조에는 일반적인 오차 역전파(Backpropagation)를 가로막는 <strong>두 가지 치명적인 벽</strong>이 존재한다.
 
 1. <strong>생성 텍스트 샘플링의 불연속성 (Discrete Sampling)</strong>:
-   - LLM은 다음 토큰들의 확률 분포(Softmax)를 계산하지만, 실제 문장 생성 시에는 이 분포에서 특정 토큰 $a$를 확률적으로 뽑는 <strong>샘플링(Sampling)</strong>을 수행한다.
-   - 샘플링 연산은 미분 불가능한 불연속 사건이므로, 생성된 문장 $a$로부터 언어 모델 파라미터 $\theta$로 기울기가 전파될 수 없다.
-
+  - LLM은 다음 토큰들의 확률 분포(Softmax)를 계산하지만, 실제 문장 생성 시에는 이 분포에서 특정 토큰 $a$를 확률적으로 뽑는 <strong>샘플링(Sampling)</strong>을 수행한다.
+  - 샘플링 연산은 미분 불가능한 불연속 사건이므로, 생성된 문장 $a$로부터 언어 모델 파라미터 $\theta$로 기울기가 전파될 수 없다.
 2. <strong>보상 모델의 블랙박스성 (Black-box Reward Model)</strong>:
-   - 보상 모델 $R(s, a)$은 인간의 선호도를 딥러닝 스코어로 출력하는 함수이거나 실제 인간 평가자이다.
-   - 보상 값 $R$이 "8.5점"으로 주어졌을 때, 이 스코어를 생성된 단어 단위로 직접 미분하는 공식은 존재하지 않는다.
+  - 보상 모델 $R(s, a)$은 인간의 선호도를 딥러닝 스코어로 출력하는 함수이거나 실제 인간 평가자이다.
+  - 보상 값 $R$이 "8.5점"으로 주어졌을 때, 이 스코어를 생성된 단어 단위로 직접 미분하는 공식은 존재하지 않는다.
 
 결과적으로 보상 $R$을 오차 손실처럼 직접 미분하여 역전파하는 $\nabla_\theta R$ 방식은 수학적으로 수립될 수 없다.
 
 <br/>
 
-### Core Mechanics: Policy Gradient & Log-Derivative Trick
+### Policy Gradient 학습 원리 상세
 
 > <i>보상을 미분할 수 없다면, 보상을 가져오는 행동의 확률 밀도(Probability Mass)를 미분하여 이동시킨다.</i> <br/>
-<br/>
 
-Policy Gradient는 이 차단된 미분 연산 길목을 우회하는 우아한 수학적 해결책이다.
-우리가 최적화하고자 하는 진짜 목표는 단일 응답의 보상이 아니라, 현재 언어 모델 정책 $\pi_\theta$가 생성하는 전체 응답 궤적 $\tau = (s, a_1, a_2, \dots, a_T)$의 <strong>기대 보상(Expected Return) $J(\theta)$</strong>이다.
+Policy Gradient의 최적화 목표는 단일 응답의 보상이 아니라, 현재 언어 모델 정책 $\pi_\theta$가 생성하는 전체 응답 궤적 $\tau = (s, a_1, a_2, \dots, a_T)$의 <strong>기대 보상(Expected Return) $J(\theta)$</strong>이다.
 
 <br/>
+
 $$
 J(\theta) = \mathbb{E}_{\tau \sim p_\theta(\tau)} [R(\tau)] = \int p_\theta(\tau) R(\tau) \, d\tau
 $$
+
 <br/>
 
 목적함수 $J(\theta)$의 기울기 $\nabla_\theta J(\theta)$를 구하기 위해 적분 내부로 미분을 적용한다. 보상 함수 $R(\tau)$는 파라미터 $\theta$와 독립적이므로 미분 대상에서 제외된다.
 
 <br/>
+
 $$
 \nabla_\theta J(\theta) = \int \nabla_\theta p_\theta(\tau) R(\tau) \, d\tau
 $$
+
 <br/>
 
 여기서 <strong>로그 미분 트릭 (Log-Derivative Trick)</strong>을 적용한다.
 
 <br/>
+
 $$
 \nabla_x \log f(x) = \frac{\nabla_x f(x)}{f(x)} \quad \implies \quad \nabla_x f(x) = f(x) \nabla_x \log f(x)
 $$
+
 <br/>
 
 이를 미분식 $\nabla_\theta p_\theta(\tau)$에 적용하면 $p_\theta(\tau) \nabla_\theta \log p_\theta(\tau)$가 되며, 원래의 기댓값 적분 형태 $\mathbb{E}_{\tau \sim p_\theta}$로 성공적으로 되돌아온다!
 
 <br/>
+
 $$
 \begin{aligned}
 \nabla_\theta J(\theta) &= \int p_\theta(\tau) \nabla_\theta \log p_\theta(\tau) R(\tau) \, d\tau \\
 &= \mathbb{E}_{\tau \sim p_\theta(\tau)} \left[ \nabla_\theta \log p_\theta(\tau) R(\tau) \right]
 \end{aligned}
 $$
+
 <br/>
 
 응답 궤적의 확률 $\log p_\theta(\tau)$을 각 토큰 단위 생성 확률의 합으로 분해하면, 마침내 <strong>Policy Gradient의 핵심 수식</strong>이 완성된다.
 
 <br/>
+
 $$
 \nabla_\theta J(\theta) = \mathbb{E}_{\tau \sim p_\theta(\tau)} \left[ \left( \sum_{t=1}^{T} \nabla_\theta \log \pi_\theta(a_t | s_t) \right) R(\tau) \right]
 $$
+
 <br/>
 
 <strong>수식의 기하학적·직관적 의미</strong>
@@ -136,10 +138,11 @@ $$
 
 <br/>
 
-### Advanced Mechanics: Advantage Baseline & KL Divergence Penalty
+### Advanced Mechanics: Advantage Baseline &amp; KL Divergence Penalty
 
 > <i>단순 보상 최대화가 유발하는 <strong>탐색 고갈(Exploration Collapse)</strong>과 <strong>모드 붕괴(Mode Collapse)</strong>를 막고, 다양한 고품질 응답을 유지하기 위한 두 가지 필수 수학적 안정화 메커니즘을 탐구한다.</i> <br/>
-<br/>
+>
+> <br/>
 
 강화학습을 언어 모델(LLM)에 적용할 때 단순히 보상 $R(\tau)$만 극대화하면 두 가지 치명적인 한계에 직면한다:
 
@@ -149,6 +152,7 @@ $$
 이를 해결하기 위해 현존하는 **InstructGPT, ChatGPT, Llama 3, DeepSeek (PPO / GRPO)** 등 모든 현대 RLHF 시스템은 아래 두 가지 제약 방정식을 반드시 결합한다.
 
 #### 1) Baseline $J(\theta)$ 차감을 통한 Advantage ($A_t$) 정의
+
 현재 정책의 평균 기대 보상 수준인 **기준선 Baseline $b = J(\theta)$**를 차감하여 행동의 상대적 우수성(**Advantage**)을 계산한다:
 
 $$
@@ -159,6 +163,7 @@ $$
 - $R(\tau) < b \implies A(\tau) < 0$: 기대치 이하인 행동이므로 보상이 플러스 점수라도 확률을 **하강**시킨다.
 
 #### 2) KL Divergence Penalty ($\beta$)를 통한 다양성 보존
+
 학습 중인 새로운 정책 $\pi_\theta$가 초기 기준 모델 $\pi_{\text{ref}}$(SFT 모델)의 원래 확률 분포에서 너무 멀어지지 않도록 **KL Divergence 불이익(Penalty)**을 부여한다:
 
 $$
@@ -170,17 +175,20 @@ $$
 
 <br/>
 
-### Interactive Simulator: Robot Exploration & Mathematical Term Inspector
+### Interactive Simulator: Robot Exploration &amp; Mathematical Term Inspector
 
 > <i>로봇 2D 캔버스 탐색과 Policy Gradient 수식 항(Term) 정밀 분석기를 통해 확률 밀도 이동, Baseline 이득, 그리고 KL Penalty 제약을 실시간 관찰한다.</i> <br/>
-<br/>
+>
+> <br/>
 
-아래 시뮬레이터에서 <strong>로봇 캐릭터의 2D 경로 탐색</strong>과, **$P(\text{Right})$ 확률 슬라이더**, **Baseline $J(\theta)$ 기준선 슬라이더**, 그리고 **KL Penalty 계수 $\beta$ 슬라이더**를 직접 조정하며 **정책 수렴과 다양성 보존 원리를 정밀 검증**할 수 있다.
+아래 시뮬레이터에서 <strong>로봇 캐릭터의 2D 경로 탐색</strong>과, $P(\text{Right})$ **확률 슬라이더**, **Baseline **$J(\theta)$** 기준선 슬라이더**, 그리고 **KL Penalty 계수 **$\beta$** 슬라이더**를 직접 조정하며 **정책 수렴과 다양성 보존 원리를 정밀 검증**할 수 있다.
 
 <br/>
 
 <div className="not-content my-6 w-full clear-both">
+
   <ProbabilityMassSimulator client:visible />
+
 </div>
 
 <br/>
@@ -244,12 +252,14 @@ policy_gradient_step(sample_state, reward_from_model=10.0)
 
 본 문서에서 다룬 LLM 학습 파이프라인과 Policy Gradient의 핵심 특징을 요약하면 다음과 같다.
 
-| 구분 | 사전 학습 (Pre-training) | 지도 미세 조정 (SFT) | 강화학습 (Policy Gradient / RLHF) |
-| :--- | :--- | :--- | :--- |
-| <strong>학습 목표</strong> | 다음 토큰 예측 (Next Token) | 정답 대화 모방 (Instruction) | 인간 선호도 정렬 및 기대 보상 최대화 |
-| <strong>손실 / 보상 신호</strong> | Cross-Entropy Loss | Cross-Entropy Loss | 보상 모델 $R(s,a)$ 스칼라 스코어 |
-| <strong>역전파 메커니즘</strong> | 오차 $L$의 직접 역전파 ($\nabla_\theta L$) | 오차 $L$의 직접 역전파 ($\nabla_\theta L$) | 확률 밀도 로그 미분 ($\nabla_\theta \log \pi_\theta \cdot R$) |
-| <strong>핵심 한계 및 역할</strong> | 무분별한 텍스트 지식 습득 | 단일 정답 강제 & 표면적 모방 | 확률 분포 이동을 통한 답변 품질 최적화 |
+
+| 구분                          | 사전 학습 (Pre-training)               | 지도 미세 조정 (SFT)                     | 강화학습 (Policy Gradient / RLHF)                         |
+| :--------------------------- | :---------------------------------- | :---------------------------------- | :----------------------------------------------------- |
+| <strong>학습 목표</strong>      | 다음 토큰 예측 (Next Token)              | 정답 대화 모방 (Instruction)             | 인간 선호도 정렬 및 기대 보상 최대화                                 |
+| <strong>손실 / 보상 신호</strong> | Cross-Entropy Loss                 | Cross-Entropy Loss                 | 보상 모델 $R(s,a)$ 스칼라 스코어                                |
+| <strong>역전파 메커니즘</strong>   | 오차 $L$의 직접 역전파 ($\nabla_\theta L$) | 오차 $L$의 직접 역전파 ($\nabla_\theta L$) | 확률 밀도 로그 미분 ($\nabla_\theta \log \pi_\theta \cdot R$) |
+| <strong>핵심 한계 및 역할</strong> | 무분별한 텍스트 지식 습득                     | 단일 정답 강제 &amp; 표면적 모방              | 확률 분포 이동을 통한 답변 품질 최적화                                |
+
 
 <br/>
 
@@ -262,3 +272,4 @@ policy_gradient_step(sample_state, reward_from_model=10.0)
 - **Training language models to follow instructions with human feedback (InstructGPT)** - Ouyang et al. (2022) [(Link)](https://arxiv.org/abs/2203.02155)
 
 </SectionSlider>
+
