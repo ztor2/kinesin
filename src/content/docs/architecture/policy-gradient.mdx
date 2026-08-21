@@ -1,42 +1,26 @@
 ---
 title: "Policy Gradient"
-description: "LLM에서의 강화학습 도입 배경과 역사, 그리고 Policy Gradient가 확률 분포(Probability Mass)를 이동시켜 신경망을 최적화하는 수식적·기하학적 원리"
+description: "Policy Gradient 원리"
 ---
 import SectionSlider from '../../../components/common/SectionSlider.astro';
 import { ProbabilityMassSimulator } from '../../../components/policy-gradient/PolicyGradientVisualizer.jsx';
+import LLMPipelineFlow from '../../../components/policy-gradient/LLMPipelineFlow.astro';
 
 <SectionSlider>
 
 ### Intro
 
-> <i><strong>Policy Gradient</strong>는 미분 불가능한 확률적 행동과 블랙박스 환경 보상 속에서, 보상을 많이 가져오는 행동의 <strong>확률 밀도(Probability Mass) 자체를 이동</strong>시켜 신경망을 최적화하는 핵심 수학적 원리이다.</i>
+> <i><strong>Policy Gradient</strong>는 미분 불가능한 언어 생성 환경에서 높은 보상을 획득한 응답의 <strong>확률 밀도(Probability Mass) 자체를 이동</strong>시켜 모델을 최적화하는 핵심 수학적 원리.</i>
 >
 > <br/>
 
-- LLM(Large Language Model)은 처음에 사전 학습(Pre-training)으로 기본적인 문장 구조를 학습하고, 이후 SFT(Supervised Fine-Tuning)를 통해 좀 더 복잡성있는 맥락 기반의 지식을 학습한다.
-- 하지만 LLM이 실제 사람과의 대화에 적용되면, 설명하기 어려운 인간의 선호를 예측하기 어려워 각종 환각(Hallucination)이 발생하곤 했다.
-- 이를 개선하기 위해 인간의 피드백을 보상(Reward) 신호로 설정하고, <strong>강화학습(Reinforcement Learning)</strong>을 통해 모델의 응답 성향을 최적화하는 <strong>RLHF (Reinforcement Learning from Human Feedback)</strong> 및 <strong>PPO</strong> 기술이 LLM 학습 과정에 도입되었다.
-- 강화학습 보상 신호의 특성 상 역전파(Backpropagation)와는 다른 방식으로 학습된다.
-- 본 문서에서는 강화학습의 Policy Gradient가 확률 분포를 이동시키며 학습을 진행하는 프로세스를 알아보기로 한다.<br/><br/>
+<LLMPipelineFlow />
 
 <br/>
 
-### Backgrounds : 사전학습과 SFT, 그리고 RLHF
-
-LLM이 발전해 온 3단계 학습 파이프라인과 강화학습 도입 배경은 다음과 같다.
-
-1. <strong>사전 학습 (Pre-training)</strong>:
-  - <strong>목적</strong>: 인터넷의 거대한 텍스트 데이터셋에서 "다음 토큰 예측(Next-Token Prediction)"을 수행하여 언어적 지식과 문맥 이해 능력을 습득한다.
-  - <strong>한계</strong>: 모델은 인터넷 상의 훌륭한 글뿐만 아니라 편향, 오개념, 무의미한 텍스트도 함께 학습하며, 사용자의 지시나 질문에 단답형으로 대답하는 방법을 알지 못한다.
-2. <strong>지도 미세 조정 (Supervised Fine-Tuning, SFT)</strong>:
-  - <strong>목적</strong>: `[질문, 고품질 답변]` 형태의 정답 데이터셋을 구축하고, 지도학습 오차 역전파(Cross-Entropy Loss)를 통해 "지시를 수행하는 프롬프트 모드"로 정렬한다.
-  - <strong>한계 (SFT의 벽)</strong>:
-    - <strong>표면적 모방 (Surface-level Mimicry)</strong>: 모델은 작성자의 스타일이나 단어 조합을 모방할 뿐, 답변의 논리적 우수성을 스스로 평가하지 못한다.
-    - <strong>단일 정답의 한계</strong>: 동일한 질문이라도 우수하고 친절한 답변의 방식은 수없이 다양하지만, SFT는 단 하나의 텍스트 라벨만을 정답으로 강제한다.
-3. <strong>인간 피드백 기반 강화학습 (RLHF)</strong>:
-  - OpenAI는 2017년 Deep RL from Human Preferences 연구를 시작으로, 2022년 InstructGPT와 ChatGPT에 <strong>RLHF</strong>를 성공적으로 도입했다.
-  - 사람이 두 개 이상의 모델 응답 중 더 유용하고 안전한 응답을 선택(Preference)하면, 이를 바탕으로 보상 모델(Reward Model, $R$)을 학습시킨다.
-  - LLM은 이 보상 모델의 보상을 최대화하는 방향으로 <strong>Policy Gradient (PPO 등)</strong> 알고리즘을 수행하여, 인간의 의도와 안전 가이드라인에 완벽히 부합하는 정렬(Alignment)을 완성하게 되었다.
+- **사전학습 & SFT**: 대규모 코퍼스로부터 언어적 표현을 학습하고, 정답 대화 데이터를 모방하여 질의응답의 기본 형태를 갖춤.
+- **Policy Gradient (RLHF)**: 정답 텍스트를 단순 모방하는 것을 넘어, **인간 선호도에 부합하는 고품질 응답의 발생 확률 밀도를 상향 조정**하는 최종 정렬 단계.
+- 본 아티클에서는 미분 불가능한 토큰 샘플링 환경에서 Policy Gradient가 확률 분포를 최적화하는 수학적·기하학적 원리를 다룸.
 
 <br/>
 
@@ -105,7 +89,7 @@ $$
 
 <br/>
 
-이를 미분식 $\nabla_\theta p_\theta(\tau)$에 적용하면 $p_\theta(\tau) \nabla_\theta \log p_\theta(\tau)$가 되며, 원래의 기댓값 적분 형태 $\mathbb{E}_{\tau \sim p_\theta}$로 성공적으로 되돌아온다!
+이를 미분식 $\nabla_\theta p_\theta(\tau)$에 적용하면 $p_\theta(\tau) \nabla_\theta \log p_\theta(\tau)$가 되며, 원래의 기댓값 적분 형태 $\mathbb{E}_{\tau \sim p_\theta}$로 성공적으로 되돌아온다.
 
 <br/>
 

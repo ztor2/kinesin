@@ -43,6 +43,41 @@
   --sl-font-heading: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
 }
 
+/* 🖥️ 좌측 사이드바 접힘 모드 (.sidebar-collapsed) 전역 레이아웃 제어 */
+html.sidebar-collapsed {
+  --sl-sidebar-width: 0rem !important;
+}
+
+@media (min-width: 50rem) {
+  /* 사이드바 패널 트랜지션 및 숨김 */
+  .sidebar-pane {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease !important;
+  }
+
+  html.sidebar-collapsed .sidebar-pane {
+    transform: translateX(-100%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+  }
+
+  /* 메인 콘텐츠 패널 확장 */
+  .main-pane {
+    transition: margin-inline-start 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s ease !important;
+  }
+
+  html.sidebar-collapsed .main-pane {
+    margin-inline-start: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  html.sidebar-collapsed .content-panel {
+    max-width: 72rem !important;
+    margin: 0 auto !important;
+  }
+}
+
 body {
   font-family: 'Plus Jakarta Sans', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
 }
