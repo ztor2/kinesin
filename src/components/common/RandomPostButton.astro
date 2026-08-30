@@ -1,0 +1,168 @@
+---
+// RandomPostButton.astro - Minimalist One-click Random Article Explorer
+interface Props {
+  className?: string;
+}
+
+const { className = '' } = Astro.props;
+
+// 공개 발행된 아티클 목록 (draft, templates 제외)
+const publicArticles = [
+  { title: 'Backpropagation', url: '/architecture/backprop/' },
+  { title: 'Policy Gradient', url: '/architecture/policy-gradient/' },
+  { title: 'RoPE (Rotary Position Embedding)', url: '/architecture/rope/' },
+  { title: 'PIXELRAG', url: '/papers/pixelrag/' }
+];
+---
+
+<div class={`random-post-container ${className}`}>
+  <button
+    id="kinesin-random-post-btn"
+    class="random-post-btn gmarket-font"
+    title="아무 아티클이나 무작위로 읽어봅니다"
+    aria-label="무작위 아티클 탐색"
+  >
+    <span class="cursor-icon-wrapper">
+      <svg class="cursor-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M4 4l7.07 17 2.51-7.39L21 11.1 4 4z"></path>
+        <path d="M13.5 13.5L19 19"></path>
+      </svg>
+    </span>
+    
+    <span class="btn-text">Feeling Lucky <span class="sub-text">(Random Post)</span></span>
+  </button>
+</div>
+
+<style>
+  .random-post-container {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin: 1.75rem 0 1rem;
+    width: 100%;
+  }
+
+  .random-post-btn {
+    display: inline-flex;
+    align-items: center;
+    gap: 9px;
+    padding: 10px 22px;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: #d97706;
+    background: linear-gradient(135deg, #fffdf5, #fef3c7);
+    border: 1.5px solid #fde68a;
+    border-radius: 999px;
+    box-shadow: 0 4px 16px -2px rgba(217, 119, 6, 0.15), 0 2px 6px rgba(0, 0, 0, 0.03);
+    backdrop-filter: blur(10px);
+    -webkit-backdrop-filter: blur(10px);
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+    user-select: none;
+    text-decoration: none;
+  }
+
+  :root[data-theme='dark'] .random-post-btn {
+    color: #fbbf24;
+    background: linear-gradient(135deg, rgba(30, 20, 10, 0.9), rgba(45, 25, 8, 0.95));
+    border: 1.5px solid rgba(245, 158, 11, 0.4);
+    box-shadow: 0 4px 20px -2px rgba(245, 158, 11, 0.2), 0 2px 6px rgba(0, 0, 0, 0.3);
+  }
+
+  .random-post-btn:hover {
+    transform: translateY(-2px) scale(1.02);
+    color: #b45309;
+    border-color: #f59e0b;
+    box-shadow: 0 8px 24px -4px rgba(217, 119, 6, 0.28), 0 4px 10px rgba(0, 0, 0, 0.05);
+  }
+
+  :root[data-theme='dark'] .random-post-btn:hover {
+    color: #fde68a;
+    border-color: #fbbf24;
+    box-shadow: 0 8px 28px -4px rgba(245, 158, 11, 0.45), 0 4px 12px rgba(0, 0, 0, 0.4);
+  }
+
+  .random-post-btn:active {
+    transform: translateY(0px) scale(0.98);
+  }
+
+  .cursor-icon-wrapper {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  .cursor-svg {
+    width: 16px;
+    height: 16px;
+  }
+
+  .random-post-btn:hover .cursor-icon-wrapper {
+    transform: translate(2px, -2px) scale(1.15);
+  }
+
+  .btn-text {
+    display: inline-flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .sub-text {
+    font-size: 12px;
+    font-weight: 500;
+    opacity: 0.8;
+  }
+
+  /* 클릭 시 가벼운 펄스 애니메이션 */
+  .btn-clicked {
+    animation: clickPulse 0.3s ease-in-out;
+  }
+
+  @keyframes clickPulse {
+    0% { transform: scale(0.98); }
+    50% { transform: scale(1.05); }
+    100% { transform: scale(1); }
+  }
+</style>
+
+<script is:inline define:vars={{ publicArticles }}>
+  (function() {
+    function setupRandomPostButton() {
+      const btn = document.getElementById('kinesin-random-post-btn');
+      if (!btn) return;
+
+      function goToRandomPost() {
+        if (!publicArticles || publicArticles.length === 0) return;
+
+        // 현재 페이지 제외한 목록 필터링
+        const currentPath = window.location.pathname.replace(/\/$/, '');
+        const candidates = publicArticles.filter(item => {
+          const itemPath = item.url.replace(/\/$/, '');
+          return itemPath !== currentPath;
+        });
+
+        const targetList = candidates.length > 0 ? candidates : publicArticles;
+        const randomIndex = Math.floor(Math.random() * targetList.length);
+        const selected = targetList[randomIndex];
+
+        btn.classList.add('btn-clicked');
+        btn.style.pointerEvents = 'none';
+        btn.style.opacity = '0.85';
+
+        setTimeout(() => {
+          window.location.href = selected.url;
+        }, 180);
+      }
+
+      btn.addEventListener('click', goToRandomPost);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', setupRandomPostButton);
+    } else {
+      setupRandomPostButton();
+    }
+  })();
+</script>

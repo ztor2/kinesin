@@ -476,7 +476,7 @@
 
       if (!rawContent || !renderedViewport) return;
 
-      // H2, H3 헤딩 탐색 및 파트별 슬라이드 구조화
+      // H2, H3 헤딩 탐색 및 파트별 실제 DOM 요소 슬라이드 구조화 (innerHTML 파괴 방지)
       const headings = Array.from(rawContent.querySelectorAll('h3, h2'));
       const slides = [];
 
@@ -490,26 +490,38 @@
             topBlock = topBlock.parentElement;
           }
 
-          let htmlChunk = topBlock.outerHTML;
+          const slideWrapper = document.createElement('div');
+          slideWrapper.className = 'section-slide-panel';
+          slideWrapper.style.display = 'none';
 
+          const blocksToMove = [topBlock];
           let nextBlock = topBlock.nextElementSibling;
           while (nextBlock) {
             const hasNextHeading = nextBlock.tagName === 'H2' || nextBlock.tagName === 'H3' || nextBlock.querySelector('h2, h3');
             if (hasNextHeading) break;
-            htmlChunk += nextBlock.outerHTML;
+            blocksToMove.push(nextBlock);
             nextBlock = nextBlock.nextElementSibling;
           }
+
+          blocksToMove.forEach(b => slideWrapper.appendChild(b));
+          renderedViewport.appendChild(slideWrapper);
 
           slides.push({
             id: headingId,
             title: titleText,
-            html: htmlChunk
+            element: slideWrapper
           });
         });
       }
 
       if (slides.length === 0) {
-        slides.push({ id: '', title: '전체 문서', html: rawContent.innerHTML });
+        const fullWrapper = document.createElement('div');
+        fullWrapper.className = 'section-slide-panel';
+        while (rawContent.firstChild) {
+          fullWrapper.appendChild(rawContent.firstChild);
+        }
+        renderedViewport.appendChild(fullWrapper);
+        slides.push({ id: '', title: '전체 문서', element: fullWrapper });
       }
 
       let currentIndex = 0;
@@ -538,8 +550,6 @@
 
       let isSlideMode = true;
       let isFullscreenMode = false;
-
-      scrollView.innerHTML = rawContent.innerHTML;
 
       // 📸 1. Instagram Story 분할 세그먼트 생성 및 클릭 이벤트 등록
       function renderStorySegments() {
@@ -597,9 +607,12 @@
 
       function updateControls(shouldScrollToTop = false) {
         if (isSlideMode) {
-          // 카드 모드 ON 상태
-          const slide = slides[currentIndex];
-          renderedViewport.innerHTML = slide.html;
+          // 카드 모드 ON 상태: 해당 슬라이드만 display: block 처리
+          slides.forEach((slide, idx) => {
+            if (slide.element) {
+              slide.element.style.display = (idx === currentIndex) ? 'block' : 'none';
+            }
+          });
 
           const numText = `${currentIndex + 1} / ${slides.length}`;
           numIndicators.forEach(el => el.textContent = numText);
@@ -756,16 +769,33 @@
 
       function toggleMode() {
         isSlideMode = !isSlideMode;
+        const navBars = document.querySelectorAll('.card-internal-nav-bar');
+        
         if (isSlideMode) {
           toggleSwitch.classList.add('card-mode');
           toggleSwitch.classList.remove('scroll-mode');
-          cardView.style.display = 'block';
-          scrollView.style.display = 'none';
+          if (storyProgress) storyProgress.style.display = 'flex';
+          navBars.forEach(bar => bar.style.display = 'flex');
+          if (cardElement) {
+            cardElement.style.border = '';
+            cardElement.style.boxShadow = '';
+            cardElement.style.padding = '';
+          }
         } else {
           toggleSwitch.classList.remove('card-mode');
           toggleSwitch.classList.add('scroll-mode');
-          cardView.style.display = 'none';
-          scrollView.style.display = 'flex';
+          if (storyProgress) storyProgress.style.display = 'none';
+          navBars.forEach(bar => bar.style.display = 'none');
+          if (restartContainer) restartContainer.style.display = 'none';
+          // 스크롤 모드: 모든 슬라이드 패널을 동시에 보여줌
+          slides.forEach(slide => {
+            if (slide.element) slide.element.style.display = 'block';
+          });
+          if (cardElement) {
+            cardElement.style.border = 'none';
+            cardElement.style.boxShadow = 'none';
+            cardElement.style.padding = '0';
+          }
         }
         updateControls(false);
       }
