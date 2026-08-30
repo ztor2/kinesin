@@ -252,22 +252,37 @@ export const ProbabilityMassSimulator = () => {
     }
   }, [activeMathTerm]);
 
-  // Compute 2D robot position based on activeStep
+  const [isAutoPlaying, setIsAutoPlaying] = useState(false);
+  const isAutoPlayingRef = useRef(isAutoPlaying);
+
+  useEffect(() => {
+    isAutoPlayingRef.current = isAutoPlaying;
+  }, [isAutoPlaying]);
+
+  // Compute 2D robot position perfectly aligned with node centers
   const getRobotPosition = () => {
-    if (!activeStep || activeStep === 'START') return { x: 50, y: 28 };
-    if (activeStep === 'L') return { x: 25, y: 32 };
-    if (activeStep === 'R') return { x: 75, y: 32 };
-    if (activeStep === 'LL') return { x: 12.5, y: 68 };
-    if (activeStep === 'LR') return { x: 37.5, y: 68 };
-    if (activeStep === 'RL') return { x: 62.5, y: 68 };
-    if (activeStep === 'RR') return { x: 87.5, y: 68 };
-    return { x: 50, y: 28 };
+    if (!activeStep || activeStep === 'START') return { x: 50, y: 14 };
+    if (activeStep === 'L') return { x: 25, y: 48 };
+    if (activeStep === 'R') return { x: 75, y: 48 };
+    if (activeStep === 'LL') return { x: 12.5, y: 84 };
+    if (activeStep === 'LR') return { x: 37.5, y: 84 };
+    if (activeStep === 'RL') return { x: 62.5, y: 84 };
+    if (activeStep === 'RR') return { x: 87.5, y: 84 };
+    return { x: 50, y: 14 };
   };
 
   const robotPos = getRobotPosition();
 
+  const MAX_AUTO_EPISODES = 20;
+
   // Policy Gradient Real Learning Step: Exploration + Automatic Gradient Update
   const runPolicyGradientStep = () => {
+    // Check episode limit
+    if (episodeCount >= MAX_AUTO_EPISODES) {
+      setIsAutoPlaying(false);
+      return;
+    }
+
     // 1. Reset to START
     setActiveStep('START');
 
@@ -283,12 +298,18 @@ export const ProbabilityMassSimulator = () => {
     // 2. Move to 1-Step
     setTimeout(() => {
       setActiveStep(choice1);
-    }, 350);
+    }, 400);
 
     // 3. Move to 2-Step & Perform Policy Update
     setTimeout(() => {
       setActiveStep(finalTraj);
-      setEpisodeCount((prev) => prev + 1);
+      setEpisodeCount((prev) => {
+        const nextCount = prev + 1;
+        if (nextCount >= MAX_AUTO_EPISODES) {
+          setIsAutoPlaying(false);
+        }
+        return nextCount;
+      });
       setLastReward(reward);
 
       // Advantage using current REAL-TIME Baseline b (via baselineRef.current)
@@ -296,7 +317,7 @@ export const ProbabilityMassSimulator = () => {
       const advantage = reward - currentBaseline;
       
       // Tuned Learning Rate to ensure smooth, realistic incremental updates
-      const lr = 0.015;
+      const lr = 0.018;
 
       // True Policy Gradient Score Function:
       const gradStep1 = choice1 === 'R' ? (1 - probRight) : (-probRight);
@@ -307,9 +328,6 @@ export const ProbabilityMassSimulator = () => {
       const deltaP_reward = lr * advantage * gradTotal;
 
       // KL Divergence Penalty Gradient w.r.t Reference Policy P_ref = 0.5:
-      // D_KL(P || P_ref) = P log(P / 0.5) + (1-P) log((1-P) / 0.5)
-      // ∇_P D_KL = log(P / (1-P)) [Logit difference]
-      // Penalty gradient resists deviation from P_ref = 0.5:
       const currentBeta = klCoefRef.current;
       const logitDiff = Math.log(probRight / (1 - probRight));
       const klGrad = currentBeta * logitDiff;
@@ -324,11 +342,38 @@ export const ProbabilityMassSimulator = () => {
         const nextProb = Math.min(0.95, Math.max(0.05, prevProb + deltaP));
         return nextProb;
       });
-    }, 900);
+    }, 950);
   };
+
+  // Continuous Auto-play loop with max limit protection
+  useEffect(() => {
+    let intervalId = null;
+    if (isAutoPlaying) {
+      if (episodeCount >= MAX_AUTO_EPISODES) {
+        setIsAutoPlaying(false);
+        return;
+      }
+      runPolicyGradientStep();
+      intervalId = setInterval(() => {
+        setEpisodeCount((curr) => {
+          if (curr >= MAX_AUTO_EPISODES) {
+            setIsAutoPlaying(false);
+            if (intervalId) clearInterval(intervalId);
+            return curr;
+          }
+          return curr;
+        });
+        runPolicyGradientStep();
+      }, 1600);
+    }
+    return () => {
+      if (intervalId) clearInterval(intervalId);
+    };
+  }, [isAutoPlaying]);
 
   // Reset training episode & policy
   const resetTraining = () => {
+    setIsAutoPlaying(false);
     setProbRight(0.5);
     setBaseline(2.0);
     setEpisodeCount(0);
@@ -348,9 +393,9 @@ export const ProbabilityMassSimulator = () => {
       boxSizing: 'border-box',
       display: 'flex',
       flexDirection: 'column',
-      gap: '24px' // 넓은 여유 간격
+      gap: '24px'
     }}>
-      {/* 1. 컴포넌트 헤더 영역 (Backprop 방식 세로 bar + 타이틀) */}
+      {/* 1. 컴포넌트 헤더 영역 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
         {/* Row 1: 세로형 컬러 바 + 메인 타이틀 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
@@ -360,8 +405,8 @@ export const ProbabilityMassSimulator = () => {
           </h3>
         </div>
 
-        {/* Row 2: 우측 정렬된 컨트롤 버튼 그룹 [초기화] -> [1회 탐색 & Policy Gradient 학습 실행] */}
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center' }}>
+        {/* Row 2: 우측 정렬된 컨트롤 버튼 그룹 [초기화] -> [자동 연속 학습 (20회)] -> [1회 탐색] */}
+        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap' }}>
           <button
             onClick={resetTraining}
             className="gmarket-font"
@@ -379,7 +424,31 @@ export const ProbabilityMassSimulator = () => {
             초기화
           </button>
           <button
-            onClick={runPolicyGradientStep}
+            onClick={() => {
+              if (episodeCount >= MAX_AUTO_EPISODES) {
+                setEpisodeCount(0);
+              }
+              setIsAutoPlaying((prev) => !prev);
+            }}
+            className="gmarket-font"
+            style={{
+              padding: '7px 15px',
+              fontSize: '13px',
+              fontWeight: '700',
+              borderRadius: '8px',
+              border: isAutoPlaying ? '1.5px solid #ef4444' : '1.5px solid #10b981',
+              backgroundColor: isAutoPlaying ? '#fef2f2' : '#ecfdf5',
+              color: isAutoPlaying ? '#dc2626' : '#047857',
+              cursor: 'pointer',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            {isAutoPlaying ? '❚❚ 자동 학습 정지' : '▶ 자동 연속 학습'}
+          </button>
+          <button
+            onClick={() => { setIsAutoPlaying(false); runPolicyGradientStep(); }}
             className="gmarket-font"
             style={{
               padding: '7px 16px',
@@ -398,7 +467,7 @@ export const ProbabilityMassSimulator = () => {
         </div>
       </div>
 
-      {/* 2. 시인성이 향상된 크고 선명한 2D 로봇 탐색 다이어그램 캔버스 */}
+      {/* 2. 2D 로봇 탐색 다이어그램 캔버스 */}
       <div style={{
         position: 'relative',
         height: '240px',
@@ -409,17 +478,17 @@ export const ProbabilityMassSimulator = () => {
         overflow: 'hidden'
       }}>
         <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-          <line x1="50%" y1="20%" x2="25%" y2="48%" stroke={probLeft > 0.5 ? '#3b82f6' : '#cbd5e1'} strokeWidth={probLeft * 6 + 1.5} />
-          <line x1="50%" y1="20%" x2="75%" y2="48%" stroke={probRight > 0.5 ? '#3b82f6' : '#cbd5e1'} strokeWidth={probRight * 6 + 1.5} />
+          <line x1="50%" y1="14%" x2="25%" y2="48%" stroke={probLeft > 0.5 ? '#3b82f6' : '#cbd5e1'} strokeWidth={probLeft * 6 + 1.5} />
+          <line x1="50%" y1="14%" x2="75%" y2="48%" stroke={probRight > 0.5 ? '#3b82f6' : '#cbd5e1'} strokeWidth={probRight * 6 + 1.5} />
           
-          <line x1="25%" y1="48%" x2="12.5%" y2="82%" stroke="#cbd5e1" strokeWidth={probLeft * 4 + 1} />
-          <line x1="25%" y1="48%" x2="37.5%" y2="82%" stroke="#cbd5e1" strokeWidth={probRight * 4 + 1} />
+          <line x1="25%" y1="48%" x2="12.5%" y2="84%" stroke="#cbd5e1" strokeWidth={probLeft * 4 + 1} />
+          <line x1="25%" y1="48%" x2="37.5%" y2="84%" stroke="#cbd5e1" strokeWidth={probRight * 4 + 1} />
 
-          <line x1="75%" y1="48%" x2="62.5%" y2="82%" stroke="#cbd5e1" strokeWidth={probLeft * 4 + 1} />
-          <line x1="75%" y1="48%" x2="87.5%" y2="82%" stroke="#10b981" strokeWidth={probRight * 5 + 1.5} />
+          <line x1="75%" y1="48%" x2="62.5%" y2="84%" stroke="#cbd5e1" strokeWidth={probLeft * 4 + 1} />
+          <line x1="75%" y1="48%" x2="87.5%" y2="84%" stroke="#10b981" strokeWidth={probRight * 5 + 1.5} />
         </svg>
 
-        {/* 다이어그램 우측 상단 내부에 위치하는 에피소드 카운터 (배경 카드 제거 및 깔끔한 텍스트 처리) */}
+        {/* 다이어그램 우측 상단 에피소드 카운터 */}
         <div style={{
           position: 'absolute',
           top: '12px',
@@ -432,40 +501,139 @@ export const ProbabilityMassSimulator = () => {
           Episode <strong className="num-font" style={{ color: '#6d28d9', fontSize: '13px' }}>#{episodeCount}</strong>
         </div>
 
-        {/* 선명하게 커진 폰트와 여유 있는 노드 박스들 */}
-        <div style={{ position: 'absolute', top: '14%', left: '50%', transform: 'translate(-50%, -50%)', padding: '6px 14px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1.5px solid #64748b', fontSize: '12px', fontWeight: '700', color: '#1e293b', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
+        {/* 1. START 노드 */}
+        <div style={{
+          position: 'absolute',
+          top: '14%',
+          left: '50%',
+          transform: 'translate(-50%, -50%)',
+          padding: '6px 14px',
+          borderRadius: '10px',
+          backgroundColor: activeStep === 'START' ? '#dbeafe' : '#ffffff',
+          border: activeStep === 'START' ? '2px solid #2563eb' : '1.5px solid #64748b',
+          fontSize: '12px',
+          fontWeight: '700',
+          color: '#1e293b',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+          transition: 'all 0.2s ease'
+        }}>
           START
         </div>
 
-        <div style={{ position: 'absolute', top: '48%', left: '25%', transform: 'translate(-50%, -50%)', padding: '6px 14px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1.5px solid #64748b', fontSize: '12px', fontWeight: '700', color: '#1e293b', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
+        {/* 2. 1-Step 노드들 */}
+        <div style={{
+          position: 'absolute',
+          top: '48%',
+          left: '25%',
+          transform: 'translate(-50%, -50%)',
+          padding: '6px 14px',
+          borderRadius: '10px',
+          backgroundColor: activeStep === 'L' ? '#dbeafe' : '#ffffff',
+          border: activeStep === 'L' ? '2px solid #2563eb' : '1.5px solid #64748b',
+          fontSize: '12px',
+          fontWeight: '700',
+          color: '#1e293b',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+          transition: 'all 0.2s ease'
+        }}>
           Left ({(probLeft*100).toFixed(0)}%)
         </div>
-        <div style={{ position: 'absolute', top: '48%', left: '75%', transform: 'translate(-50%, -50%)', padding: '6px 14px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1.5px solid #64748b', fontSize: '12px', fontWeight: '700', color: '#1e293b', boxShadow: '0 2px 6px rgba(0,0,0,0.04)' }}>
+        <div style={{
+          position: 'absolute',
+          top: '48%',
+          left: '75%',
+          transform: 'translate(-50%, -50%)',
+          padding: '6px 14px',
+          borderRadius: '10px',
+          backgroundColor: activeStep === 'R' ? '#dbeafe' : '#ffffff',
+          border: activeStep === 'R' ? '2px solid #2563eb' : '1.5px solid #64748b',
+          fontSize: '12px',
+          fontWeight: '700',
+          color: '#1e293b',
+          boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+          transition: 'all 0.2s ease'
+        }}>
           Right ({(probRight*100).toFixed(0)}%)
         </div>
 
-        <div style={{ position: 'absolute', top: '84%', left: '12.5%', transform: 'translate(-50%, -50%)', padding: '6px 12px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1.5px solid #cbd5e1', fontSize: '12px', textAlign: 'center', color: '#475569' }}>
+        {/* 3. 2-Step 노드들 */}
+        <div style={{
+          position: 'absolute',
+          top: '84%',
+          left: '12.5%',
+          transform: 'translate(-50%, -50%)',
+          padding: '6px 12px',
+          borderRadius: '10px',
+          backgroundColor: activeStep === 'LL' ? '#fee2e2' : '#ffffff',
+          border: activeStep === 'LL' ? '2px solid #ef4444' : '1.5px solid #cbd5e1',
+          fontSize: '12px',
+          textAlign: 'center',
+          color: '#475569',
+          transition: 'all 0.2s ease'
+        }}>
           LL: <strong className="num-font">0점</strong>
         </div>
-        <div style={{ position: 'absolute', top: '84%', left: '37.5%', transform: 'translate(-50%, -50%)', padding: '6px 12px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1.5px solid #cbd5e1', fontSize: '12px', textAlign: 'center', color: '#1d4ed8' }}>
+        <div style={{
+          position: 'absolute',
+          top: '84%',
+          left: '37.5%',
+          transform: 'translate(-50%, -50%)',
+          padding: '6px 12px',
+          borderRadius: '10px',
+          backgroundColor: activeStep === 'LR' ? '#dbeafe' : '#ffffff',
+          border: activeStep === 'LR' ? '2px solid #2563eb' : '1.5px solid #cbd5e1',
+          fontSize: '12px',
+          textAlign: 'center',
+          color: '#1d4ed8',
+          transition: 'all 0.2s ease'
+        }}>
           LR: <strong className="num-font">1점</strong>
         </div>
-        <div style={{ position: 'absolute', top: '84%', left: '62.5%', transform: 'translate(-50%, -50%)', padding: '6px 12px', borderRadius: '10px', backgroundColor: '#ffffff', border: '1.5px solid #cbd5e1', fontSize: '12px', textAlign: 'center', color: '#1d4ed8' }}>
+        <div style={{
+          position: 'absolute',
+          top: '84%',
+          left: '62.5%',
+          transform: 'translate(-50%, -50%)',
+          padding: '6px 12px',
+          borderRadius: '10px',
+          backgroundColor: activeStep === 'RL' ? '#dbeafe' : '#ffffff',
+          border: activeStep === 'RL' ? '2px solid #2563eb' : '1.5px solid #cbd5e1',
+          fontSize: '12px',
+          textAlign: 'center',
+          color: '#1d4ed8',
+          transition: 'all 0.2s ease'
+        }}>
           RL: <strong className="num-font">1점</strong>
         </div>
-        <div style={{ position: 'absolute', top: '84%', left: '87.5%', transform: 'translate(-50%, -50%)', padding: '6px 14px', borderRadius: '10px', backgroundColor: '#ecfdf5', border: '2px solid #10b981', fontSize: '12px', textAlign: 'center', boxShadow: '0 4px 12px rgba(16, 185, 129, 0.2)' }}>
+        <div style={{
+          position: 'absolute',
+          top: '84%',
+          left: '87.5%',
+          transform: 'translate(-50%, -50%)',
+          padding: '6px 14px',
+          borderRadius: '10px',
+          backgroundColor: activeStep === 'RR' ? '#d1fae5' : '#ecfdf5',
+          border: activeStep === 'RR' ? '2.5px solid #059669' : '2px solid #10b981',
+          fontSize: '12px',
+          textAlign: 'center',
+          boxShadow: activeStep === 'RR' ? '0 0 16px rgba(16, 185, 129, 0.6)' : '0 4px 12px rgba(16, 185, 129, 0.2)',
+          transition: 'all 0.2s ease'
+        }}>
           <strong style={{ color: '#047857' }}>RR: 5점</strong>
         </div>
 
+        {/* 4. 애니메이션 로봇 아바타 (정밀 노드 위치 스냅 및 스프링 물리) */}
         <motion.div
           animate={{ left: `${robotPos.x}%`, top: `${robotPos.y}%` }}
-          transition={{ type: 'spring', stiffness: 300, damping: 25 }}
+          transition={{ type: 'spring', stiffness: 350, damping: 24 }}
           style={{
             position: 'absolute',
-            width: '42px',
-            height: '42px',
-            transform: 'translate(-50%, -50%)',
-            zIndex: 10
+            width: '44px',
+            height: '44px',
+            x: '-50%',
+            y: '-50%',
+            zIndex: 20,
+            pointerEvents: 'none'
           }}
         >
           <img 
@@ -476,7 +644,7 @@ export const ProbabilityMassSimulator = () => {
               height: '100%', 
               borderRadius: '50%', 
               border: '2.5px solid #3b82f6',
-              boxShadow: '0 4px 14px rgba(59, 130, 246, 0.4)',
+              boxShadow: '0 4px 14px rgba(59, 130, 246, 0.5)',
               objectFit: 'cover'
             }} 
           />

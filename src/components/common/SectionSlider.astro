@@ -513,6 +513,29 @@
       }
 
       let currentIndex = 0;
+
+      // 🔄 새로고침 및 URL 링크 복원: 1) URL Hash (#heading-id) 우선 확인
+      const currentHash = window.location.hash ? decodeURIComponent(window.location.hash.substring(1)) : '';
+      if (currentHash) {
+        const foundIndex = slides.findIndex(s => s.id === currentHash);
+        if (foundIndex !== -1) {
+          currentIndex = foundIndex;
+        }
+      }
+
+      // 2) URL Hash가 없으면 sessionStorage 확인
+      if (currentIndex === 0 && !currentHash) {
+        try {
+          const savedIndex = sessionStorage.getItem('kinesin_slide_' + window.location.pathname);
+          if (savedIndex !== null) {
+            const parsed = parseInt(savedIndex, 10);
+            if (!isNaN(parsed) && parsed >= 0 && parsed < slides.length) {
+              currentIndex = parsed;
+            }
+          }
+        } catch (e) {}
+      }
+
       let isSlideMode = true;
       let isFullscreenMode = false;
 
@@ -644,7 +667,16 @@
           // 목차(TOC) 하이라이트 실시간 연동
           if (slide.id) {
             syncTocHighlight(slide.id);
+            // 🔄 URL Hash 동기화 (히스토리 오염 없이 주소창 업데이트)
+            try {
+              history.replaceState(null, '', '#' + slide.id);
+            } catch (e) {}
           }
+
+          // 🔄 sessionStorage 에 현재 카드 인덱스 보관 (새로고침 유지)
+          try {
+            sessionStorage.setItem('kinesin_slide_' + window.location.pathname, currentIndex.toString());
+          } catch (e) {}
 
           // 페이지 전환 시 카드 상단으로 자동 매끄러운 스크롤 이동
           if (shouldScrollToTop && cardElement && !isFullscreenMode) {
@@ -796,6 +828,19 @@
 
       // TOC 링크 터치/클릭 역방향 스위칭 바인딩
       bindTocClickEvents();
+
+      // 🔄 URL 해시 변경(브라우저 뒤로가기/앞으로가기 또는 목차 링크 이동) 감지
+      window.addEventListener('hashchange', function() {
+        if (!isSlideMode) return;
+        const hash = window.location.hash ? decodeURIComponent(window.location.hash.substring(1)) : '';
+        if (hash) {
+          const targetIndex = slides.findIndex(s => s.id === hash);
+          if (targetIndex !== -1 && targetIndex !== currentIndex) {
+            currentIndex = targetIndex;
+            updateControls(false);
+          }
+        }
+      });
 
       // -------------------------------------------------------------
       // 📱 스마트 터치 스와이프 (스크롤 가능 요소 및 시뮬레이터 제외 가드)

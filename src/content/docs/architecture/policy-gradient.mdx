@@ -4,35 +4,28 @@ description: "Policy Gradient 원리"
 ---
 import SectionSlider from '../../../components/common/SectionSlider.astro';
 import { ProbabilityMassSimulator } from '../../../components/policy-gradient/PolicyGradientVisualizer.jsx';
-import LLMPipelineFlow from '../../../components/policy-gradient/LLMPipelineFlow.astro';
+import ProbabilityElevationDiagram from '../../../components/policy-gradient/ProbabilityElevationDiagram.astro';
 
 <SectionSlider>
 
 ### Intro
 
-> <i><strong>Policy Gradient</strong>는 미분 불가능한 언어 생성 환경에서 높은 보상을 획득한 응답의 <strong>확률 밀도(Probability Mass) 자체를 이동</strong>시켜 모델을 최적화하는 핵심 수학적 원리.</i>
->
-> <br/>
+> <i><strong>Policy Gradient</strong>는 강화학습에서 높은 보상을 획득한 응답에 대한 <strong>확률 밀도(Probability Mass)를 변화</strong>시켜 모델을 최적화하는 핵심 수학적 원리이다.</i>
 
-<LLMPipelineFlow />
+<ProbabilityElevationDiagram />
 
 <br/>
 
-- **사전학습 & SFT**: 대규모 코퍼스로부터 언어적 표현을 학습하고, 정답 대화 데이터를 모방하여 질의응답의 기본 형태를 갖춤.
-- **Policy Gradient (RLHF)**: 정답 텍스트를 단순 모방하는 것을 넘어, **인간 선호도에 부합하는 고품질 응답의 발생 확률 밀도를 상향 조정**하는 최종 정렬 단계.
-- 본 아티클에서는 미분 불가능한 토큰 샘플링 환경에서 Policy Gradient가 확률 분포를 최적화하는 수학적·기하학적 원리를 다룸.
+- LLM은 <strong>사전학습</strong> 단계에서 대규모 데이터셋에서 언어적 표현과 문법을 학습하고, <strong>SFT</strong>에서는 주로 QA 데이터셋을 모방하여 맥락에 맞게 질문에 응답하는 능력을 갖춘다.
+- <strong>RLHF(Reinforcement Learning from Human Feedback)</strong>은 사전학습과 SFT 이후에 수행되는 정렬(Alignment) 방법으로, 사람의 선호도를 기반으로 보상(Reward)을 부여하여 학습에 반영한다.
+- <strong>Policy Gradient</strong>는 이 <strong>RLHF</strong>에서 부여된 보상 정보를 모델의 예측 시스템(확률 밀도)에 직접 반영하기 위한 핵심적인 강화학습 알고리즘이다.
+- 본 문서에서는 미분 불가능한 강화학습 환경에서 Policy Gradient가 확률 분포를 최적화하는 수학적 원리를 살펴본다.
 
 <br/>
 
-### SFT와 RLHF의 학습 프로세스 비교
+### Policy Gradient의 필요성
 
-> <i>강화학습에서는 확률적 샘플링과 블랙박스 보상 함수로 인해 일반적인 역전파 연쇄 법칙이 작동하지 않는다.</i> <br/>
->
-> <br/>
-
-SFT 환경에서는 입력 단어 토큰부터 정답 확률, Cross-Entropy Loss까지 모든 연산이 미분 가능한 하나의 연결된 그래프이다.
-
-그러나 강화학습을 통해 LLM(Policy, $\pi_\theta$)을 학습시킬 때의 과정은 다음과 같다.
+강화학습을 통해 LLM(Policy, $\pi_\theta$)을 학습시키는 과정은 다음과 같다.
 
 <br/>
 
@@ -42,22 +35,24 @@ $$
 
 <br/>
 
-이 구조에는 일반적인 오차 역전파(Backpropagation)를 가로막는 <strong>두 가지 치명적인 벽</strong>이 존재한다.
+이 구조에서는 일반적인 딥러닝 모델 학습 및 SFT에 사용되는 역전파(Backpropagation) 기법을 적용할 수 없다. 이유는 다음과 같다.
+
+
 
 1. <strong>생성 텍스트 샘플링의 불연속성 (Discrete Sampling)</strong>:
-  - LLM은 다음 토큰들의 확률 분포(Softmax)를 계산하지만, 실제 문장 생성 시에는 이 분포에서 특정 토큰 $a$를 확률적으로 뽑는 <strong>샘플링(Sampling)</strong>을 수행한다.
+  - 사전학습이나 SFT 단계에서는 다음 토큰들의 확률 분포(Softmax)만을 계산하지만, 강화학습 단계에서 실제 문장 생성을 위해 이 분포에서 특정 토큰 $a$를 확률적으로 뽑는 <strong>샘플링(Sampling)</strong>을 수행한다.
   - 샘플링 연산은 미분 불가능한 불연속 사건이므로, 생성된 문장 $a$로부터 언어 모델 파라미터 $\theta$로 기울기가 전파될 수 없다.
-2. <strong>보상 모델의 블랙박스성 (Black-box Reward Model)</strong>:
+2. <strong>보상 모델의 블랙박스 (Black-box Reward Model)</strong>:
   - 보상 모델 $R(s, a)$은 인간의 선호도를 딥러닝 스코어로 출력하는 함수이거나 실제 인간 평가자이다.
-  - 보상 값 $R$이 "8.5점"으로 주어졌을 때, 이 스코어를 생성된 단어 단위로 직접 미분하는 공식은 존재하지 않는다.
+  - 만약 보상 값 $R$이 8.5점으로 주어졌다고 해보자. 이 스코어를 생성된 단어 단위로 직접 미분하는 공식은 존재하지 않는다.
 
-결과적으로 보상 $R$을 오차 손실처럼 직접 미분하여 역전파하는 $\nabla_\theta R$ 방식은 수학적으로 수립될 수 없다.
+결과적으로, 보상 $R$을 직접 미분하여 역전파하는 방식이 적용될 수 없다.
 
 <br/>
 
-### Policy Gradient 학습 원리 상세
+### Policy Gradient 학습 프로세스 상세
 
-> <i>보상을 미분할 수 없다면, 보상을 가져오는 행동의 확률 밀도(Probability Mass)를 미분하여 이동시킨다.</i> <br/>
+> <i>보상을 미분할 수 없다면, 보상을 가져오는 행동의 확률 밀도(Probability Mass)를 미분하여 이동시킬 수 있다.</i> <br/>
 
 Policy Gradient의 최적화 목표는 단일 응답의 보상이 아니라, 현재 언어 모델 정책 $\pi_\theta$가 생성하는 전체 응답 궤적 $\tau = (s, a_1, a_2, \dots, a_T)$의 <strong>기대 보상(Expected Return) $J(\theta)$</strong>이다.
 
@@ -102,7 +97,7 @@ $$
 
 <br/>
 
-응답 궤적의 확률 $\log p_\theta(\tau)$을 각 토큰 단위 생성 확률의 합으로 분해하면, 마침내 <strong>Policy Gradient의 핵심 수식</strong>이 완성된다.
+응답 궤적의 확률 $\log p_\theta(\tau)$을 각 토큰 단위 생성 확률의 합으로 분해하면, 마침내 <strong>Policy Gradient의 수식</strong>이 도출된다.
 
 <br/>
 
@@ -112,60 +107,54 @@ $$
 
 <br/>
 
-<strong>수식의 기하학적·직관적 의미</strong>
+<strong>Policy Gradient 수식의  의미</strong>
 
-- <strong>보상을 미분한 것이 아니다</strong>: 미분 기호 $\nabla_\theta$는 오직 <strong>언어 모델 토큰 생성 로그 확률 $\log \pi_\theta(a_t|s_t)$</strong>에만 붙어 있다.
 - <strong>확률 밀도(Probability Mass)의 이동</strong>: 보상 $R(\tau)$는 미분 기울기의 크기와 방향을 조절하는 <strong>스칼라 가중치(Weight)</strong> 역할을 수행한다.
   - $R(\tau)$가 높다면 (예: +9.0점): 해당 응답을 만든 토큰들의 로그 확률을 경사상승(Gradient Ascent)시켜 <strong>발생 확률 밀도를 높인다 ($\uparrow$)</strong>.
-  - $R(\tau)$가 낮다면 (예: -5.0점): 해당 응답을 만든 토큰들의 <strong>발생 확률 밀도를 낮춘다 ($\downarrow$)</strong>.
-- 즉, 보상 함수를 직접 깎아 나가는 것이 아니라, <strong>좋은 평가를 받은 응답 생성이 더 자주 일어나도록 언어 모델의 확률 분포 산맥 자체를 이동</strong>시키는 것이다!
+  - $R(\tau)$가 낮다면 (예: -5.0점): 해당 응답을 만든 토큰들의 로그 확률을 경사하강(Gradient Descent)시캬 <strong>발생 확률 밀도를 낮춘다 ($\downarrow$)</strong>.
 
 <br/>
 
-### Advanced Mechanics: Advantage Baseline &amp; KL Divergence Penalty
+### Advanced: Advantage Baseline과 KL Divergence Penalty
 
-> <i>단순 보상 최대화가 유발하는 <strong>탐색 고갈(Exploration Collapse)</strong>과 <strong>모드 붕괴(Mode Collapse)</strong>를 막고, 다양한 고품질 응답을 유지하기 위한 두 가지 필수 수학적 안정화 메커니즘을 탐구한다.</i> <br/>
->
-> <br/>
+강화학습을 LLM에 적용할 때 단순히 보상 $R(\tau)$만 극대화하면 두 가지 한계에 직면한다:
 
-강화학습을 언어 모델(LLM)에 적용할 때 단순히 보상 $R(\tau)$만 극대화하면 두 가지 치명적인 한계에 직면한다:
+1. <strong>양수 보상에 의한 왜곡과 학습 불안정성</strong>: 모든 보상이 양수(예: $+1.0 \sim +9.0$)인 경우 품질이 떨어지는 답변조차 확률이 함께 상승하는 왜곡이 발생하며, 샘플 간 기울기 편차(분산)가 극심해져 학습이 불안정해진다.
+2. <strong>모드 붕괴(Mode Collapse 또는 Reward Hacking)</strong>: 높은 점수를 받기 쉬운 특정 정형화된 답변(템플릿 등) 하나로만 확률이 쏠려, 언어 모델 본연의 풍부한 표현 다양성과 유연한 문제 해결 능력이 훼손된다.
 
-1. **분산 폭발 및 어중간한 보상에 의한 왜곡**: 모든 보상이 양수인 경우, 비효율적인 답변조차 확률이 상승하거나 에피소드 간 기울기 편차(Variance)가 극심해진다.
-2. **모드 붕괴 (Mode Collapse / Reward Hacking)**: 특정 최고 보상 응답(예: 템플릿 답변) 하나에만 확률 밀도가 $95\%$ 이상으로 쏠려, 원래 언어 모델이 가졌던 풍부한 언어 표현 다양성과 탐색 능력이 상실된다.
+이를 해결하기 위해 <strong>RLHF 시스템</strong>은 아래의 두 가지 수학적 안정화 장치를 결합한다.
 
-이를 해결하기 위해 현존하는 **InstructGPT, ChatGPT, Llama 3, DeepSeek (PPO / GRPO)** 등 모든 현대 RLHF 시스템은 아래 두 가지 제약 방정식을 반드시 결합한다.
+<br/>
 
 #### 1) Baseline $J(\theta)$ 차감을 통한 Advantage ($A_t$) 정의
 
-현재 정책의 평균 기대 보상 수준인 **기준선 Baseline $b = J(\theta)$**를 차감하여 행동의 상대적 우수성(**Advantage**)을 계산한다:
+현재 정책의 평균 기대 보상 수준인 <strong>기준선 Baseline $b = J(\theta)$</strong>를 차감하여 행동의 상대적 우수성(Advantage)을 계산한다:
 
 $$
 A(\tau) = R(\tau) - b
 $$
 
-- $R(\tau) > b \implies A(\tau) > 0$: 기대치 이상인 훌륭한 행동이므로 확률을 **상승**시킨다.
-- $R(\tau) < b \implies A(\tau) < 0$: 기대치 이하인 행동이므로 보상이 플러스 점수라도 확률을 **하강**시킨다.
+- $R(\tau) > b \implies A(\tau) > 0$: 기대치 이상인 훌륭한 행동이므로 확률을 <strong>상승</strong>시킨다.
+- $R(\tau) < b \implies A(\tau) < 0$: 기대치 이하인 행동이므로 보상이 플러스 점수라도 확률을 <strong>하강</strong>시킨다.
+
+&lt;br/&gt;
 
 #### 2) KL Divergence Penalty ($\beta$)를 통한 다양성 보존
 
-학습 중인 새로운 정책 $\pi_\theta$가 초기 기준 모델 $\pi_{\text{ref}}$(SFT 모델)의 원래 확률 분포에서 너무 멀어지지 않도록 **KL Divergence 불이익(Penalty)**을 부여한다:
+학습 중인 새로운 정책 $\pi_\theta$가 초기 기준 모델 $\pi_{\text{ref}}$(SFT 모델)의 원래 확률 분포에서 너무 멀어지지 않도록 <strong>KL Divergence Penalty</strong>를 부여한다:
 
 $$
 R_{\text{effective}}(\tau) = R(\tau) - \beta \cdot D_{\text{KL}}(\pi_\theta || \pi_{\text{ref}})
 $$
 
-- **미분 기울기**: $D_{\text{KL}}$의 미분 기울기는 현재 확률과 참조 확률 간의 로짓 차이 $\log \left( \frac{\pi_\theta}{1-\pi_\theta} \right)$에 비접촉 항으로 작용한다.
-- **역할**: $\beta > 0$로 설정하면特定 노드(`RR`)로 확률 밀도가 $90\%$ 이상 과도하게 쏠리려 할 때 **수학적 억제력(안전 밧줄)**이 발동하여, 최소한의 탐색 확률과 응답 다양성을 유지시킨다.
+- <strong>수학적 원리</strong>: KL Divergence($D_{\text{KL}}$)는 두 확률 분포 사이의 통계적 차이를 측정한다. 현재 정책 $\pi_\theta$가 원래 SFT 모델 $\pi_{\text{ref}}$의 확률 분포에서 크게 벗어날수록 패널티가 커져 실질 보상 $R_{\text{effective}}$이 감소한다.
+- <strong>안정화 역할</strong>: $\beta > 0$로 설정하면 모델이 최고 보상을 주는 특정 답변(예: 정형화된 템플릿) 하나에만 확률이 과도하게 쏠리는 <strong>모드 붕괴</strong>를 방지하고, 원래 언어 모델이 지녔던 자연스러운 표현 다양성을 안정적으로 유지시킨다.
 
 <br/>
 
-### Interactive Simulator: Robot Exploration &amp; Mathematical Term Inspector
+### Policy Gradient 학습 시뮬레이터
 
-> <i>로봇 2D 캔버스 탐색과 Policy Gradient 수식 항(Term) 정밀 분석기를 통해 확률 밀도 이동, Baseline 이득, 그리고 KL Penalty 제약을 실시간 관찰한다.</i> <br/>
->
-> <br/>
-
-아래 시뮬레이터에서 <strong>로봇 캐릭터의 2D 경로 탐색</strong>과, $P(\text{Right})$ **확률 슬라이더**, **Baseline **$J(\theta)$** 기준선 슬라이더**, 그리고 **KL Penalty 계수 **$\beta$** 슬라이더**를 직접 조정하며 **정책 수렴과 다양성 보존 원리를 정밀 검증**할 수 있다.
+다음 Policy Gradient 시뮬레이터에서 탐색 시의$P(\text{Right})$ 확률, Baseline $J(\theta)$, KL Penalty 계수 $\beta$를 직접 조정한 후 로봇으로 경로 탐색을 진행하며 보상에 따라 설명했던 이론대로 학습이 진행되는 과정을 시뮬레이션할 수 있다.
 
 <br/>
 
@@ -232,28 +221,28 @@ policy_gradient_step(sample_state, reward_from_model=10.0)
 
 <br/>
 
-### Summary
+### Comparison
 
-본 문서에서 다룬 LLM 학습 파이프라인과 Policy Gradient의 핵심 특징을 요약하면 다음과 같다.
+마지막으로 강화학습의 Policy Gradient를 조금 더 잘 이해하기 위해, 앞 단계에서 이루어지는 사전학습과 SFT와 비교하여 핵심 특징을 요약해보면 다음과 같다.
 
 
 | 구분                          | 사전 학습 (Pre-training)               | 지도 미세 조정 (SFT)                     | 강화학습 (Policy Gradient / RLHF)                         |
 | :--------------------------- | :---------------------------------- | :---------------------------------- | :----------------------------------------------------- |
 | <strong>학습 목표</strong>      | 다음 토큰 예측 (Next Token)              | 정답 대화 모방 (Instruction)             | 인간 선호도 정렬 및 기대 보상 최대화                                 |
-| <strong>손실 / 보상 신호</strong> | Cross-Entropy Loss                 | Cross-Entropy Loss                 | 보상 모델 $R(s,a)$ 스칼라 스코어                                |
+| <strong>손실이나 보상 신호</strong> | Cross-Entropy Loss                 | Cross-Entropy Loss                 | 보상 모델 $R(s,a)$ 스칼라 스코어                                |
 | <strong>역전파 메커니즘</strong>   | 오차 $L$의 직접 역전파 ($\nabla_\theta L$) | 오차 $L$의 직접 역전파 ($\nabla_\theta L$) | 확률 밀도 로그 미분 ($\nabla_\theta \log \pi_\theta \cdot R$) |
 | <strong>핵심 한계 및 역할</strong> | 무분별한 텍스트 지식 습득                     | 단일 정답 강제 &amp; 표면적 모방              | 확률 분포 이동을 통한 답변 품질 최적화                                |
 
 
-<br/>
+
 
 ### References
 
 <br/>
 
-- **Policy Gradient Methods for Reinforcement Learning with Function Approximation** - Sutton et al. (1999) [(Link)](https://papers.nips.cc/paper/1721-policy-gradient-methods-for-reinforcement-learning-with-function-approximation.pdf)
-- **Deep Reinforcement Learning from Human Preferences** - Christiano et al. (2017) [(Link)](https://arxiv.org/abs/1706.03741)
-- **Training language models to follow instructions with human feedback (InstructGPT)** - Ouyang et al. (2022) [(Link)](https://arxiv.org/abs/2203.02155)
+- <strong>Policy Gradient Methods for Reinforcement Learning with Function Approximation</strong> - Sutton et al. (1999) [(Link)](https://papers.nips.cc/paper/1721-policy-gradient-methods-for-reinforcement-learning-with-function-approximation.pdf)
+- <strong>Deep Reinforcement Learning from Human Preferences</strong> - Christiano et al. (2017) [(Link)](https://arxiv.org/abs/1706.03741)
+- <strong>Training language models to follow instructions with human feedback (InstructGPT)</strong> - Ouyang et al. (2022) [(Link)](https://arxiv.org/abs/2203.02155)
 
 </SectionSlider>
 
