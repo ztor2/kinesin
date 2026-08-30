@@ -1,0 +1,301 @@
+---
+// src/components/policy-gradient/ProbabilityElevationDiagram.astro
+---
+
+<div class="not-content elevation-diagram-wrapper">
+  <!-- 상단 간결한 한글 범례 (Legend) -->
+  <div class="elevation-legend">
+    <div class="legend-item">
+      <span class="legend-line initial-line"></span>
+      <span class="legend-text gmarket-font">초기 정책</span>
+    </div>
+    <div class="legend-item">
+      <span class="legend-line updated-line"></span>
+      <span class="legend-text gmarket-font">최적화 정책</span>
+    </div>
+  </div>
+
+  <div class="svg-container">
+    <svg viewBox="0 0 660 215" class="elevation-svg" preserveAspectRatio="xMidYMid meet">
+      <defs>
+        <!-- 중립적인 인디고/슬레이트 곡선 그라디언트 -->
+        <linearGradient id="neutralCurveGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" stop-color="#6366f1" stop-opacity="0.22" />
+          <stop offset="70%" stop-color="#6366f1" stop-opacity="0.05" />
+          <stop offset="100%" stop-color="#6366f1" stop-opacity="0.0" />
+        </linearGradient>
+      </defs>
+
+      <!-- 1. 단순화된 X/Y 축 라인 & 화살표 머리 (상단 안전 마진 확보) -->
+      <line x1="50" y1="175" x2="615" y2="175" class="axis-line" stroke-width="1.5" />
+      <polygon points="622,175 613,171 613,179" class="axis-arrow-head" />
+
+      <line x1="50" y1="175" x2="50" y2="28" class="axis-line" stroke-width="1.5" />
+      <polygon points="50,20 46,30 54,30" class="axis-arrow-head" />
+
+      <!-- 축 라벨 (Y축 라벨 잘림 방지 위치 보정) -->
+      <text x="50" y="15" class="axis-label" text-anchor="middle">확률 P(a)</text>
+      <text x="622" y="195" class="axis-label" text-anchor="end">응답 공간 (a)</text>
+
+      <!-- 2. 초기 확률 분포 (점선 곡선) -->
+      <path
+        d="M 50 142 C 120 128, 160 112, 190 112 C 240 112, 360 130, 440 134 C 490 136, 550 140, 605 142"
+        fill="none"
+        class="curve-initial"
+        stroke-width="1.5"
+        stroke-dasharray="4 4"
+      />
+
+      <!-- 3. Policy Gradient 후 확률 분포 (중립적 인디고/슬레이트 실선 곡선) -->
+      <!-- 곡선 영역 채우기 -->
+      <path
+        d="M 50 175 L 50 168 C 110 168, 150 46, 190 46 C 230 46, 270 160, 350 163 C 390 164, 415 168, 440 168 C 480 168, 540 168, 605 170 L 605 175 Z"
+        fill="url(#neutralCurveGrad)"
+      />
+      <!-- 메인 실선 곡선 -->
+      <path
+        d="M 50 168 C 110 168, 150 46, 190 46 C 230 46, 270 160, 350 163 C 390 164, 415 168, 440 168 C 480 168, 540 168, 605 170"
+        fill="none"
+        class="curve-updated"
+        stroke-width="2.5"
+      />
+
+      <!-- 4. 고보상 영역 (x: 190): 초기 점선(y:112) ➔ 실선 정점(y:46) 상승 화살표 막대 -->
+      <!-- 시작점 앵커 -->
+      <circle cx="190" cy="112" r="2.5" fill="#94a3b8" />
+      <!-- 세로 화살표 선 -->
+      <line x1="190" y1="112" x2="190" y2="57" stroke="#059669" stroke-width="3" stroke-linecap="round" />
+      <!-- 화살표 머리 -->
+      <polygon points="190,46 183.5,58 196.5,58" fill="#059669" />
+      
+      <!-- 상승 뱃지 (가로 컴팩트 & 폰트 확대 & 가독성 강화) -->
+      <g transform="translate(190, 26)">
+        <rect x="-46" y="-20" width="92" height="22" rx="5" class="tag-good-bg" />
+        <text x="0" y="-5" class="tag-good-text gmarket-font" text-anchor="middle">밀도 상승 &uarr;</text>
+      </g>
+      <!-- X축 하단 라벨 및 가이드선 -->
+      <line x1="190" y1="114" x2="190" y2="175" class="guide-line" stroke-dasharray="2 2" />
+      <text x="190" y="195" class="action-name good-name gmarket-font" text-anchor="middle">선호 응답 (good)</text>
+
+      <!-- 5. 저보상 영역 (x: 440): 초기 점선(y:134) ➔ 실선 바닥(y:168) 하강 화살표 막대 -->
+      <!-- 시작점 앵커 -->
+      <circle cx="440" cy="134" r="2.5" fill="#94a3b8" />
+      <!-- 세로 화살표 선 -->
+      <line x1="440" y1="134" x2="440" y2="157" stroke="#e11d48" stroke-width="3" stroke-linecap="round" />
+      <!-- 화살표 머리 -->
+      <polygon points="440,168 433.5,156 446.5,156" fill="#e11d48" />
+      
+      <!-- 하강 뱃지 (가로 컴팩트 & 폰트 확대 & 가독성 강화) -->
+      <g transform="translate(440, 114)">
+        <rect x="-46" y="-20" width="92" height="22" rx="5" class="tag-bad-bg" />
+        <text x="0" y="-5" class="tag-bad-text gmarket-font" text-anchor="middle">밀도 억제 &darr;</text>
+      </g>
+      <!-- X축 하단 라벨 및 가이드선 -->
+      <line x1="440" y1="169" x2="440" y2="175" class="guide-line" stroke-dasharray="2 2" />
+      <text x="440" y="195" class="action-name bad-name gmarket-font" text-anchor="middle">비선호 응답 (bad)</text>
+    </svg>
+  </div>
+</div>
+
+<style>
+  .gmarket-font {
+    font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
+  }
+
+  .elevation-diagram-wrapper {
+    width: 100%;
+    margin: 1.25rem 0;
+    padding: 20px 20px 14px 20px;
+    border-radius: 16px;
+    border: 1px solid var(--sl-color-hairline, #e2e8f0);
+    background-color: var(--sl-color-bg-nav, #ffffff);
+    box-shadow: 0 4px 14px rgba(0, 0, 0, 0.03);
+    box-sizing: border-box;
+  }
+
+  :root[data-theme='dark'] .elevation-diagram-wrapper {
+    border-color: #334155;
+    background-color: rgba(15, 23, 42, 0.6);
+    box-shadow: 0 4px 18px rgba(0, 0, 0, 0.35);
+  }
+
+  /* 상단 간결한 범례 (Legend) */
+  .elevation-legend {
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 10px;
+    padding-bottom: 8px;
+    border-bottom: 1px dashed var(--sl-color-hairline, #f1f5f9);
+  }
+
+  :root[data-theme='dark'] .elevation-legend {
+    border-bottom-color: rgba(51, 65, 85, 0.7);
+  }
+
+  .legend-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .legend-line {
+    width: 16px;
+    height: 0;
+    display: inline-block;
+  }
+
+  .initial-line {
+    border-top: 2px dashed #94a3b8;
+  }
+
+  .updated-line {
+    border-top: 2.5px solid #6366f1;
+  }
+
+  :root[data-theme='dark'] .updated-line {
+    border-top-color: #818cf8;
+  }
+
+  .legend-text {
+    font-size: 11.5px;
+    font-weight: 700;
+    color: var(--sl-color-text, #475569);
+  }
+
+  :root[data-theme='dark'] .legend-text {
+    color: #cbd5e1;
+  }
+
+  .svg-container {
+    width: 100%;
+    position: relative;
+  }
+
+  .elevation-svg {
+    width: 100%;
+    height: auto;
+    display: block;
+  }
+
+  .axis-line {
+    stroke: var(--sl-color-hairline, #cbd5e1);
+  }
+
+  :root[data-theme='dark'] .axis-line {
+    stroke: #475569;
+  }
+
+  .axis-arrow-head {
+    fill: #94a3b8;
+  }
+
+  :root[data-theme='dark'] .axis-arrow-head {
+    fill: #64748b;
+  }
+
+  .axis-label {
+    font-size: 11px;
+    font-weight: 700;
+    fill: #64748b;
+    letter-spacing: -0.01em;
+  }
+
+  :root[data-theme='dark'] .axis-label {
+    fill: #94a3b8;
+  }
+
+  .guide-line {
+    stroke: var(--sl-color-hairline, #cbd5e1);
+  }
+
+  :root[data-theme='dark'] .guide-line {
+    stroke: #475569;
+  }
+
+  /* 초기 곡선 (중립 회색 점선) */
+  .curve-initial {
+    stroke: #94a3b8;
+  }
+
+  :root[data-theme='dark'] .curve-initial {
+    stroke: #64748b;
+  }
+
+  /* 최적화 후 실선 곡선: 중립적인 인디고 / 슬레이트 블루 */
+  .curve-updated {
+    stroke: #6366f1;
+  }
+
+  :root[data-theme='dark'] .curve-updated {
+    stroke: #818cf8;
+  }
+
+  /* 고보상 뱃지 (에메랄드) - 크기 및 가독성 업그레이드 */
+  .tag-good-bg {
+    fill: #ecfdf5;
+    stroke: #10b981;
+    stroke-width: 1.3;
+  }
+
+  :root[data-theme='dark'] .tag-good-bg {
+    fill: rgba(6, 78, 59, 0.85);
+    stroke: #34d399;
+  }
+
+  .tag-good-text {
+    font-size: 11px;
+    font-weight: 700;
+    fill: #047857;
+    letter-spacing: -0.01em;
+  }
+
+  :root[data-theme='dark'] .tag-good-text {
+    fill: #6ee7b7;
+  }
+
+  /* 저보상 뱃지 (로즈 레드) - 크기 및 가독성 업그레이드 */
+  .tag-bad-bg {
+    fill: #fff1f2;
+    stroke: #f43f5e;
+    stroke-width: 1.3;
+  }
+
+  :root[data-theme='dark'] .tag-bad-bg {
+    fill: rgba(136, 19, 55, 0.8);
+    stroke: #fb7185;
+  }
+
+  .tag-bad-text {
+    font-size: 11px;
+    font-weight: 700;
+    fill: #be123c;
+    letter-spacing: -0.01em;
+  }
+
+  :root[data-theme='dark'] .tag-bad-text {
+    fill: #fecdd3;
+  }
+
+  .action-name {
+    font-size: 11.5px;
+    font-weight: 700;
+  }
+
+  .good-name {
+    fill: #047857;
+  }
+
+  :root[data-theme='dark'] .good-name {
+    fill: #34d399;
+  }
+
+  .bad-name {
+    fill: #be123c;
+  }
+
+  :root[data-theme='dark'] .bad-name {
+    fill: #fb7185;
+  }
+</style>

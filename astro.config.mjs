@@ -36,36 +36,43 @@ export default defineConfig({
       sidebar: [
           {
               label: 'Architecture',
-              autogenerate: { directory: 'architecture' },
+              items: [{ autogenerate: { directory: 'architecture' } }]
           },
           {
               label: 'Datasets',
-              autogenerate: { directory: 'datasets' },
+              items: [{ autogenerate: { directory: 'datasets' } }]
           },
           {
               label: 'Benchmark',
-              autogenerate: { directory: 'benchmark' },
+              items: [{ autogenerate: { directory: 'benchmark' } }]
           },
           {
               label: 'Papers',
-              autogenerate: { directory: 'papers' },
+              items: [{ autogenerate: { directory: 'papers' } }]
           },
       ],
-      }), react()],
-markdown: {
+      expressiveCode: true,
+    }), react()],
+  markdown: {
     remarkPlugins: [remarkMath],
     rehypePlugins: [
-    rehypeKatex,
-    [
+      rehypeKatex,
+      [
         rehypeExternalLinks,
         {
-        target: '_blank',
-        rel: ['noopener', 'noreferrer'],
+          target: '_blank',
+          rel: ['noopener', 'noreferrer'],
         },
+      ],
     ],
-    ],
-},
+  },
   vite: {
     plugins: [tailwindcss()],
+    server: {
+      watch: {
+        usePolling: true,
+        interval: 100,
+      },
+    },
   },
 });

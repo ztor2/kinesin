@@ -43,6 +43,41 @@
   --sl-font-heading: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
 }
 
+/* 🖥️ 좌측 사이드바 접힘 모드 (.sidebar-collapsed) 전역 레이아웃 제어 */
+html.sidebar-collapsed {
+  --sl-sidebar-width: 0rem !important;
+}
+
+@media (min-width: 50rem) {
+  /* 사이드바 패널 트랜지션 및 숨김 */
+  .sidebar-pane {
+    transition: transform 0.25s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease !important;
+  }
+
+  html.sidebar-collapsed .sidebar-pane {
+    transform: translateX(-100%) !important;
+    opacity: 0 !important;
+    pointer-events: none !important;
+    visibility: hidden !important;
+  }
+
+  /* 메인 콘텐츠 패널 확장 */
+  .main-pane {
+    transition: margin-inline-start 0.25s cubic-bezier(0.4, 0, 0.2, 1), width 0.25s ease !important;
+  }
+
+  html.sidebar-collapsed .main-pane {
+    margin-inline-start: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  html.sidebar-collapsed .content-panel {
+    max-width: 72rem !important;
+    margin: 0 auto !important;
+  }
+}
+
 body {
   font-family: 'Plus Jakarta Sans', 'Noto Sans KR', system-ui, -apple-system, sans-serif;
 }
@@ -123,9 +158,20 @@ h1#_top {
 }
 
 :root[data-theme='dark'] .sl-markdown-content blockquote:not(:where(.not-content *)) {
-  border-inline-start-color: #818cf8 !important; /* Indigo 400 */
-  background-color: rgba(30, 27, 75, 0.6) !important; /* Indigo-950 */
-  color: #f1f5f9 !important;
+  border-inline-start-color: #a5b4fc !important; /* Brighter Indigo 300 for high visibility */
+  background-color: rgba(99, 102, 241, 0.15) !important; /* Slightly brighter, clearer Indigo tint */
+  color: #f8fafc !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* <strong> 핵심 강조 텍스트 전역 컬러 포인트 스타일 (에메랄드/그린 계열) */
+.sl-markdown-content strong:not(:where(.not-content *)) {
+  color: #059669 !important; /* 라이트 모드: 깊이감 있고 선명한 에메랄드 그린 (Emerald-600) */
+  font-weight: 700 !important;
+}
+
+:root[data-theme='dark'] .sl-markdown-content strong:not(:where(.not-content *)) {
+  color: #34d399 !important; /* 다크 모드: 어두운 배경에서 화사하게 빛나는 민트 에메랄드 (Emerald-400) */
 }
 
 /* 사이트 제목 타이틀 색상 및 폰트 변경 */

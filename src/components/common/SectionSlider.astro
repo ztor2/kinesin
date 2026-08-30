@@ -227,6 +227,78 @@
       background-color: #4338ca;
     }
 
+    /* 📸 Instagram Story 스타일 분할 세그먼트 프로그레스 바 */
+    .story-progress-container {
+      display: flex !important;
+      align-items: center !important;
+      justify-content: stretch !important;
+      gap: 6px !important;
+      width: 100% !important;
+      margin: 0 0 1.25rem 0 !important;
+      padding: 6px 0 !important;
+      box-sizing: border-box !important;
+    }
+
+    .story-progress-segment {
+      flex: 1 1 0% !important;
+      height: 5px !important;
+      min-height: 5px !important;
+      max-height: 5px !important;
+      border-radius: 999px !important;
+      background-color: rgba(203, 213, 225, 0.6) !important; /* Slate-300 고대비 */
+      cursor: pointer !important;
+      position: relative !important;
+      overflow: hidden !important;
+      box-sizing: border-box !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      top: 0 !important;
+      transform: none !important;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+    }
+
+    :root[data-theme='dark'] .story-progress-segment {
+      background-color: rgba(51, 65, 85, 0.8) !important; /* Slate-700 고대비 */
+    }
+
+    .story-progress-segment:hover {
+      height: 7px !important;
+      opacity: 0.95 !important;
+    }
+
+    .story-progress-fill {
+      height: 100% !important;
+      width: 0% !important;
+      background: linear-gradient(90deg, #3b82f6, #6366f1) !important;
+      border-radius: 999px !important;
+      transition: width 0.25s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      display: block !important;
+    }
+
+    .story-progress-segment.is-completed {
+      background-color: #6366f1 !important;
+    }
+
+    .story-progress-segment.is-completed .story-progress-fill {
+      width: 100% !important;
+      background: #6366f1 !important;
+    }
+
+    .story-progress-segment.is-active {
+      background-color: rgba(99, 102, 241, 0.3) !important;
+    }
+
+    .story-progress-segment.is-active .story-progress-fill {
+      width: 100% !important;
+      background: linear-gradient(90deg, #3b82f6, #6366f1) !important;
+      box-shadow: 0 0 10px rgba(99, 102, 241, 0.7) !important;
+    }
+
+    :root[data-theme='dark'] .story-progress-segment.is-active .story-progress-fill {
+      background: linear-gradient(90deg, #60a5fa, #818cf8) !important;
+      box-shadow: 0 0 10px rgba(129, 140, 248, 0.8) !important;
+    }
+
     /* 전체화면 보기 전용 모드 CSS 스타일 (Zen Fullscreen Overlay - iOS Safari 호환 및 가로 흔들림 차단) */
     .section-slider-root.is-fullscreen {
       position: fixed !important;
@@ -344,10 +416,8 @@
         </button>
       </div>
 
-      {/* 2. 상단 프로그레스 바 */}
-      <div style="height: 4px; width: 100%; background-color: var(--sl-color-hairline, #e2e8f0); border-radius: 2px; margin-bottom: 1.25rem; overflow: hidden;">
-        <div id="slider-progress-bar" style="height: 100%; width: 0%; background: linear-gradient(90deg, #3b82f6, #6366f1); transition: width 0.3s ease;"></div>
-      </div>
+      {/* 2. Instagram Story 스타일 분할 세그먼트 프로그레스 바 (클릭 점프 지원) */}
+      <div id="slider-story-progress" class="story-progress-container" role="progressbar" aria-label="카드 탐색 진행 상태"></div>
 
       {/* 3. 카드 본문 콘텐츠 뷰포트 */}
       <div id="slider-rendered-viewport"></div>
@@ -391,7 +461,7 @@
       const sliderRoot = document.getElementById('section-slider-root');
       
       const numIndicators = document.querySelectorAll('.slider-num-indicator');
-      const progressBar = document.getElementById('slider-progress-bar');
+      const storyProgress = document.getElementById('slider-story-progress');
       
       const btnsPrev = document.querySelectorAll('.slider-btn-prev');
       const btnsNext = document.querySelectorAll('.slider-btn-next');
@@ -443,12 +513,68 @@
       }
 
       let currentIndex = 0;
+
+      // 🔄 새로고침 및 URL 링크 복원: 1) URL Hash (#heading-id) 우선 확인
+      const currentHash = window.location.hash ? decodeURIComponent(window.location.hash.substring(1)) : '';
+      if (currentHash) {
+        const foundIndex = slides.findIndex(s => s.id === currentHash);
+        if (foundIndex !== -1) {
+          currentIndex = foundIndex;
+        }
+      }
+
+      // 2) URL Hash가 없으면 sessionStorage 확인
+      if (currentIndex === 0 && !currentHash) {
+        try {
+          const savedIndex = sessionStorage.getItem('kinesin_slide_' + window.location.pathname);
+          if (savedIndex !== null) {
+            const parsed = parseInt(savedIndex, 10);
+            if (!isNaN(parsed) && parsed >= 0 && parsed < slides.length) {
+              currentIndex = parsed;
+            }
+          }
+        } catch (e) {}
+      }
+
       let isSlideMode = true;
       let isFullscreenMode = false;
 
       scrollView.innerHTML = rawContent.innerHTML;
 
-      // 🔗 1. 카드 파트 ➔ 우측 목차(TOC) 하이라이트 동기화 함수
+      // 📸 1. Instagram Story 분할 세그먼트 생성 및 클릭 이벤트 등록
+      function renderStorySegments() {
+        if (!storyProgress) return;
+        storyProgress.innerHTML = '';
+
+        slides.forEach((slide, idx) => {
+          const segment = document.createElement('div');
+          segment.className = 'story-progress-segment';
+          segment.setAttribute('title', `${idx + 1}. ${slide.title} (클릭하여 이동)`);
+          segment.setAttribute('aria-label', `파트 ${idx + 1}: ${slide.title}`);
+          segment.style.cssText = 'flex: 1 1 0%; height: 5px; min-height: 5px; max-height: 5px; border-radius: 999px; cursor: pointer; position: relative; overflow: hidden; background-color: rgba(203, 213, 225, 0.7); margin: 0; padding: 0; display: block; box-sizing: border-box;';
+          
+          const fill = document.createElement('div');
+          fill.className = 'story-progress-fill';
+          fill.style.cssText = 'height: 100%; width: 0%; border-radius: 999px; transition: width 0.25s ease; display: block; margin: 0; padding: 0;';
+          segment.appendChild(fill);
+
+          // 세그먼트 직접 클릭 시 해당 슬라이드로 점프
+          segment.addEventListener('click', (e) => {
+            e.stopPropagation();
+            if (!isSlideMode) return;
+            if (currentIndex !== idx) {
+              currentIndex = idx;
+              updateControls(true);
+            }
+          });
+
+          storyProgress.appendChild(segment);
+        });
+      }
+
+      renderStorySegments();
+
+      // 🔗 2. 카드 파트 ➔ 우측 목차(TOC) 하이라이트 동기화 함수
       function syncTocHighlight(headingId) {
         const tocLinks = document.querySelectorAll('starlight-toc a, mobile-starlight-toc a, nav[aria-label="Table of contents"] a');
         if (!tocLinks || tocLinks.length === 0) return;
@@ -478,7 +604,41 @@
           const numText = `${currentIndex + 1} / ${slides.length}`;
           numIndicators.forEach(el => el.textContent = numText);
 
-          progressBar.style.width = `${((currentIndex + 1) / slides.length) * 100}%`;
+          // 📸 Story 세그먼트 상태 갱신 (완료 / 활성 / 대기)
+          if (storyProgress) {
+            const segments = storyProgress.querySelectorAll('.story-progress-segment');
+            const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+            const defaultTrackBg = isDark ? 'rgba(51, 65, 85, 0.8)' : 'rgba(203, 213, 225, 0.7)';
+
+            segments.forEach((seg, idx) => {
+              const fill = seg.querySelector('.story-progress-fill');
+              seg.classList.remove('is-completed', 'is-active');
+
+              if (idx < currentIndex) {
+                seg.classList.add('is-completed');
+                seg.style.backgroundColor = '#6366f1';
+                if (fill) {
+                  fill.style.width = '100%';
+                  fill.style.background = '#6366f1';
+                  fill.style.boxShadow = 'none';
+                }
+              } else if (idx === currentIndex) {
+                seg.classList.add('is-active');
+                seg.style.backgroundColor = isDark ? 'rgba(99, 102, 241, 0.3)' : 'rgba(99, 102, 241, 0.2)';
+                if (fill) {
+                  fill.style.width = '100%';
+                  fill.style.background = isDark ? 'linear-gradient(90deg, #60a5fa, #818cf8)' : 'linear-gradient(90deg, #3b82f6, #6366f1)';
+                  fill.style.boxShadow = isDark ? '0 0 10px rgba(129, 140, 248, 0.8)' : '0 0 10px rgba(99, 102, 241, 0.7)';
+                }
+              } else {
+                seg.style.backgroundColor = defaultTrackBg;
+                if (fill) {
+                  fill.style.width = '0%';
+                  fill.style.boxShadow = 'none';
+                }
+              }
+            });
+          }
 
           const isFirst = currentIndex === 0;
           const isLast = currentIndex === slides.length - 1;
@@ -507,7 +667,16 @@
           // 목차(TOC) 하이라이트 실시간 연동
           if (slide.id) {
             syncTocHighlight(slide.id);
+            // 🔄 URL Hash 동기화 (히스토리 오염 없이 주소창 업데이트)
+            try {
+              history.replaceState(null, '', '#' + slide.id);
+            } catch (e) {}
           }
+
+          // 🔄 sessionStorage 에 현재 카드 인덱스 보관 (새로고침 유지)
+          try {
+            sessionStorage.setItem('kinesin_slide_' + window.location.pathname, currentIndex.toString());
+          } catch (e) {}
 
           // 페이지 전환 시 카드 상단으로 자동 매끄러운 스크롤 이동
           if (shouldScrollToTop && cardElement && !isFullscreenMode) {
@@ -659,6 +828,19 @@
 
       // TOC 링크 터치/클릭 역방향 스위칭 바인딩
       bindTocClickEvents();
+
+      // 🔄 URL 해시 변경(브라우저 뒤로가기/앞으로가기 또는 목차 링크 이동) 감지
+      window.addEventListener('hashchange', function() {
+        if (!isSlideMode) return;
+        const hash = window.location.hash ? decodeURIComponent(window.location.hash.substring(1)) : '';
+        if (hash) {
+          const targetIndex = slides.findIndex(s => s.id === hash);
+          if (targetIndex !== -1 && targetIndex !== currentIndex) {
+            currentIndex = targetIndex;
+            updateControls(false);
+          }
+        }
+      });
 
       // -------------------------------------------------------------
       // 📱 스마트 터치 스와이프 (스크롤 가능 요소 및 시뮬레이터 제외 가드)

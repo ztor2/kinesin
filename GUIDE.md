@@ -301,6 +301,42 @@ MDX 내 대화형 시각화 컴포넌트(SVG 다이어그램, 캔버스, Range �
   긴 수식 블록이나 분수/수열/체인 룰 곱셈식이 모바일 화면 폭을 넘을 때 잘려서 잘 안 보이는 현상을 보정합니다.
   - **규칙**: `src/styles/custom.css` 내 전역 `.katex-display { overflow-x: auto !important; max-width: 100% !important; -webkit-overflow-scrolling: touch; }` 규칙을 명시하여 모바일 환경에서 수식이 잘리지 않고 손가락 터치로 쓱 가로 스크롤하여 전체 식을 확인할 수 있도록 처리합니다.
 
+### 11. 아티클별 자산 및 시각화 컴포넌트 네임스페이스 경로 규칙 (CRITICAL)
 
+프로젝트 확장 시 자산 및 시각화 컴포넌트가 모호하게 섞이거나 파편화되는 현상을 방지하기 위해 **아티클 슬러그(제목) 기반 1:1 모듈 네임스페이스 규칙**을 엄격히 준수합니다.
 
+- **이미지 자산 경로 (`src/assets/<article-slug>/`)**:
+  특정 아티클에 사용되는 고유 이미지, 아바타, 다이어그램 리소스는 `public/`이나 임의 폴더가 아닌 **`src/assets/<article-slug>/` 하위 디렉토리를 생성하여 보관**합니다.
+  - **예시**: `src/assets/policy-gradient/robot_avatar.jpg`
+  - **효과**: 번들러(Vite/Astro)를 통한 이미지 정적 최적화 및 아티클 단위 자산 격리가 보장됩니다.
 
+- **시각화 컴포넌트 경로 (`src/components/<article-slug>/`)**:
+  특정 아티클을 지원하기 위해 작성된 대화형 React/Astro 시각화 컴포넌트는 `src/components/rl/` 등의 범용 디렉토리가 아닌 **`src/components/<article-slug>/` 하위 디렉토리에 1:1로 배치**합니다.
+  - **예시**: `src/components/policy-gradient/PolicyGradientVisualizer.jsx`
+  - **효과**: MDX 문서(`src/content/docs/architecture/policy-gradient.mdx`)와 시각화 컴포넌트 간의 직관적인 1:1 연동 및 유지보수 명확성이 확보됩니다.
+
+### 12. 웹사이트 통일 컬러 팔레트 가이드 (Color Palette Design System)
+
+웹사이트 전반의 시각적 일관성과 아이덴티티를 유지하기 위해 정립된 표준 컬러 팔레트입니다. 새로운 컴포넌트, 텍스트 강조, UI 버튼 작성 시 본 색상 명세를 준수합니다.
+
+| 분류 | 역할 | 라이트 모드 (Light) | 다크 모드 (Dark) | 주요 사용처 |
+| :--- | :--- | :--- | :--- | :--- |
+| **Emerald Green** | 핵심 텍스트 강조 & 최적 보상 | `#059669` (Emerald-600) | `#34d399` (Emerald-400) | `<strong>` 본문 키워드, 최적 노드(`RR`), Kinesin 소포체 |
+| **Warm Orange** | 주요 액션 & 모드 조작 포인트 | `#f97316` (Orange-500) | `#fb923c` (Orange-400) | '전체화면' 액션 버튼, 슬라이더 조작 포인트, 핵심 알림 |
+| **Royal Indigo** | 인용구 & 정보 블록 강조선 | `#6366f1` (Indigo-500) | `#a5b4fc` (Indigo-300) | `<blockquote>` 좌측 수직 강조선, 배경 틴트 |
+| **Deep Blue** | 인터랙티브 링크 & 확률 파라미터 | `#2563eb` (Blue-600) | `#60a5fa` (Blue-400) | $P(\text{Right})$ 확률 슬라이더, 중간 보상 노드(`LR`, `RL`) |
+| **Purple / Violet** | 안전 제약 & 보조 파라미터 | `#7c3aed` (Violet-600) | `#a78bfa` (Violet-400) | KL Penalty ($\beta$) 슬라이더, 에피소드 카운터 `#Count` |
+| **Neutral Slate** | 본문 및 베이스 라인 | `#1e293b` (Slate-800) | `#f8fafc` (Slate-50) | 본문 텍스트, 카드 테두리(`border`), 비활성 트랙 |
+
+- **원칙**: 본문 텍스트 강조는 **Emerald Green**, 상단 액션 인터랙션은 **Warm Orange**, 정보성 인용구는 **Indigo**로 역할을 명확히 분리하여 색상 과다 사용을 방지합니다.
+
+### 13. 카드 슬라이더 및 스토리 분할 진행 바 가이드 (SectionSlider & Story Progress)
+
+아티클을 숏폼 플래시카드(Flashcard) 형태로 직관적으로 소비할 수 있도록 `<SectionSlider>` 공용 컴포넌트를 활용합니다.
+
+- **Instagram Story 분할 프로그레스 바**:
+  - `H2` 및 `H3` 헤딩을 기준으로 카드가 자동 분할되며, 상단에 세그먼트 막대(Segmented Bar)가 생성됩니다.
+  - **다이렉트 점프**: 독자가 특정 세그먼트 막대를 클릭하면 해당 파트로 1초 만에 즉시 건너뛸 수 있습니다.
+  - **호버 툴팁**: 각 세그먼트에 마우스를 올리면 해당 파트의 제목(`Part N: Title`)이 툴팁으로 표시됩니다.
+- **작성 원칙**:
+  - 1개 카드당 1개의 핵심 개념(One Card, One Idea)을 다루며, 뷰포트 높이 내에서 스크롤 없이 완결되도록 간결한 논문체(~함, ~단계, ~다룸)로 서술합니다.
