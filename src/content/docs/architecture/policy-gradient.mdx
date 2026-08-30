@@ -10,7 +10,7 @@ import ProbabilityElevationDiagram from '../../../components/policy-gradient/Pro
 
 ### Intro
 
-> <i><strong>Policy Gradient</strong>는 강화학습에서 높은 보상을 획득한 응답에 대한 <strong>확률 밀도(Probability Mass)를 변화</strong>시켜 모델을 최적화하는 핵심 수학적 원리이다.</i>
+> <i><strong>Policy Gradient</strong>는 강화학습에서 높은 보상을 획득한 응답에 대한 <strong>확률 밀도(Probability Mass)를 변화</strong>시켜 모델을 최적화하는 방법이다.</i>
 
 <ProbabilityElevationDiagram />
 
@@ -160,7 +160,7 @@ $$
 
 <div className="not-content my-6 w-full clear-both">
 
-  <ProbabilityMassSimulator client:visible />
+  <ProbabilityMassSimulator client:load />
 
 </div>
 
@@ -240,9 +240,9 @@ policy_gradient_step(sample_state, reward_from_model=10.0)
 
 <br/>
 
-- <strong>Policy Gradient Methods for Reinforcement Learning with Function Approximation</strong> - Sutton et al. (1999) [(Link)](https://papers.nips.cc/paper/1721-policy-gradient-methods-for-reinforcement-learning-with-function-approximation.pdf)
-- <strong>Deep Reinforcement Learning from Human Preferences</strong> - Christiano et al. (2017) [(Link)](https://arxiv.org/abs/1706.03741)
-- <strong>Training language models to follow instructions with human feedback (InstructGPT)</strong> - Ouyang et al. (2022) [(Link)](https://arxiv.org/abs/2203.02155)
+- Policy Gradient Methods for Reinforcement Learning with Function Approximation - Sutton et al. (1999) [(Link)](https://papers.nips.cc/paper/1721-policy-gradient-methods-for-reinforcement-learning-with-function-approximation.pdf)
+- Deep Reinforcement Learning from Human Preferences - Christiano et al. (2017) [(Link)](https://arxiv.org/abs/1706.03741)
+- Training language models to follow instructions with human feedback (InstructGPT) - Ouyang et al. (2022) [(Link)](https://arxiv.org/abs/2203.02155)
 
 </SectionSlider>
 

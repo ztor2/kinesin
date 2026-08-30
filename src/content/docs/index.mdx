@@ -2,6 +2,7 @@
 title: About
 description: introduction page
 ---
+  <RandomPostButton />
 
 - Knowledge archive on Machine Learning, Artificial Intelligence.
 - AI is used mainly for visual components, not for the entire content.
@@ -9,13 +10,16 @@ description: introduction page
 
 import { Image } from 'astro:assets';
 import kinesinLogo from '../../assets/kinesin.webp';
+import RandomPostButton from '../../components/common/RandomPostButton.astro';
 
-<div style={{ display: 'flex', justifyContent: 'center', marginTop: '2rem' }}>
+<div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', marginTop: '2.5rem' }}>
+
   <Image 
     src={kinesinLogo} 
     alt="Kinesin" 
-    width="150" 
-    style={{ borderRadius: '20px', boxShadow: '0 4px 8px rgba(0,0,0,0.1)' }} 
+    width="140" 
+    style={{ borderRadius: '20px', boxShadow: '0 6px 16px rgba(0,0,0,0.08)' }} 
   />
+
 </div>
 
