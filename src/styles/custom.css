@@ -31,15 +31,32 @@
 
 /* src/styles/custom.css */
 
-:root {
-  --sl-color-accent-low: #1e3a8a;
+:root,
+:root[data-theme='light'] {
+  --sl-color-accent-low: #fef3c7;
   --sl-color-accent: #3b82f6;
-  --sl-color-accent-high: #93c5fd;
+  --sl-color-accent-high: #1d4ed8;
 
-  /* 본문 컨테이너 가로폭을 60rem으로 확장 */
+  --sl-color-bg: #f8f6f0;
+  --sl-color-black: #ffffff;
+  --sl-color-bg-nav: #f2eee5;
+  --sl-color-bg-sidebar: #f5f1e8;
+  --sl-color-bg-inline-code: #eae5d8;
+
+  --sl-color-text: #292524;
+  --sl-color-gray-1: #1c1917;
+  --sl-color-gray-2: #292524;
+  --sl-color-gray-3: #57534e;
+  --sl-color-gray-4: #78716c;
+  --sl-color-gray-5: #a8a29e;
+  --sl-color-gray-6: #e4dfd2;
+  --sl-color-gray-7: #f2eee5;
+
+  --sl-color-hairline: #e4dfd2;
+  --sl-color-hairline-light: #ece7db;
+  --sl-color-hairline-shade: #dad4c5;
+
   --sl-content-width: 60rem !important;
-
-  /* Starlight 전역 제목 폰트 변수 지정 */
   --sl-font-heading: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
 }
 
