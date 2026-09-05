@@ -31,7 +31,15 @@
 
 /* src/styles/custom.css */
 
-:root,
+:root {
+  --sl-color-accent-low: #1e3a8a;
+  --sl-color-accent: #3b82f6;
+  --sl-color-accent-high: #93c5fd;
+
+  --sl-content-width: 60rem !important;
+  --sl-font-heading: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
+}
+
 :root[data-theme='light'] {
   --sl-color-accent-low: #fef3c7;
   --sl-color-accent: #3b82f6;
@@ -55,9 +63,6 @@
   --sl-color-hairline: #e4dfd2;
   --sl-color-hairline-light: #ece7db;
   --sl-color-hairline-shade: #dad4c5;
-
-  --sl-content-width: 60rem !important;
-  --sl-font-heading: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
 }
 
 /* 🖥️ 좌측 사이드바 접힘 모드 (.sidebar-collapsed) 전역 레이아웃 제어 */
