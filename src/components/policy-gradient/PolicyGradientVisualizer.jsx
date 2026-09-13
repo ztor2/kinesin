@@ -18,10 +18,10 @@ export const GraphComparisonVisualizer = () => {
     <div style={{
       width: '100%',
       padding: '24px',
-      borderRadius: '16px',
-      backgroundColor: '#ffffff',
-      border: '1px solid #e2e8f0',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+      borderRadius: '20px',
+      backgroundColor: '#fbf9f5',
+      border: '1px solid #e8e4dc',
+      boxShadow: '0 16px 36px -12px rgba(68, 64, 60, 0.08), 0 0 1px 1px rgba(68, 64, 60, 0.03)',
       boxSizing: 'border-box'
     }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
@@ -386,10 +386,10 @@ export const ProbabilityMassSimulator = () => {
     <div style={{
       width: '100%',
       padding: '24px',
-      borderRadius: '16px',
-      backgroundColor: '#ffffff',
-      border: '1px solid #e2e8f0',
-      boxShadow: '0 4px 20px rgba(0,0,0,0.03)',
+      borderRadius: '20px',
+      backgroundColor: '#fbf9f5',
+      border: '1px solid #e8e4dc',
+      boxShadow: '0 16px 36px -12px rgba(68, 64, 60, 0.08), 0 0 1px 1px rgba(68, 64, 60, 0.03)',
       boxSizing: 'border-box',
       display: 'flex',
       flexDirection: 'column',
