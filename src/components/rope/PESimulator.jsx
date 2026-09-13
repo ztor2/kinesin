@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
+import katex from 'katex';
 
-const SENTENCES = [
-  { id: 'en', label: 'English', tokens: ['The', 'cat', 'sat', 'on', 'the', 'mat'] },
-  { id: 'ko', label: '한국어', tokens: ['귀여운', '고양이가', '이불', '위에', '앉아', '있다'] }
+// 실제 LLM BPE/SentencePiece 토크나이저 규격 반영 (공백 접두어   표기)
+const TOKENS = [
+  { text: 'The', display: 'The', id: 464 },
+  { text: ' cat', display: ' cat', id: 3797 },
+  { text: ' sat', display: ' sat', id: 3348 },
+  { text: ' on', display: ' on', id: 319 },
+  { text: ' the', display: ' the', id: 262 },
+  { text: ' mat', display: ' mat', id: 2603 }
 ];
 
 const BASE_FREQ = 10000;
@@ -10,17 +16,32 @@ const BASE_FREQ = 10000;
 // 각도 계산: pos * BASE^(-2i/d)
 const getAngle = (pos, i, d) => pos * Math.pow(BASE_FREQ, (-2 * i) / d);
 
+// KaTeX 수식 렌더링 헬퍼
+const MathView = ({ math, style }) => {
+  const html = katex.renderToString(math, { throwOnError: false });
+  return (
+    <span 
+      style={{ display: 'inline-flex', alignItems: 'center', ...style }} 
+      dangerouslySetInnerHTML={{ __html: html }} 
+    />
+  );
+};
+
 // 단일 SVG 시계 컴포넌트
 const ClockItem = ({ index, rotated, isRoPE, label, accentColor }) => {
-  const clockSize = 95;
-  const radius = 36;
-  const center = 47.5;
+  const clockSize = 92;
+  const radius = 34;
+  const center = 46;
 
   const baseVector = isRoPE ? [0.8, 0.4] : [0, 1];
   const initialX = center + radius * baseVector[0];
   const initialY = center - radius * baseVector[1];
   const rotatedX = center + radius * rotated[0];
   const rotatedY = center - radius * rotated[1];
+
+  const mathFormula = isRoPE
+    ? `\\mathbf{q}' = [${rotated[0].toFixed(2)},\\, ${rotated[1].toFixed(2)}]`
+    : `\\mathbf{p} = [${rotated[0].toFixed(2)},\\, ${rotated[1].toFixed(2)}]`;
 
   return (
     <div 
@@ -29,76 +50,72 @@ const ClockItem = ({ index, rotated, isRoPE, label, accentColor }) => {
         display: 'flex',
         flexDirection: 'column',
         alignItems: 'center',
-        padding: '12px',
-        borderRadius: '12px',
-        backgroundColor: '#ffffff',
-        border: '1px solid #e2e8f0',
-        boxShadow: '0 2px 4px rgba(0, 0, 0, 0.04)',
-        minWidth: '135px',
-        flex: '1 1 135px',
+        padding: '8px 4px',
+        minWidth: '115px',
+        flex: '1 1 115px',
         boxSizing: 'border-box'
       }}
     >
-      <span style={{ fontSize: '13px', fontWeight: '700', color: '#1e293b', marginBottom: '2px', textAlign: 'center' }}>
+      <span style={{ fontSize: '12.5px', fontWeight: '700', color: '#1e293b', marginBottom: '1px', textAlign: 'center' }}>
         {label}
       </span>
-      <span style={{ fontSize: '11px', color: '#64748b', marginBottom: '8px', fontFamily: 'monospace', fontWeight: '500' }}>
+      <span style={{ fontSize: '10.5px', color: '#64748b', marginBottom: '8px', fontWeight: '500' }}>
         {index === 0 ? '고주파' : index === 1 ? (isRoPE ? '저주파' : '중주파') : '저주파'}
       </span>
 
       <svg 
-        viewBox="0 0 95 95" 
+        viewBox="0 0 92 92" 
         style={{ width: `${clockSize}px`, height: `${clockSize}px`, minWidth: `${clockSize}px`, flexShrink: 0 }}
       >
-        <circle cx={center} cy={center} r={radius + 3} fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.5" />
+        {/* 아이보리 캔버스 위에 선명하게 올라앉는 화이트 다이얼 */}
+        <circle cx={center} cy={center} r={radius + 4} fill="#ffffff" stroke="#cbd5e1" strokeWidth="1.6" />
         
-        <line x1={center} y1={center - radius - 2} x2={center} y2={center - radius + 3} stroke="#94a3b8" strokeWidth="1.5" />
-        <line x1={center + radius + 2} y1={center} x2={center + radius - 3} y2={center} stroke="#94a3b8" strokeWidth="1.5" />
-        <line x1={center} y1={center + radius + 2} x2={center} y2={center + radius - 3} stroke="#94a3b8" strokeWidth="1.5" />
-        <line x1={center - radius - 2} y1={center} x2={center - radius + 3} y2={center} stroke="#94a3b8" strokeWidth="1.5" />
+        {/* 눈금선 */}
+        <line x1={center} y1={center - radius - 2} x2={center} y2={center - radius + 2} stroke="#94a3b8" strokeWidth="1.5" />
+        <line x1={center + radius + 2} y1={center} x2={center + radius - 2} y2={center} stroke="#94a3b8" strokeWidth="1.5" />
+        <line x1={center} y1={center + radius + 2} x2={center} y2={center + radius - 2} stroke="#94a3b8" strokeWidth="1.5" />
+        <line x1={center - radius - 2} y1={center} x2={center - radius + 2} y2={center} stroke="#94a3b8" strokeWidth="1.5" />
 
+        {/* RoPE 초기 벡터 (점선) */}
         {isRoPE && (
           <>
             <line x1={center} y1={center} x2={initialX} y2={initialY} stroke="#c084fc" strokeWidth="1.5" strokeDasharray="3 3" />
-            <circle cx={initialX} cy={initialY} r="3" fill="#c084fc" />
+            <circle cx={initialX} cy={initialY} r="2.5" fill="#c084fc" />
           </>
         )}
 
+        {/* 회전된 벡터 바늘 */}
         <line 
           x1={center} 
           y1={center} 
           x2={rotatedX} 
           y2={rotatedY} 
           stroke={accentColor} 
-          strokeWidth="3" 
+          strokeWidth="2.8" 
           strokeLinecap="round" 
         />
-        <circle cx={rotatedX} cy={rotatedY} r="4" fill={accentColor} />
-        <circle cx={center} cy={center} r="2.5" fill="#0f172a" />
+        <circle cx={rotatedX} cy={rotatedY} r="3.8" fill={accentColor} />
+        <circle cx={center} cy={center} r="2.2" fill="#0f172a" />
       </svg>
 
-      <div style={{ marginTop: '8px', textAlign: 'center', fontFamily: 'monospace', fontSize: '12px', fontWeight: '700' }}>
-        {isRoPE ? (
-          <span style={{ color: '#7c3aed', backgroundColor: '#f3e8ff', padding: '2px 6px', borderRadius: '4px' }}>
-            q' = [{rotated[0].toFixed(2)}, {rotated[1].toFixed(2)}]
-          </span>
-        ) : (
-          <span style={{ color: '#0284c7', backgroundColor: '#e0f2fe', padding: '2px 6px', borderRadius: '4px' }}>
-            p = [{rotated[0].toFixed(2)}, {rotated[1].toFixed(2)}]
-          </span>
-        )}
+      {/* KaTeX 형식 좌표 수식 */}
+      <div style={{ marginTop: '9px', textAlign: 'center', height: '22px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <MathView 
+          math={mathFormula} 
+          style={{ 
+            color: isRoPE ? '#7c3aed' : '#0284c7', 
+            fontSize: '12px',
+            fontFamily: 'KaTeX_Math, serif'
+          }} 
+        />
       </div>
     </div>
   );
 };
 
 export const PESimulator = () => {
-  const [selectedSentenceIdx, setSelectedSentenceIdx] = useState(0);
   const [position, setPosition] = useState(1); // Query position m
   const [viewMode, setViewMode] = useState('split'); // 'split' | 'pe' | 'rope'
-
-  const sentence = SENTENCES[selectedSentenceIdx];
-  const numTokens = sentence.tokens.length;
 
   // PE: d_model = 6 (시계 3개: i=0, 1, 2)
   const peClockData = [0, 1, 2].map((i) => {
@@ -107,7 +124,7 @@ export const PESimulator = () => {
     const sin = Math.sin(angle);
     return {
       index: i,
-      label: `시계 ${i} (dim ${i * 2}, ${i * 2 + 1})`,
+      label: `차원 (${i * 2}, ${i * 2 + 1})`,
       peRotated: [sin, cos]
     };
   });
@@ -120,7 +137,7 @@ export const PESimulator = () => {
     const [qx, qy] = [0.8, 0.4];
     return {
       index: i,
-      label: `시계 ${i} (dim ${i * 2}, ${i * 2 + 1})`,
+      label: `차원 (${i * 2}, ${i * 2 + 1})`,
       ropeRotated: [
         qx * cos - qy * sin,
         qx * sin + qy * cos
@@ -128,55 +145,48 @@ export const PESimulator = () => {
     };
   });
 
-  // --- 정확한 이론 수식 기반의 토큰 간 상대거리 & Attention Score 계산 ---
-  // Query 위치: m (position), Key 위치: n (0 ~ N-1)
-  // RoPE 이론: (q'_m)^T k'_n = \sum q^{(i)T} R((n-m)\theta_i) k^{(i)}
-  // PE 이론: (x_m + p_m)^T (x_n + p_n) = x_m^T x_n + x_m^T p_n + p_m^T x_n + p_m^T p_n
-  const qBase = [0.8, 0.4, 0.6, 0.2]; // RoPE base q
-  const kBase = [0.7, 0.5, 0.5, 0.3]; // RoPE base k
+  // 이론 수식 기반 토큰 간 상대거리 & Attention Score 계산
+  const qBase = [0.8, 0.4, 0.6, 0.2];
+  const kBase = [0.7, 0.5, 0.5, 0.3];
 
-  const scoreData = sentence.tokens.map((token, n) => {
+  const scoreData = TOKENS.map((token, n) => {
     const dist = n - position;
     const absDist = Math.abs(dist);
 
-    // 1. RoPE Score 계산 (d_h = 4, 2쌍)
-    // 쌍 0: theta_0 = 1.0 (고주파), 쌍 1: theta_1 = 0.1 (중저주파)
+    // 1. RoPE Score 계산 (d_h = 4, 2쌍 내적)
     let ropeScoreSum = 0;
     for (let i = 0; i < 2; i++) {
-      const theta = getAngle(1, i, 4); // theta_i
-      const relAngle = dist * theta; // (n-m)*theta_i
+      const theta = getAngle(1, i, 4);
+      const relAngle = dist * theta;
       const cosR = Math.cos(relAngle);
       const sinR = Math.sin(relAngle);
 
       const qPair = [qBase[i * 2], qBase[i * 2 + 1]];
       const kPair = [kBase[i * 2], kBase[i * 2 + 1]];
 
-      // q^T R((n-m)theta) k
       const kRotated = [
         kPair[0] * cosR - kPair[1] * sinR,
         kPair[0] * sinR + kPair[1] * cosR
       ];
       ropeScoreSum += (qPair[0] * kRotated[0] + qPair[1] * kRotated[1]);
     }
-    // 정규화 (0~1 범위 시각화용)
     const normRoPEScore = Math.max(0.05, Math.min(1.0, (ropeScoreSum / 1.5).toFixed(2)));
 
     // 2. Absolute PE Score 계산 (d_model = 6, 3쌍 내적)
-    // p_m^T p_n = \sum \cos((n-m)\omega_i) 의 요동치는 패턴 시각화
     let pePosDot = 0;
     for (let i = 0; i < 3; i++) {
       const omega = getAngle(1, i, 6);
       pePosDot += Math.cos(dist * omega);
     }
-    // 내용 내적 + 위치 내적 + 교차항 요동 반영
     const baseContentDot = dist === 0 ? 0.9 : (0.4 - 0.05 * absDist);
     const rawPeScore = (baseContentDot + 0.3 * pePosDot) / 1.8;
     const normPEScore = Math.max(0.05, Math.min(1.0, rawPeScore.toFixed(2)));
 
     return {
       n,
-      token,
+      token: token.display,
       dist,
+      absDist,
       peScore: normPEScore,
       ropeScore: normRoPEScore
     };
@@ -192,205 +202,171 @@ export const PESimulator = () => {
         width: '100%',
         clear: 'both',
         boxSizing: 'border-box',
-        margin: '24px 0',
-        padding: '28px',
-        borderRadius: '24px',
-        backgroundColor: '#ffffff',
-        border: '1px solid #e2e8f0',
-        boxShadow: '0 20px 40px -15px rgba(15, 23, 42, 0.07), 0 0 1px 1px rgba(15, 23, 42, 0.02)',
+        margin: '20px 0',
+        padding: '24px',
+        borderRadius: '20px',
+        backgroundColor: '#fbf9f5',
+        border: '1px solid #e8e4dc',
+        boxShadow: '0 16px 36px -12px rgba(68, 64, 60, 0.08), 0 0 1px 1px rgba(68, 64, 60, 0.03)',
         fontFamily: '"Plus Jakarta Sans", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif'
       }}
     >
-      {/* 폰트 유틸리티 */}
       <style>{`
         .gmarket-font {
           font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
         }
-
         .num-font {
           font-family: 'JetBrains Mono', monospace !important;
           font-feature-settings: "tnum";
           font-variant-numeric: tabular-nums;
         }
+        .token-cell {
+          cursor: pointer;
+          transition: background-color 0.15s ease, color 0.15s ease;
+        }
+        .token-cell:hover:not(.token-cell-active) {
+          background-color: #f8f6f0;
+        }
       `}</style>
 
-      {/* 1. 상단 타이틀 & 컨트롤 헤더 (2줄 구조) */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
-        {/* Row 1: 독립된 메인 타이틀 영역 */}
+      {/* 1. 최상단 헤더: 세로 라운드 바 + 타이틀 (좌측) & 뷰 모드 스위처 탭 (우측) */}
+      <div 
+        style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          flexWrap: 'wrap', 
+          gap: '12px',
+          paddingBottom: '16px',
+          borderBottom: '1px solid #e8e4dc'
+        }}
+      >
+        {/* 좌측 세로 바 + 타이틀 */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '6px', height: '22px', borderRadius: '5px', background: 'linear-gradient(180deg, #4f46e5, #3730a3)' }} />
-          <h3 className="gmarket-font" style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.02em' }}>
+          <div style={{ width: '6px', height: '22px', borderRadius: '5px', background: 'linear-gradient(180deg, #6366f1, #4338ca)' }} />
+          <h3 className="gmarket-font" style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.02em' }}>
             PE & RoPE Simulator
           </h3>
         </div>
 
-        {/* Row 2: 우측 정렬된 뷰 스위처 버튼 그룹 */}
-        <div style={{ display: 'flex', justifyContent: 'flex-end', alignItems: 'center' }}>
-          <div style={{ display: 'flex', gap: '6px', backgroundColor: '#f1f5f9', padding: '5px', borderRadius: '12px' }}>
-            {[
-              { id: 'split', label: 'PE & RoPE' },
-              { id: 'pe', label: 'PE Only' },
-              { id: 'rope', label: 'RoPE Only' }
-            ].map((mode) => (
+        {/* 우측 뷰 모드 스위처 탭 */}
+        <div style={{ display: 'flex', gap: '4px', backgroundColor: '#eeeae1', padding: '3px', borderRadius: '9px', border: '1px solid #e2ddd3' }}>
+          {[
+            { id: 'split', label: '전체 비교', activeColor: '#4338ca', shadowColor: 'rgba(67, 56, 202, 0.15)' },
+            { id: 'pe', label: 'PE만 보기', activeColor: '#0284c7', shadowColor: 'rgba(2, 132, 199, 0.18)' },
+            { id: 'rope', label: 'RoPE만 보기', activeColor: '#7c3aed', shadowColor: 'rgba(124, 58, 237, 0.18)' }
+          ].map((mode) => {
+            const isActive = viewMode === mode.id;
+            return (
               <button
                 key={mode.id}
                 onClick={() => setViewMode(mode.id)}
                 className="gmarket-font"
                 style={{
-                  padding: '7px 16px',
-                  fontSize: '12.5px',
+                  padding: '5px 12px',
+                  fontSize: '11.5px',
                   fontWeight: '700',
-                  borderRadius: '9px',
+                  borderRadius: '6px',
                   border: 'none',
                   cursor: 'pointer',
-                  backgroundColor: viewMode === mode.id ? '#ffffff' : 'transparent',
-                  color: viewMode === mode.id ? '#4f46e5' : '#64748b',
-                  boxShadow: viewMode === mode.id ? '0 2px 6px rgba(79, 70, 229, 0.12)' : 'none',
+                  backgroundColor: isActive ? '#ffffff' : 'transparent',
+                  color: isActive ? mode.activeColor : '#64748b',
+                  boxShadow: isActive ? `0 1px 4px ${mode.shadowColor}` : 'none',
                   transition: 'all 0.15s ease'
                 }}
               >
                 {mode.label}
               </button>
-            ))}
-          </div>
-        </div>
-      </div>
-
-      {/* 2. Sentence & Token Selector */}
-      <div 
-        style={{
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '12px',
-          backgroundColor: '#f8fafc',
-          padding: '16px',
-          borderRadius: '12px',
-          border: '1px solid #e2e8f0'
-        }}
-      >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span className="gmarket-font" style={{ fontSize: '13.5px', fontWeight: '700', color: '#1e293b' }}>
-            Query 토큰 선택 (위치 m 설정)
-          </span>
-          <div style={{ display: 'flex', gap: '6px' }}>
-            {SENTENCES.map((s, idx) => (
-              <button
-                key={s.id}
-                onClick={() => {
-                  setSelectedSentenceIdx(idx);
-                  setPosition(1);
-                }}
-                className="gmarket-font"
-                style={{
-                  padding: '5px 12px',
-                  fontSize: '12px',
-                  fontWeight: '700',
-                  borderRadius: '7px',
-                  border: selectedSentenceIdx === idx ? '1px solid #6366f1' : '1px solid #cbd5e1',
-                  backgroundColor: selectedSentenceIdx === idx ? '#eef2ff' : '#ffffff',
-                  color: selectedSentenceIdx === idx ? '#4f46e5' : '#475569',
-                  cursor: 'pointer'
-                }}
-              >
-                {s.label}
-              </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Tokens Row */}
-        <div 
-          style={{
-            display: 'flex',
-            flexDirection: 'row',
-            flexWrap: 'nowrap',
-            gap: '10px',
-            overflowX: 'auto',
-            paddingBottom: '4px',
-            width: '100%'
-          }}
-        >
-          {sentence.tokens.map((token, idx) => {
-            const isSelected = position === idx;
-            return (
-              <button
-                key={idx}
-                onClick={() => setPosition(idx)}
-                style={{
-                  display: 'flex',
-                  flexDirection: 'column',
-                  alignItems: 'center',
-                  justify: 'center',
-                  padding: '10px 14px',
-                  borderRadius: '10px',
-                  border: isSelected ? '2px solid #2563eb' : '1px solid #cbd5e1',
-                  backgroundColor: isSelected ? '#eff6ff' : '#ffffff',
-                  cursor: 'pointer',
-                  minWidth: '75px',
-                  flexShrink: 0,
-                  transition: 'all 0.15s ease'
-                }}
-              >
-                <span style={{ fontSize: '14px', fontWeight: '800', color: isSelected ? '#1d4ed8' : '#0f172a', marginBottom: '3px' }}>
-                  {token}
-                </span>
-                <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: '600', color: isSelected ? '#2563eb' : '#64748b' }}>
-                  m = {idx}
-                </span>
-              </button>
             );
           })}
         </div>
-
-        {/* Position Slider */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '16px', paddingTop: '8px', borderTop: '1px solid #e2e8f0' }}>
-          <span style={{ fontSize: '13px', fontWeight: '700', color: '#334155', whitespace: 'nowrap' }}>
-            Query 위치 조절 (m): <strong style={{ color: '#2563eb', fontFamily: 'monospace', fontSize: '15px', marginLeft: '4px' }}>{position} ("{sentence.tokens[position]}")</strong>
-          </span>
-          <input
-            type="range"
-            min="0"
-            max={numTokens - 1}
-            value={position}
-            onChange={(e) => setPosition(Number(e.target.value))}
-            style={{ width: '100%', cursor: 'pointer', accentColor: '#2563eb' }}
-          />
-        </div>
       </div>
 
-      {/* 3. PE & RoPE Clocks Row Layout */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '20px', width: '100%' }}>
-        
-        {/* PE Row */}
-        {(viewMode === 'split' || viewMode === 'pe') && (
+      {/* 2. Query 토큰 선택 소제목 및 일체형 표(Table) 선택기 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+        <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#0f172a' }}>
+          Query 토큰 선택
+        </span>
+
+        <div 
+          style={{ 
+            width: '100%',
+            overflowX: 'auto',
+            WebkitOverflowScrolling: 'touch'
+          }}
+        >
           <div 
             style={{
               display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              padding: '18px',
-              borderRadius: '14px',
-              backgroundColor: '#f0f9ff',
-              border: '2px solid #7dd3fc'
+              minWidth: '380px',
+              border: '1.5px solid #dfdad0',
+              borderRadius: '10px',
+              overflow: 'hidden',
+              backgroundColor: '#ffffff',
+              boxShadow: '0 1px 3px rgba(0,0,0,0.03)'
             }}
           >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '8px', paddingTop: '2px' }}>
-                <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#0369a1' }}>
-                  Absolute Positional Encoding (PE)
-                </h4>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#0369a1', fontWeight: '700', backgroundColor: '#e0f2fe', padding: '3px 10px', borderRadius: '6px', border: '1px solid #bae6fd', textAlign: 'right' }}>
-                  적용 단계 : 입력 토큰 임베딩
-                </span>
-                <span style={{ fontSize: '10px', fontFamily: 'monospace', color: '#0284c7', fontWeight: '600' }}>
-                  (d = 6)
-                </span>
-              </div>
+            {TOKENS.map((t, idx) => {
+              const isSelected = position === idx;
+              const isLast = idx === TOKENS.length - 1;
+              return (
+                <div
+                  key={idx}
+                  onClick={() => setPosition(idx)}
+                  className={`token-cell ${isSelected ? 'token-cell-active' : ''}`}
+                  style={{
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    padding: '10px 4px',
+                    borderRight: isLast ? 'none' : '1px solid #eae5db',
+                    backgroundColor: isSelected ? '#eef2ff' : 'transparent',
+                    borderBottom: isSelected ? '3px solid #6366f1' : '3px solid transparent',
+                    userSelect: 'none'
+                  }}
+                >
+                  <span 
+                    style={{ 
+                      fontSize: '13.5px', 
+                      fontWeight: isSelected ? '800' : '600', 
+                      color: isSelected ? '#4338ca' : '#1e293b',
+                      fontFamily: '"Plus Jakarta Sans", "Noto Sans KR", sans-serif',
+                      letterSpacing: '-0.01em',
+                      marginBottom: '2px'
+                    }}
+                  >
+                    {t.display}
+                  </span>
+                  <MathView 
+                    math={`m = ${idx}`} 
+                    style={{ 
+                      fontSize: '11px', 
+                      color: isSelected ? '#4338ca' : '#94a3b8',
+                      fontFamily: 'KaTeX_Math, serif'
+                    }} 
+                  />
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
+      {/* 3. PE & RoPE 시계 다이어그램 섹션 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '22px' }}>
+        
+        {/* Absolute PE 시계 영역 */}
+        {(viewMode === 'split' || viewMode === 'pe') && (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', borderBottom: '1px solid #eae5dc', paddingBottom: '6px' }}>
+              <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#0284c7' }}>
+                Absolute PE
+              </span>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px', width: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '8px', width: '100%', justifyContent: 'space-around' }}>
               {peClockData.map((clk) => (
                 <ClockItem
                   key={clk.index}
@@ -405,36 +381,16 @@ export const PESimulator = () => {
           </div>
         )}
 
-        {/* RoPE Row */}
+        {/* RoPE 시계 영역 */}
         {(viewMode === 'split' || viewMode === 'rope') && (
-          <div 
-            style={{
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '12px',
-              padding: '18px',
-              borderRadius: '14px',
-              backgroundColor: '#f5f3ff',
-              border: '2px solid #c084fc'
-            }}
-          >
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
-              <div style={{ display: 'flex', items: 'center', gap: '8px', paddingTop: '2px' }}>
-                <h4 style={{ margin: 0, fontSize: '15px', fontWeight: '800', color: '#6b21a8' }}>
-                  Rotary Position Embedding (RoPE)
-                </h4>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: '2px' }}>
-                <span style={{ fontSize: '11px', fontFamily: 'monospace', color: '#6b21a8', fontWeight: '700', backgroundColor: '#f3e8ff', padding: '3px 10px', borderRadius: '6px', border: '1px solid #e9d5ff', textAlign: 'right' }}>
-                  적용 단계 : Query / Key 벡터 단일 Attention Head 범위
-                </span>
-                <span style={{ fontSize: '10px', fontFamily: 'monospace', color: '#7c3aed', fontWeight: '600' }}>
-                  (d_h = 4)
-                </span>
-              </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'baseline', borderBottom: '1px solid #eae5dc', paddingBottom: '6px' }}>
+              <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#7c3aed' }}>
+                Rotary Position Embedding (RoPE)<span style={{ color: '#64748b', fontSize: '11px', verticalAlign: 'super', marginLeft: '2px' }}>*</span>
+              </span>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '12px', width: '100%' }}>
+            <div style={{ display: 'flex', flexDirection: 'row', flexWrap: 'wrap', gap: '8px', width: '100%', justifyContent: 'space-around' }}>
               {ropeClockData.map((clk) => (
                 <ClockItem
                   key={clk.index}
@@ -451,29 +407,27 @@ export const PESimulator = () => {
 
       </div>
 
-      {/* 4. 신규 패널: 토큰 간 상대 거리 & Attention Score 패널 */}
+      {/* 4. Attention 점수 비교 & 상대 거리(Δ) 패널 */}
       <div 
         style={{
           display: 'flex',
           flexDirection: 'column',
-          gap: '14px',
-          backgroundColor: '#f8fafc',
-          padding: '18px',
-          borderRadius: '14px',
-          border: '1px solid #e2e8f0',
-          marginTop: '4px'
+          gap: '10px',
+          paddingTop: '16px',
+          borderTop: '1px solid #e8e4dc'
         }}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
-          <div>
-            <h4 style={{ margin: 0, fontSize: '14px', fontWeight: '800', color: '#0f172a' }}>
-              Query 토큰 '{sentence.tokens[position]}'(m={position}) ↔ Key 토큰(n) 간 Attention 점수 비교
-            </h4>
-          </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '6px' }}>
+          <span style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a' }}>
+            '{TOKENS[position].display}' 토큰의 Attention Score
+          </span>
+          <span style={{ fontSize: '11px', color: '#64748b' }}>
+            <strong style={{ color: '#4338ca' }}>Δ = |n - m|</strong> (상대 거리)
+          </span>
         </div>
 
-        {/* Score Bar Chart List */}
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '4px' }}>
+        {/* Bar Chart List */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           {scoreData.map((item) => {
             const isSelf = item.n === position;
             return (
@@ -482,66 +436,96 @@ export const PESimulator = () => {
                 style={{
                   display: 'flex',
                   alignItems: 'center',
-                  gap: '12px',
-                  padding: '10px 14px',
-                  borderRadius: '10px',
-                  backgroundColor: isSelf ? '#f8fafc' : 'transparent',
-                  border: isSelf ? '2px solid #6366f1' : '1px solid transparent',
-                  boxShadow: isSelf ? '0 2px 8px rgba(99, 102, 241, 0.1)' : 'none',
-                  transition: 'all 0.2s ease'
+                  gap: '10px',
+                  padding: '6px 8px',
+                  borderRadius: '8px',
+                  backgroundColor: isSelf ? '#eef2ff' : 'transparent',
+                  transition: 'background-color 0.15s ease'
                 }}
               >
-                {/* Token Label */}
-                <div style={{ minWidth: '85px', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  <span style={{ fontSize: '15px', fontWeight: '800', color: isSelf ? '#4338ca' : '#0f172a' }}>
+                {/* Token Label & Relative Distance Δ */}
+                <div style={{ minWidth: '100px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <span style={{ fontSize: '13px', fontFamily: '"Plus Jakarta Sans", "Noto Sans KR", sans-serif', fontWeight: isSelf ? '800' : '600', color: isSelf ? '#4338ca' : '#1e293b' }}>
                     {item.token}
                   </span>
-                  {isSelf && (
-                    <span style={{ fontSize: '10px', fontWeight: '700', color: '#6366f1', backgroundColor: '#e0e7ff', padding: '1px 5px', borderRadius: '4px' }}>
+                  {isSelf ? (
+                    <span 
+                      style={{ 
+                        fontSize: '10px', 
+                        fontFamily: '"Plus Jakarta Sans", "Noto Sans KR", sans-serif', 
+                        fontWeight: '700', 
+                        color: '#4338ca',
+                        marginRight: '6px'
+                      }}
+                    >
                       Query
                     </span>
+                  ) : (
+                    <MathView 
+                      math={`\\Delta = ${item.absDist}`} 
+                      style={{ 
+                        fontSize: '10.5px', 
+                        color: '#94a3b8',
+                        marginRight: '6px',
+                        fontFamily: 'KaTeX_Math, serif'
+                      }} 
+                    />
                   )}
                 </div>
 
-                {/* Bars Comparison */}
-                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                {/* Bars */}
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: '4px' }}>
                   {/* PE Bar */}
                   {(viewMode === 'split' || viewMode === 'pe') && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '10px', fontWeight: '700', color: '#0284c7', width: '32px' }}>PE</span>
-                      <div style={{ flex: 1, backgroundColor: '#e0f2fe', height: '12px', borderRadius: '6px', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '9.5px', fontWeight: '700', color: '#0284c7', width: '28px' }}>PE</span>
+                      <div style={{ flex: 1, backgroundColor: 'rgba(2, 132, 199, 0.15)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
                         <div 
                           style={{ 
                             width: `${item.peScore * 100}%`, 
                             backgroundColor: '#0284c7', 
                             height: '100%',
-                            transition: 'width 0.3s ease'
+                            transition: 'width 0.25s ease'
                           }} 
                         />
                       </div>
-                      <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: '700', color: '#0369a1', width: '36px', textAlign: 'right' }}>
-                        {item.peScore}
-                      </span>
+                      <MathView 
+                        math={`${item.peScore}`} 
+                        style={{ 
+                          fontSize: '11px', 
+                          color: '#0369a1', 
+                          width: '34px', 
+                          justifyContent: 'flex-end',
+                          fontFamily: 'KaTeX_Math, serif'
+                        }} 
+                      />
                     </div>
                   )}
 
                   {/* RoPE Bar */}
                   {(viewMode === 'split' || viewMode === 'rope') && (
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                      <span style={{ fontSize: '10px', fontWeight: '700', color: '#7c3aed', width: '32px' }}>RoPE</span>
-                      <div style={{ flex: 1, backgroundColor: '#f3e8ff', height: '12px', borderRadius: '6px', overflow: 'hidden' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <span style={{ fontSize: '9.5px', fontWeight: '700', color: '#7c3aed', width: '28px' }}>RoPE</span>
+                      <div style={{ flex: 1, backgroundColor: 'rgba(124, 58, 237, 0.15)', height: '8px', borderRadius: '4px', overflow: 'hidden' }}>
                         <div 
                           style={{ 
                             width: `${item.ropeScore * 100}%`, 
                             backgroundColor: '#7c3aed', 
                             height: '100%',
-                            transition: 'width 0.3s ease'
+                            transition: 'width 0.25s ease'
                           }} 
                         />
                       </div>
-                      <span style={{ fontSize: '11px', fontFamily: 'monospace', fontWeight: '700', color: '#6b21a8', width: '36px', textAlign: 'right' }}>
-                        {item.ropeScore}
-                      </span>
+                      <MathView 
+                        math={`${item.ropeScore}`} 
+                        style={{ 
+                          fontSize: '11px', 
+                          color: '#6b21a8', 
+                          width: '34px', 
+                          justifyContent: 'flex-end',
+                          fontFamily: 'KaTeX_Math, serif'
+                        }} 
+                      />
                     </div>
                   )}
                 </div>
@@ -549,6 +533,13 @@ export const PESimulator = () => {
             );
           })}
         </div>
+      </div>
+
+      {/* 5. 주석 (Footnote) */}
+      <div style={{ borderTop: '1px dashed #dfdad0', paddingTop: '10px', marginTop: '2px' }}>
+        <p style={{ margin: 0, fontSize: '11px', color: '#64748b', lineHeight: 1.6, fontStyle: 'italic' }}>
+          <strong style={{ color: '#4338ca', fontStyle: 'normal' }}>*</strong> Absolute PE는 토큰 임베딩 차원, RoPE는 단일 Attention Head 차원에 적용되므로 RoPE의 차원 수가 더 적게 표현된다. 본문에선 각각 6차원(Absolute PE), 4차원(RoPE) 벡터로 표현.
+        </p>
       </div>
 
     </div>

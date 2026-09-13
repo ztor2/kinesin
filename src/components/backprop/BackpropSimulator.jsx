@@ -292,9 +292,9 @@ export const BackpropSimulator = () => {
         margin: '24px 0',
         padding: '28px',
         borderRadius: '24px',
-        backgroundColor: '#ffffff',
-        border: '1px solid #e2e8f0',
-        boxShadow: '0 20px 40px -15px rgba(15, 23, 42, 0.07), 0 0 1px 1px rgba(15, 23, 42, 0.02)',
+        backgroundColor: '#fbf9f5',
+        border: '1px solid #e8e4dc',
+        boxShadow: '0 16px 36px -12px rgba(68, 64, 60, 0.08), 0 0 1px 1px rgba(68, 64, 60, 0.03)',
         fontFamily: '"Plus Jakarta Sans", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif'
       }}
     >

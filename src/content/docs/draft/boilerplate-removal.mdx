@@ -1,0 +1,170 @@
+---
+title: "DOM 트리 기반 본문 추출과 보일러플레이트 제거"
+description: "웹 크롤링 데이터에서 비정형 노이즈를 걷어내고 순수 본문과 마크다운 구조를 복원하는 핵심 큐레이션 알고리즘"
+---
+
+import SectionSlider from '../../../components/common/SectionSlider.astro';
+
+<SectionSlider>
+
+### Intro
+
+> <i><strong>보일러플레이트 제거(Boilerplate Removal)</strong>는 웹의 혼돈(HTML) 속에서 메뉴·광고·스크립트 노이즈를 걷어내고, LLM 학습을 위한 순수한 텍스트와 시맨틱 구조(Markdown)를 발라내는 데이터 큐레이션의 첫 관문이다.</i>
+
+<br/>
+
+- <strong>문제 정의</strong>: 무가공 웹페이지(Common Crawl 등)에는 본문 외에도 내비게이션 바, 광고, 쿠키 안내창, 푸터 저작권 문구가 섞여 있어, 그대로 학습 시 모델의 문맥 일관성 파괴 및 Perplexity 급상승 유발.
+- <strong>핵심 해결책</strong>: 단순 태그 스트리핑(`soup.get_text()`) 대신 HTML DOM 트리의 <strong>텍스트 밀도(Text Density)</strong>와 <strong>링크 밀도(Link Density)</strong>를 계산하여 노이즈 서브트리를 동적으로 가지치기(Pruning).
+- <strong>적용 현황</strong>: FineWeb, RefinedWeb, Dolma 등 현대 프론티어 LLM 사전학습 파이프라인의 필수 기반 단계(Trafilatura, Resiliparse 등 활용).
+
+<br/>
+
+본 문서에서는 단순 텍스트 추출의 한계를 짚고, DOM 트리를 통계적으로 분석해 의미 있는 본문 블록만 정밀 추출하는 알고리즘 메커니즘을 탐구한다.
+
+<br/>
+
+### Theoretical Background
+
+> <i>웹 문서의 노이즈와 본문을 구분하는 수학적 척도인 링크 밀도(Link Density)와 텍스트 밀도(Text Density)의 정량적 정의를 다룬다.</i>
+
+<br/>
+
+HTML 문서는 계층적 트리 구조 $\mathcal{T} = (\mathcal{V}, \mathcal{E})$로 표현되며, 각 노드 $u \in \mathcal{V}$는 특정 HTML 태그를 나타낸다.
+
+특정 노드 $u$가 포함하는 전체 텍스트 길이를 $\text{len}(u)$, 그중 하이퍼링크(`<a>` 태그) 내부 텍스트의 길이를 $\text{link\_len}(u)$라 할 때, <strong>링크 밀도(Link Density, $\text{LD}$)</strong>는 다음과 같이 정의된다:
+
+<br/>
+
+$$
+\text{LD}(u) = \frac{\text{link\_len}(u)}{\max(1, \text{len}(u))}
+$$
+
+<br/>
+
+- <strong>내비게이션 및 광고 영역</strong>: $\text{LD}(u) \approx 1.0$ (대부분의 텍스트가 다른 페이지 링크로 구성됨).
+- <strong>순수 본문 영역</strong>: $\text{LD}(u) \ll 0.2$ (서술형 문장이 주를 이루며 링크 비율이 극히 낮음).
+
+<br/>
+
+### Core Mechanics & Algorithms
+
+> <i>DOM 트리를 상향식(Bottom-up) 또는 하향식(Top-down)으로 탐색하며 노이즈 노드를 동적으로 가지치기하는 알고리즘 단계.</i>
+
+<br/>
+
+알고리즘은 크게 세 가지 파이프라인으로 전개된다:
+
+<br/>
+
+1. <strong>구조 정규화 및 블랙리스트 노드 1차 제거</strong>:
+   - 본문과 무관한 명백한 태그(`<script>`, `<style>`, `<nav>`, `<footer>`, `<header>`, `<aside>`) 및 주석 노드 선제거.
+2. <strong>통계 기반 서브트리 스코어링 (Tree Traversal & Scoring)</strong>:
+   - 각 블록 레벨 노드(`<div>`, `<article>`, `<section>`, `<p>`)의 텍스트 밀도, 구두점 밀도, 단어 수, 링크 밀도 복합 평가.
+3. <strong>임계값 기반 가지치기 (Pruning) & 마크다운 재구성</strong>:
+   - 본문으로 판별된 서브트리만 보존하고, 제목(`h1~h6`), 목록(`ul/ol`), 테이블(`table`), 코드(`<pre>/<code>`)의 시맨틱 구조를 Markdown 문법으로 변환.
+
+<br/>
+
+$$
+\text{Score}(u) = \text{TextLength}(u) \times (1 - \text{LD}(u)) \times \text{PunctuationRatio}(u)
+$$
+
+<br/>
+
+### Simulator & Interactive Visualization
+
+아래 시뮬레이터를 통해 복잡한 HTML DOM 트리에서 링크 밀도 임계값에 따라 광고/메뉴 노드가 가지치기(Pruning)되고 본문만 추출되는 과정을 직관적으로 관찰할 수 있다.
+
+<br/>
+
+<div className="not-content my-6 w-full clear-both">
+  {/* [TODO: DOM Tree Pruning Simulator 컴포넌트 개발 및 배치 예정] */}
+  {/* 좌측: HTML DOM 트리 노드 그래프, 우측: 링크 밀도 슬라이더 조절에 따른 실시간 필터링 결과 및 추출된 마크다운 뷰어 */}
+</div>
+
+<br/>
+
+### Code Implementation
+
+Trafilatura 및 CETR의 핵심 로직을 경량화한 **DOM 링크 밀도 기반 본문 추출 알고리즘의 파이썬 최소 동작 예제**이다:
+
+<br/>
+
+```python
+from html.parser import HTMLParser
+
+class SimpleDOMDensityExtractor(HTMLParser):
+    def __init__(self, link_threshold=0.25):
+        super().__init__()
+        self.link_threshold = link_threshold
+        self.in_link = False
+        self.blocks = []
+        self.curr_text = []
+        self.curr_link_len = 0
+
+    def handle_starttag(self, tag, attrs):
+        if tag in ['p', 'article', 'div']:
+            self._flush()
+        elif tag == 'a':
+            self.in_link = True
+
+    def handle_endtag(self, tag):
+        if tag == 'a':
+            self.in_link = False
+        elif tag in ['p', 'article', 'div']:
+            self._flush()
+
+    def handle_data(self, data):
+        cleaned = data.strip()
+        if cleaned:
+            self.curr_text.append(cleaned)
+            if self.in_link:
+                self.curr_link_len += len(cleaned)
+
+    def _flush(self):
+        text = " ".join(self.curr_text).strip()
+        if text:
+            total_len = len(text)
+            ld = self.curr_link_len / max(1, total_len)
+            # 링크 밀도가 임계값 이하이고 길이가 충분한 경우 본문으로 채택
+            if ld <= self.link_threshold and total_len > 30:
+                self.blocks.append(text)
+        self.curr_text = []
+        self.curr_link_len = 0
+
+# 실행 테스트
+html_sample = """
+<nav><a href="/">홈</a> <a href="/news">뉴스 목록</a> <a href="/login">로그인</a></nav>
+<article>
+  <p>대규모 언어 모델(LLM)의 사전학습은 데이터의 품질에 의해 결정된다.</p>
+  <p>비정형 웹 문서에서 보일러플레이트를 제거하면 모델의 펄플렉서티가 획기적으로 개선된다.</p>
+</article>
+<footer><a href="/privacy">개인정보처리방침</a> © 2026 Kinesin</footer>
+"""
+
+parser = SimpleDOMDensityExtractor()
+parser.feed(html_sample)
+print("\n".join(parser.blocks))
+```
+
+<br/>
+
+### Comparison & Summary
+
+본문 추출 기법별 장단점과 LLM 사전학습 파이프라인에서의 적합성을 비교하면 다음과 같다.
+
+| 방식 | 동작 원리 | 장점 | 단점 (LLM 관점) |
+| :--- | :--- | :--- | :--- |
+| <strong>단순 파싱 (Regex / naive get_text)</strong> | 모든 태그를 제거하고 텍스트만 나열 | 구현이 가장 단순하고 빠름 | 메뉴, 광고가 본문 중간에 섞여 문맥 파괴 |
+| <strong>휴리스틱 CSS 클래스 필터</strong> | `.nav`, `.footer`, `.ad` 클래스명 제거 | 직관적인 노이즈 제거 | 사이트마다 클래스 네이밍이 달라 일반화 불가 |
+| <strong>DOM 밀도 분석 (Trafilatura/Resiliparse)</strong> | 링크 밀도·텍스트 밀도 기반 트리 가지치기 | 사이트 구조에 구애받지 않고 본문 및 마크다운 완벽 보존 | 단순 파싱 대비 파싱 및 트리 계산 비용 소요 |
+
+<br/>
+
+### References
+
+- <strong>CleanEval: A Competition for Cleaning Web Pages</strong> - Baroni et al. (2008) [(Link)](https://aclanthology.org/W08-0101/)
+- <strong>CETR: Content Extraction via Tag Ratios</strong> - Weninger et al. (2010) [(Link)](https://dl.acm.org/doi/10.1145/1772690.1772886)
+- <strong>Trafilatura: A Web Scraping Library and Tool</strong> - Barbaresi (2021) [(Link)](https://aclanthology.org/2021.acl-demo.15/)
+
+</SectionSlider>
