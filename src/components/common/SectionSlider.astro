@@ -385,17 +385,61 @@ const formattedDate = lastUpdated ? lastUpdated.toLocaleDateString(lang ?? 'en',
 
     @media (max-width: 50rem) {
       .section-slider-top-bar {
-        padding-right: 8px;
+        padding-left: 0;
+        padding-right: 0;
+        margin-top: 0.1rem !important;
+        margin-bottom: 0.35rem !important;
+        height: 20px !important;
+      }
+      .top-bar-last-updated {
+        font-size: 10.5px !important;
+        height: 20px !important;
+      }
+      .top-bar-right-actions {
+        height: 20px !important;
+        gap: 8px !important;
+      }
+      .top-bar-action-item {
+        font-size: 11px !important;
+        height: 20px !important;
+      }
+      /* 모바일에서는 가독성 및 화면 크기 특성상 fullscreen 버튼 숨김 처리 */
+      #fullscreen-toggle-btn {
+        display: none !important;
+      }
+      .toggle-switch-track {
+        width: 34px !important;
+        height: 18px !important;
+        border-radius: 9px !important;
+      }
+      .toggle-switch-thumb {
+        width: 14px !important;
+        height: 14px !important;
+      }
+      .toggle-switch-track.scroll-mode .toggle-switch-thumb {
+        transform: translateX(14px) !important;
       }
       .section-slider-card {
-        padding: 16px 14px !important;
+        padding: 14px 12px !important;
         border-radius: 8px !important;
-        min-height: 220px;
+        min-height: 200px;
       }
       .hdr-nav-btn, .slider-restart-btn {
-        height: 30px;
-        padding: 0 12px;
+        height: 28px;
+        padding: 0 10px;
         font-size: 11px;
+      }
+      .story-progress-container {
+        margin: 0 0 0.75rem 0 !important;
+        padding: 4px 0 !important;
+      }
+      .card-internal-nav-bar.top-nav {
+        margin-bottom: 0.5rem !important;
+        padding-bottom: 0.5rem !important;
+      }
+      .card-internal-nav-bar.bottom-nav {
+        margin-top: 0.5rem !important;
+        padding-top: 0.6rem !important;
       }
       .section-slider-root.is-fullscreen {
         padding: 12px 8px !important;

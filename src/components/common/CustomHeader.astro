@@ -68,13 +68,15 @@ const isPapers = pathname.startsWith('/papers');
 		</a>
 	</nav>
 
-	<!-- 우측 영역: 검색, 언어, 테마 (TOC 상단 정렬) -->
+	<!-- 우측 영역: 검색, 언어, 테마 (TOC 상단 정렬, 모바일에서는 테마선택기 숨겨서 드로어 중복 방지) -->
 	<div class="header-tools right-group sl-flex">
 		<div class="search-container">
 			<Search {...Astro.props} />
 		</div>
 		<LanguageSelect {...Astro.props} />
-		<ThemeSelect {...Astro.props} />
+		<div class="theme-select-desktop sl-hidden md:sl-flex">
+			<ThemeSelect {...Astro.props} />
+		</div>
 	</div>
 </div>
 
@@ -290,14 +292,24 @@ const isPapers = pathname.startsWith('/papers');
 		stroke-linejoin: round;
 	}
 
-	/* 모바일 (50rem 이하) 반응형 */
+	/* 모바일 (50rem 이하) 반응형: 슬림 헤더 및 여백 최적화 */
 	@media (max-width: 50rem) {
+		:global(:root) {
+			--sl-nav-height: 2.75rem;
+		}
+
 		.header-container {
-			padding-inline: 0.75rem;
+			padding-inline: 0.85rem;
+			height: var(--sl-nav-height, 2.75rem);
 		}
 
 		.header-brand {
 			width: auto !important;
+		}
+
+		.site-logo {
+			width: 28px !important;
+			height: 28px !important;
 		}
 
 		.sidebar-toggle-btn {
@@ -305,6 +317,10 @@ const isPapers = pathname.startsWith('/papers');
 		}
 
 		.header-nav {
+			display: none !important;
+		}
+
+		.theme-select-desktop {
 			display: none !important;
 		}
 
