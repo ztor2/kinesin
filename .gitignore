@@ -11,6 +11,9 @@ dist/
 **/.obsidian/
 Clippings/
 
+# Personal / scratch notes
+notes/
+
 node_modules/
 
 # logs

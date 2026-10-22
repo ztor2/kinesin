@@ -27,8 +27,39 @@ const MathView = ({ math, style }) => {
   );
 };
 
+const I18N = {
+  en: {
+    dimLabel: (a, b) => `Dim (${a}, ${b})`,
+    highFreq: 'High Freq',
+    midFreq: 'Mid Freq',
+    lowFreq: 'Low Freq',
+    compareBoth: 'Compare Both',
+    peOnly: 'Absolute PE',
+    ropeOnly: 'RoPE',
+    selectQuery: 'Select Query Token (m)',
+    query: 'Query',
+    scoresFor: (token) => `Attention Scores for '${token}'`,
+    relDist: 'Relative Distance',
+    footnote: 'Absolute PE applies across the entire token embedding, whereas RoPE applies per attention head. Here, they are illustrated with 6 dimensions (3 pairs) for PE and 4 dimensions (2 pairs) for RoPE.'
+  },
+  ko: {
+    dimLabel: (a, b) => `차원 (${a}, ${b})`,
+    highFreq: '고주파',
+    midFreq: '중주파',
+    lowFreq: '저주파',
+    compareBoth: '전체 비교',
+    peOnly: 'PE만 보기',
+    ropeOnly: 'RoPE만 보기',
+    selectQuery: 'Query 토큰 선택',
+    query: 'Query',
+    scoresFor: (token) => `'${token}' 토큰의 Attention Score`,
+    relDist: '상대 거리',
+    footnote: '* Absolute PE는 토큰 임베딩 차원, RoPE는 단일 Attention Head 차원에 적용되므로 RoPE의 차원 수가 더 적게 표현된다. 본문에선 각각 6차원(Absolute PE), 4차원(RoPE) 벡터로 표현.'
+  }
+};
+
 // 단일 SVG 시계 컴포넌트
-const ClockItem = ({ index, rotated, isRoPE, label, accentColor }) => {
+const ClockItem = ({ index, rotated, isRoPE, label, freqLabel, accentColor }) => {
   const clockSize = 92;
   const radius = 34;
   const center = 46;
@@ -60,7 +91,7 @@ const ClockItem = ({ index, rotated, isRoPE, label, accentColor }) => {
         {label}
       </span>
       <span style={{ fontSize: '10.5px', color: '#64748b', marginBottom: '8px', fontWeight: '500' }}>
-        {index === 0 ? '고주파' : index === 1 ? (isRoPE ? '저주파' : '중주파') : '저주파'}
+        {freqLabel}
       </span>
 
       <svg 
@@ -113,7 +144,8 @@ const ClockItem = ({ index, rotated, isRoPE, label, accentColor }) => {
   );
 };
 
-export const PESimulator = () => {
+export const PESimulator = ({ lang = 'en' }) => {
+  const t = I18N[lang] || I18N.en;
   const [position, setPosition] = useState(1); // Query position m
   const [viewMode, setViewMode] = useState('split'); // 'split' | 'pe' | 'rope'
 
@@ -124,7 +156,8 @@ export const PESimulator = () => {
     const sin = Math.sin(angle);
     return {
       index: i,
-      label: `차원 (${i * 2}, ${i * 2 + 1})`,
+      label: t.dimLabel(i * 2, i * 2 + 1),
+      freqLabel: i === 0 ? t.highFreq : (i === 1 ? t.midFreq : t.lowFreq),
       peRotated: [sin, cos]
     };
   });
@@ -137,7 +170,8 @@ export const PESimulator = () => {
     const [qx, qy] = [0.8, 0.4];
     return {
       index: i,
-      label: `차원 (${i * 2}, ${i * 2 + 1})`,
+      label: t.dimLabel(i * 2, i * 2 + 1),
+      freqLabel: i === 0 ? t.highFreq : t.lowFreq,
       ropeRotated: [
         qx * cos - qy * sin,
         qx * sin + qy * cos
@@ -204,7 +238,7 @@ export const PESimulator = () => {
         boxSizing: 'border-box',
         margin: '20px 0',
         padding: '24px',
-        borderRadius: '20px',
+        borderRadius: '10px',
         backgroundColor: '#fbf9f5',
         border: '1px solid #e8e4dc',
         boxShadow: '0 16px 36px -12px rgba(68, 64, 60, 0.08), 0 0 1px 1px rgba(68, 64, 60, 0.03)',
@@ -212,11 +246,12 @@ export const PESimulator = () => {
       }}
     >
       <style>{`
-        .gmarket-font {
-          font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
+        .gmarket-font,
+        .jakarta-font {
+          font-family: 'Plus Jakarta Sans', 'GmarketSans', 'Noto Sans KR', sans-serif !important;
         }
         .num-font {
-          font-family: 'JetBrains Mono', monospace !important;
+          font-family: 'Plus Jakarta Sans', sans-serif !important;
           font-feature-settings: "tnum";
           font-variant-numeric: tabular-nums;
         }
@@ -252,9 +287,9 @@ export const PESimulator = () => {
         {/* 우측 뷰 모드 스위처 탭 */}
         <div style={{ display: 'flex', gap: '4px', backgroundColor: '#eeeae1', padding: '3px', borderRadius: '9px', border: '1px solid #e2ddd3' }}>
           {[
-            { id: 'split', label: '전체 비교', activeColor: '#4338ca', shadowColor: 'rgba(67, 56, 202, 0.15)' },
-            { id: 'pe', label: 'PE만 보기', activeColor: '#0284c7', shadowColor: 'rgba(2, 132, 199, 0.18)' },
-            { id: 'rope', label: 'RoPE만 보기', activeColor: '#7c3aed', shadowColor: 'rgba(124, 58, 237, 0.18)' }
+            { id: 'split', label: t.compareBoth, activeColor: '#4338ca', shadowColor: 'rgba(67, 56, 202, 0.15)' },
+            { id: 'pe', label: t.peOnly, activeColor: '#0284c7', shadowColor: 'rgba(2, 132, 199, 0.18)' },
+            { id: 'rope', label: t.ropeOnly, activeColor: '#7c3aed', shadowColor: 'rgba(124, 58, 237, 0.18)' }
           ].map((mode) => {
             const isActive = viewMode === mode.id;
             return (
@@ -285,7 +320,7 @@ export const PESimulator = () => {
       {/* 2. Query 토큰 선택 소제목 및 일체형 표(Table) 선택기 */}
       <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
         <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#0f172a' }}>
-          Query 토큰 선택
+          {t.selectQuery}
         </span>
 
         <div 
@@ -372,6 +407,7 @@ export const PESimulator = () => {
                   key={clk.index}
                   index={clk.index}
                   label={clk.label}
+                  freqLabel={clk.freqLabel}
                   rotated={clk.peRotated}
                   isRoPE={false}
                   accentColor="#0284c7"
@@ -396,6 +432,7 @@ export const PESimulator = () => {
                   key={clk.index}
                   index={clk.index}
                   label={clk.label}
+                  freqLabel={clk.freqLabel}
                   rotated={clk.ropeRotated}
                   isRoPE={true}
                   accentColor="#7c3aed"
@@ -419,10 +456,10 @@ export const PESimulator = () => {
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '6px' }}>
           <span style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a' }}>
-            '{TOKENS[position].display}' 토큰의 Attention Score
+            {t.scoresFor(TOKENS[position].display.trim())}
           </span>
           <span style={{ fontSize: '11px', color: '#64748b' }}>
-            <strong style={{ color: '#4338ca' }}>Δ = |n - m|</strong> (상대 거리)
+            <strong style={{ color: '#4338ca' }}>Δ = |n - m|</strong> ({t.relDist})
           </span>
         </div>
 
@@ -538,7 +575,7 @@ export const PESimulator = () => {
       {/* 5. 주석 (Footnote) */}
       <div style={{ borderTop: '1px dashed #dfdad0', paddingTop: '10px', marginTop: '2px' }}>
         <p style={{ margin: 0, fontSize: '11px', color: '#64748b', lineHeight: 1.6, fontStyle: 'italic' }}>
-          <strong style={{ color: '#4338ca', fontStyle: 'normal' }}>*</strong> Absolute PE는 토큰 임베딩 차원, RoPE는 단일 Attention Head 차원에 적용되므로 RoPE의 차원 수가 더 적게 표현된다. 본문에선 각각 6차원(Absolute PE), 4차원(RoPE) 벡터로 표현.
+          <strong style={{ color: '#4338ca', fontStyle: 'normal' }}>*</strong> {t.footnote}
         </p>
       </div>
 

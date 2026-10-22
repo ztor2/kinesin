@@ -1,7 +1,9 @@
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect, useCallback } from 'react';
 import katex from 'katex';
 import { motion, AnimatePresence } from 'framer-motion';
-import robotAvatarImg from '../../assets/policy-gradient/robot_avatar.jpg';
+import chiikawaStudyImg from '../../assets/policy-gradient/chiikawa_study_avatar.png';
+import chiikawaHappyImg from '../../assets/policy-gradient/chiikawa_happy_avatar.png';
+import chiikawaSadImg from '../../assets/policy-gradient/chiikawa_sad_avatar.png';
 
 // KaTeX 수학 수식 HTML 렌더링 헬퍼 컴포넌트
 const MathView = ({ math, style }) => {
@@ -10,23 +12,59 @@ const MathView = ({ math, style }) => {
 };
 
 // 1. Interactive Component 1: Computational Graph Guard
-export const GraphComparisonVisualizer = () => {
+export const GraphComparisonVisualizer = ({ lang = 'en' }) => {
   const [selectedType, setSelectedType] = useState('supervised');
   const [highlightedNode, setHighlightedNode] = useState(null);
 
+  const t = lang === 'ko' ? {
+    title: '계산 그래프(Computational Graph) & 기울기 전파 비교',
+    supervised: '지도학습 (Supervised)',
+    rl: '강화학습 (RL)',
+    param: '파라미터',
+    model: '신경망 모델',
+    pred: '예측값',
+    loss: '손실함수',
+    policyParam: '정책 파라미터',
+    policyNet: '정책 신경망',
+    action: '행동 선택',
+    env: '환경 (Env)'
+  } : {
+    title: 'Computational Graph & Gradient Flow Comparison',
+    supervised: 'Supervised Learning',
+    rl: 'Reinforcement Learning',
+    param: 'Parameters',
+    model: 'Model Network',
+    pred: 'Prediction',
+    loss: 'Loss Function',
+    policyParam: 'Policy Param',
+    policyNet: 'Policy Network',
+    action: 'Action Sampling',
+    env: 'Environment (Env)'
+  };
+
   return (
-    <div style={{
+    <div className="gc-visualizer-container" style={{
       width: '100%',
-      padding: '24px',
-      borderRadius: '20px',
       backgroundColor: '#fbf9f5',
       border: '1px solid #e8e4dc',
       boxShadow: '0 16px 36px -12px rgba(68, 64, 60, 0.08), 0 0 1px 1px rgba(68, 64, 60, 0.03)',
       boxSizing: 'border-box'
     }}>
+      <style>{`
+        .gc-visualizer-container {
+          padding: 24px;
+          border-radius: 10px;
+        }
+        @media (max-width: 640px) {
+          .gc-visualizer-container {
+            padding: 16px 12px !important;
+            border-radius: 14px !important;
+          }
+        }
+      `}</style>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '12px', marginBottom: '20px' }}>
         <span className="gmarket-font" style={{ fontSize: '15px', fontWeight: '700', color: '#0f172a' }}>
-          계산 그래프(Computational Graph) & 기울기 전파 비교
+          {t.title}
         </span>
         <div style={{ display: 'flex', gap: '8px' }}>
           <button
@@ -43,7 +81,7 @@ export const GraphComparisonVisualizer = () => {
               cursor: 'pointer'
             }}
           >
-            지도학습 (Supervised)
+            {t.supervised}
           </button>
           <button
             onClick={() => { setSelectedType('rl'); setHighlightedNode(null); }}
@@ -59,7 +97,7 @@ export const GraphComparisonVisualizer = () => {
               cursor: 'pointer'
             }}
           >
-            강화학습 (RL)
+            {t.rl}
           </button>
         </div>
       </div>
@@ -75,44 +113,44 @@ export const GraphComparisonVisualizer = () => {
         {selectedType === 'supervised' ? (
           <div style={{ minWidth: '500px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0' }}>
             <div onClick={() => setHighlightedNode('param')} style={{ cursor: 'pointer', padding: '12px 16px', borderRadius: '12px', backgroundColor: highlightedNode === 'param' ? '#dbeafe' : '#ffffff', border: '1.5px solid #3b82f6', textAlign: 'center' }}>
-              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>파라미터</div>
+              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>{t.param}</div>
               <div style={{ fontSize: '16px', color: '#1d4ed8' }}><MathView math="\theta" /></div>
             </div>
             <div style={{ color: '#3b82f6', fontWeight: 'bold' }}>➔</div>
             <div onClick={() => setHighlightedNode('model')} style={{ cursor: 'pointer', padding: '12px 16px', borderRadius: '12px', backgroundColor: highlightedNode === 'model' ? '#dbeafe' : '#ffffff', border: '1.5px solid #3b82f6', textAlign: 'center' }}>
-              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>신경망 모델</div>
+              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>{t.model}</div>
               <div style={{ fontSize: '15px', color: '#1d4ed8' }}><MathView math="f_\theta(x)" /></div>
             </div>
             <div style={{ color: '#3b82f6', fontWeight: 'bold' }}>➔</div>
             <div onClick={() => setHighlightedNode('pred')} style={{ cursor: 'pointer', padding: '12px 16px', borderRadius: '12px', backgroundColor: highlightedNode === 'pred' ? '#dbeafe' : '#ffffff', border: '1.5px solid #3b82f6', textAlign: 'center' }}>
-              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>예측값</div>
+              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>{t.pred}</div>
               <div style={{ fontSize: '15px', color: '#1d4ed8' }}><MathView math="\hat{y}" /></div>
             </div>
             <div style={{ color: '#3b82f6', fontWeight: 'bold' }}>➔</div>
             <div onClick={() => setHighlightedNode('loss')} style={{ cursor: 'pointer', padding: '12px 16px', borderRadius: '12px', backgroundColor: highlightedNode === 'loss' ? '#fee2e2' : '#ffffff', border: '1.5px solid #ef4444', textAlign: 'center' }}>
-              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>손실함수</div>
+              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>{t.loss}</div>
               <div style={{ fontSize: '15px', color: '#b91c1c' }}><MathView math="L" /></div>
             </div>
           </div>
         ) : (
           <div style={{ minWidth: '560px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 0' }}>
             <div onClick={() => setHighlightedNode('param')} style={{ cursor: 'pointer', padding: '12px 14px', borderRadius: '12px', backgroundColor: highlightedNode === 'param' ? '#d1fae5' : '#ffffff', border: '1.5px solid #10b981', textAlign: 'center' }}>
-              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>정책 파라미터</div>
+              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>{t.policyParam}</div>
               <div style={{ fontSize: '15px', color: '#047857' }}><MathView math="\theta" /></div>
             </div>
             <div style={{ color: '#10b981', fontWeight: 'bold' }}>➔</div>
             <div onClick={() => setHighlightedNode('policy')} style={{ cursor: 'pointer', padding: '12px 14px', borderRadius: '12px', backgroundColor: highlightedNode === 'policy' ? '#d1fae5' : '#ffffff', border: '1.5px solid #10b981', textAlign: 'center' }}>
-              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>정책 신경망</div>
+              <div style={{ fontSize: '11px', color: '#64748b', fontWeight: '700' }}>{t.policyNet}</div>
               <div style={{ fontSize: '14.5px', color: '#047857' }}><MathView math="\pi_\theta(a|s)" /></div>
             </div>
             <div style={{ color: '#f59e0b', fontWeight: 'bold' }}>Sampling ➔</div>
             <div onClick={() => setHighlightedNode('action')} style={{ cursor: 'pointer', padding: '12px 14px', borderRadius: '12px', backgroundColor: highlightedNode === 'action' ? '#fef3c7' : '#ffffff', border: '1.5px dashed #f59e0b', textAlign: 'center' }}>
-              <div style={{ fontSize: '11px', color: '#b45309', fontWeight: '700' }}>행동 선택</div>
+              <div style={{ fontSize: '11px', color: '#b45309', fontWeight: '700' }}>{t.action}</div>
               <div style={{ fontSize: '15px', color: '#b45309' }}><MathView math="a" /></div>
             </div>
             <div style={{ color: '#ef4444', fontWeight: 'bold' }}>Black-box ➔</div>
             <div onClick={() => setHighlightedNode('env')} style={{ cursor: 'pointer', padding: '12px 14px', borderRadius: '12px', backgroundColor: highlightedNode === 'env' ? '#fee2e2' : '#ffffff', border: '1.5px solid #ef4444', textAlign: 'center' }}>
-              <div style={{ fontSize: '11px', color: '#991b1b', fontWeight: '700' }}>환경 (Env)</div>
+              <div style={{ fontSize: '11px', color: '#991b1b', fontWeight: '700' }}>{t.env}</div>
               <div style={{ fontSize: '15px', color: '#991b1b' }}><MathView math="R" /></div>
             </div>
           </div>
@@ -123,11 +161,12 @@ export const GraphComparisonVisualizer = () => {
 };
 
 // 2. Main Simulator Component: Clean, De-cluttered & Expanded Nodes
-export const ProbabilityMassSimulator = () => {
+export const ProbabilityMassSimulator = ({ lang = 'en' }) => {
   const [probRight, setProbRight] = useState(0.5);
   const [activeStep, setActiveStep] = useState(null);
   const [activeMathTerm, setActiveMathTerm] = useState('log_prob');
-  const [lineCoords, setLineCoords] = useState({ x: 150, width: 80 });
+  const formulaScrollRef = useRef(null);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
 
   // Policy Gradient Learning State
   const [episodeCount, setEpisodeCount] = useState(0);
@@ -148,7 +187,6 @@ export const ProbabilityMassSimulator = () => {
     klCoefRef.current = klCoef;
   }, [klCoef]);
 
-  const containerRef = useRef(null);
   const termRefs = {
     grad_j: useRef(null),
     expectation: useRef(null),
@@ -170,7 +208,7 @@ export const ProbabilityMassSimulator = () => {
   const expectedReturn = pLL * rLL + pLR * rLR + pRL * rRL + pRR * rRR;
 
   // Step term breakdown configuration with REAL-TIME Episode Gradient Value Sync
-  const mathTerms = {
+  const mathTerms = lang === 'ko' ? {
     grad_j: {
       symbol: '\\nabla_\\theta J(\\theta)',
       name: '기대 보상 목적함수 기울기 (Expected Return Gradient)',
@@ -181,7 +219,7 @@ export const ProbabilityMassSimulator = () => {
       valStr: lastDelta !== null ? (lastDelta >= 0 ? `ΔP = +${lastDelta.toFixed(3)}` : `ΔP = ${lastDelta.toFixed(3)}`) : 'ΔP = 0.000',
       descNode: (
         <span>
-          계산된 정책 기울기 <MathView math="\nabla_\theta J(\theta)" /> 변동량은 <strong className="num-font" style={{ color: lastDelta >= 0 ? '#059669' : '#dc2626' }}>{lastDelta !== null ? (lastDelta >= 0 ? `+${lastDelta.toFixed(3)}` : lastDelta.toFixed(3)) : '0.000'}</strong>입니다.
+          계산된 정책 기울기 <MathView math="\nabla_\theta J(\theta)" /> 변동량은 <MathView math={`\\Delta P = ${lastDelta !== null ? (lastDelta >= 0 ? `+${lastDelta.toFixed(3)}` : lastDelta.toFixed(3)) : '0.000'}`} style={{ color: lastDelta >= 0 ? '#059669' : '#dc2626', fontWeight: 'bold' }} />입니다.
           {lastDelta !== null && lastDelta > 0 && <span> (높은 보상을 받아 Right 확률이 상승했습니다)</span>}
           {lastDelta !== null && lastDelta < 0 && <span> (낮은 보상을 받아 Right 확률이 조정되었습니다)</span>}
         </span>
@@ -197,7 +235,7 @@ export const ProbabilityMassSimulator = () => {
       valStr: `P(Right) = ${probRight.toFixed(2)}`,
       descNode: (
         <span>
-          현재 정책의 Right 선택 확률은 <strong className="num-font" style={{ color: '#2563eb' }}>{probRight.toFixed(2)}</strong> 이며, <MathView math="P(\text{RR})" /> 궤적 발생 확률은 <strong className="num-font">{(pRR*100).toFixed(1)}%</strong> 입니다.
+          현재 정책의 Right 선택 확률은 <MathView math={`P(\\text{Right}) = ${probRight.toFixed(2)}`} style={{ color: '#2563eb', fontWeight: 'bold' }} /> 이며, <MathView math="P(\text{RR})" /> 궤적 발생 확률은 <MathView math={`${(pRR*100).toFixed(1)}\\%`} style={{ fontWeight: 'bold' }} /> 입니다.
         </span>
       )
     },
@@ -211,7 +249,7 @@ export const ProbabilityMassSimulator = () => {
       valStr: activeStep || 'START',
       descNode: (
         <span>
-          로봇이 선택한 행동 궤적은 <strong className="num-font" style={{ color: '#7c3aed' }}>{activeStep || 'START'}</strong> 입니다. 로그 미분 트릭 <MathView math="\nabla \log \pi = \frac{\nabla \pi}{\pi}" />을 통해 가중치 업데이트 방향을 제공합니다.
+          로봇이 선택한 행동 궤적은 <MathView math={`\\tau = \\text{${activeStep || 'START'}}`} style={{ color: '#7c3aed', fontWeight: 'bold' }} /> 입니다. 로그 미분 트릭 <MathView math="\nabla \log \pi = \frac{\nabla \pi}{\pi}" />을 통해 가중치 업데이트 방향을 제공합니다.
         </span>
       )
     },
@@ -225,7 +263,66 @@ export const ProbabilityMassSimulator = () => {
       valStr: lastReward !== null ? `Reward = ${lastReward}점` : 'Reward = 0점',
       descNode: (
         <span>
-          환경이 돌려준 보상은 <strong className="num-font" style={{ color: lastReward === 5 ? '#059669' : '#d97706' }}>{lastReward !== null ? `${lastReward}점` : '0점'}</strong> 입니다. 보상 크기에 따라 기울기 업데이트의 가중치가 조율됩니다.
+          환경이 돌려준 보상은 <MathView math={`R = ${lastReward !== null ? lastReward : 0}`} style={{ color: lastReward === 5 ? '#059669' : '#d97706', fontWeight: 'bold' }} />점 입니다. 보상 크기에 따라 기울기 업데이트의 가중치가 조율됩니다.
+        </span>
+      )
+    }
+  } : {
+    grad_j: {
+      symbol: '\\nabla_\\theta J(\\theta)',
+      name: 'Expected Return Gradient',
+      bgColor: '#f0fdf4',
+      themeColor: '#059669',
+      highlightBg: '#d1fae5',
+      formula: '\\nabla_\\theta J(\\theta) \\approx \\Delta P = ' + (lastDelta !== null ? (lastDelta >= 0 ? `+${lastDelta.toFixed(3)}` : lastDelta.toFixed(3)) : '0.000'),
+      valStr: lastDelta !== null ? (lastDelta >= 0 ? `ΔP = +${lastDelta.toFixed(3)}` : `ΔP = ${lastDelta.toFixed(3)}`) : 'ΔP = 0.000',
+      descNode: (
+        <span>
+          Estimated policy gradient step <MathView math="\nabla_\theta J(\theta)" /> is <MathView math={`\\Delta P = ${lastDelta !== null ? (lastDelta >= 0 ? `+${lastDelta.toFixed(3)}` : lastDelta.toFixed(3)) : '0.000'}`} style={{ color: lastDelta >= 0 ? '#059669' : '#dc2626', fontWeight: 'bold' }} />.
+          {lastDelta !== null && lastDelta > 0 && <span> (Reinforced rightward branch from high reward)</span>}
+          {lastDelta !== null && lastDelta < 0 && <span> (Suppressed rightward branch from sub-baseline return)</span>}
+        </span>
+      )
+    },
+    expectation: {
+      symbol: '\\mathbb{E}_{\\tau \\sim p_\\theta(\\tau)}',
+      name: 'Expectation Operator',
+      bgColor: '#eff6ff',
+      themeColor: '#2563eb',
+      highlightBg: '#dbeafe',
+      formula: '\\mathbb{E}_{\\tau} [X] \\implies P(\\text{Right}) = ' + probRight.toFixed(2),
+      valStr: `P(Right) = ${probRight.toFixed(2)}`,
+      descNode: (
+        <span>
+          Current probability of choosing Right is <MathView math={`P(\\text{Right}) = ${probRight.toFixed(2)}`} style={{ color: '#2563eb', fontWeight: 'bold' }} />, with trajectory <MathView math="P(\text{RR})" /> probability at <MathView math={`${(pRR*100).toFixed(1)}\\%`} style={{ fontWeight: 'bold' }} />.
+        </span>
+      )
+    },
+    log_prob: {
+      symbol: '\\nabla_\\theta \\log \\pi_\\theta(a|s)',
+      name: 'Log-Probability Gradient',
+      bgColor: '#f5f3ff',
+      themeColor: '#7c3aed',
+      highlightBg: '#ede9fe',
+      formula: '\\nabla_\\theta \\log \\pi_\\theta(a|s) \\implies \\text{Trajectory: } ' + (activeStep || 'START'),
+      valStr: activeStep || 'START',
+      descNode: (
+        <span>
+          Sampled trajectory is <MathView math={`\\tau = \\text{${activeStep || 'START'}}`} style={{ color: '#7c3aed', fontWeight: 'bold' }} />. The log-derivative trick <MathView math="\nabla \log \pi = \frac{\nabla \pi}{\pi}" /> guides the weight update direction.
+        </span>
+      )
+    },
+    reward_weight: {
+      symbol: 'R(\\tau)',
+      name: 'Reward Weight',
+      bgColor: '#fffbeb',
+      themeColor: '#d97706',
+      highlightBg: '#fef3c7',
+      formula: 'R(\\tau) = ' + (lastReward !== null ? `${lastReward} pts` : '0 pts'),
+      valStr: lastReward !== null ? `Reward = ${lastReward} pts` : 'Reward = 0 pts',
+      descNode: (
+        <span>
+          Returned environmental reward is <MathView math={`R = ${lastReward !== null ? lastReward : 0}`} style={{ color: lastReward === 5 ? '#059669' : '#d97706', fontWeight: 'bold' }} /> pts, scaling the magnitude and sign of the gradient ascent step.
         </span>
       )
     }
@@ -233,24 +330,14 @@ export const ProbabilityMassSimulator = () => {
 
   const activeTermInfo = mathTerms[activeMathTerm];
 
-  // Dynamically measure active inline math term element bounds to position connecting beam
-  useEffect(() => {
-    const termEl = termRefs[activeMathTerm]?.current;
-    const containerEl = containerRef.current;
-
-    if (termEl && containerEl) {
-      const termRect = termEl.getBoundingClientRect();
-      const containerRect = containerEl.getBoundingClientRect();
-
-      const relativeX = termRect.left - containerRect.left;
-      const termWidth = termRect.width;
-
-      setLineCoords({
-        x: relativeX + termWidth / 2,
-        width: termWidth
-      });
+  const selectMathTerm = (termKey) => {
+    setActiveMathTerm(termKey);
+    setIsDetailOpen(true);
+    const termEl = termRefs[termKey]?.current;
+    if (termEl) {
+      termEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
     }
-  }, [activeMathTerm]);
+  };
 
   const [isAutoPlaying, setIsAutoPlaying] = useState(false);
   const isAutoPlayingRef = useRef(isAutoPlaying);
@@ -272,6 +359,13 @@ export const ProbabilityMassSimulator = () => {
   };
 
   const robotPos = getRobotPosition();
+
+  // Dynamic Chiikawa avatar expression based on exploration & reward state
+  const getAvatarSrc = () => {
+    if (activeStep === 'LL') return chiikawaSadImg.src || chiikawaSadImg;
+    if (activeStep === 'RR') return chiikawaHappyImg.src || chiikawaHappyImg;
+    return chiikawaStudyImg.src || chiikawaStudyImg;
+  };
 
   const MAX_AUTO_EPISODES = 20;
 
@@ -382,179 +476,320 @@ export const ProbabilityMassSimulator = () => {
     setActiveStep(null);
   };
 
+  const ui = lang === 'ko' ? {
+    title: 'Policy Gradient 시뮬레이터',
+    reset: '초기화',
+    stopAuto: '❚❚ 자동 학습 정지',
+    startAuto: '▶ 자동 연속 학습',
+    stepOnce: '1회 탐색 & 학습 실행',
+    unit: '점',
+    baselineLabel: '기대보상',
+    klLabel: 'KL 페널티',
+    processTitle: 'Policy Gradient 실시간 수식',
+    toggleOpen: '상세 설명 ▾',
+    toggleClose: '설명 접기 ▴'
+  } : {
+    title: 'Policy Gradient Simulator',
+    reset: 'Reset',
+    stopAuto: '❚❚ Pause Auto',
+    startAuto: '▶ Auto Run (20x)',
+    stepOnce: 'Step Once',
+    unit: ' pts',
+    baselineLabel: 'Baseline',
+    klLabel: 'KL Penalty',
+    processTitle: 'Live Policy Gradient Formula',
+    toggleOpen: 'Term Details ▾',
+    toggleClose: 'Hide Details ▴'
+  };
+
   return (
-    <div style={{
+    <div className="pg-simulator-container" style={{
       width: '100%',
-      padding: '24px',
-      borderRadius: '20px',
       backgroundColor: '#fbf9f5',
       border: '1px solid #e8e4dc',
       boxShadow: '0 16px 36px -12px rgba(68, 64, 60, 0.08), 0 0 1px 1px rgba(68, 64, 60, 0.03)',
       boxSizing: 'border-box',
       display: 'flex',
       flexDirection: 'column',
-      gap: '24px'
+      fontFamily: '"Plus Jakarta Sans", "Noto Sans KR", -apple-system, BlinkMacSystemFont, sans-serif'
     }}>
-      {/* 1. 컴포넌트 헤더 영역 */}
-      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '16px' }}>
-        {/* Row 1: 세로형 컬러 바 + 메인 타이틀 */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          <div style={{ width: '6px', height: '22px', borderRadius: '5px', background: 'linear-gradient(180deg, #10b981, #059669)' }} />
-          <h3 className="gmarket-font" style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.02em' }}>
-            Policy Gradient Simulator
-          </h3>
-        </div>
+      <style>{`
+        .pg-simulator-container {
+          padding: 24px;
+          border-radius: 10px;
+          gap: 22px;
+        }
+        .pg-header-row {
+          display: flex;
+          justify-content: space-between;
+          align-items: center;
+          flex-wrap: wrap;
+          gap: 14px;
+        }
+        .pg-header-btns {
+          display: flex;
+          gap: 8px;
+          align-items: center;
+          flex-wrap: wrap;
+        }
+        .pg-sliders-grid {
+          display: grid;
+          grid-template-columns: repeat(3, 1fr);
+          gap: 14px;
+          background-color: #f8fafc;
+          padding: 16px;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+        }
+        .pg-traj-grid {
+          display: grid;
+          grid-template-columns: repeat(4, 1fr);
+          gap: 10px;
+        }
+        .pg-canvas-scroll-wrapper {
+          width: 100%;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          border-radius: 14px;
+          border: 1px solid #e2e8f0;
+          background-color: #f8fafc;
+        }
+        .pg-canvas-inner {
+          position: relative;
+          height: 240px;
+          min-width: 460px;
+          width: 100%;
+        }
+        .pg-formula-scroll-wrapper {
+          width: 100%;
+          overflow-x: auto;
+          -webkit-overflow-scrolling: touch;
+          background-color: #f8fafc;
+          border-radius: 12px;
+          border: 1px solid #e2e8f0;
+          box-sizing: border-box;
+          padding: 10px 0;
+        }
+        .pg-formula-row {
+          font-size: 15.5px;
+          color: #0f172a;
+          display: inline-flex;
+          align-items: center;
+          justify-content: center;
+          flex-wrap: nowrap;
+          gap: 6px;
+          width: max-content;
+          min-width: 100%;
+          margin: 0;
+          padding: 4px 20px;
+          box-sizing: border-box;
+        }
+        .pg-term-details-btn {
+          color: #64748b;
+          transition: color 0.15s ease;
+        }
+        .pg-term-details-btn:hover {
+          color: #2563eb !important;
+        }
 
-        {/* Row 2: 우측 정렬된 컨트롤 버튼 그룹 [초기화] -> [자동 연속 학습 (20회)] -> [1회 탐색] */}
-        <div style={{ display: 'flex', gap: '8px', justifyContent: 'flex-end', alignItems: 'center', flexWrap: 'wrap' }}>
-          <button
-            onClick={resetTraining}
-            className="gmarket-font"
-            style={{
-              padding: '7px 14px',
-              fontSize: '12.5px',
-              fontWeight: '700',
-              borderRadius: '8px',
-              border: '1px solid #cbd5e1',
-              backgroundColor: '#ffffff',
-              color: '#64748b',
-              cursor: 'pointer'
-            }}
-          >
-            초기화
-          </button>
-          <button
-            onClick={() => {
-              if (episodeCount >= MAX_AUTO_EPISODES) {
-                setEpisodeCount(0);
-              }
-              setIsAutoPlaying((prev) => !prev);
-            }}
-            className="gmarket-font"
-            style={{
-              padding: '7px 15px',
-              fontSize: '13px',
-              fontWeight: '700',
-              borderRadius: '8px',
-              border: isAutoPlaying ? '1.5px solid #ef4444' : '1.5px solid #10b981',
-              backgroundColor: isAutoPlaying ? '#fef2f2' : '#ecfdf5',
-              color: isAutoPlaying ? '#dc2626' : '#047857',
-              cursor: 'pointer',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '6px'
-            }}
-          >
-            {isAutoPlaying ? '❚❚ 자동 학습 정지' : '▶ 자동 연속 학습'}
-          </button>
-          <button
-            onClick={() => { setIsAutoPlaying(false); runPolicyGradientStep(); }}
-            className="gmarket-font"
-            style={{
-              padding: '7px 16px',
-              fontSize: '13px',
-              fontWeight: '700',
-              borderRadius: '8px',
-              border: 'none',
-              backgroundColor: '#2563eb',
-              color: '#ffffff',
-              cursor: 'pointer',
-              boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)'
-            }}
-          >
-            1회 탐색 & 학습 실행
-          </button>
+        @media (max-width: 640px) {
+          .pg-simulator-container {
+            padding: 16px 12px !important;
+            border-radius: 14px !important;
+            gap: 18px !important;
+          }
+          .pg-header-row {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 12px !important;
+          }
+          .pg-header-btns {
+            width: 100% !important;
+            display: grid !important;
+            grid-template-columns: 1fr 1.3fr 1.4fr !important;
+            gap: 6px !important;
+          }
+          .pg-header-btns button {
+            padding: 7px 4px !important;
+            font-size: 11.5px !important;
+            justify-content: center !important;
+            text-align: center !important;
+          }
+          .pg-sliders-grid {
+            grid-template-columns: 1fr !important;
+            gap: 12px !important;
+            padding: 12px !important;
+          }
+          .pg-traj-grid {
+            grid-template-columns: repeat(2, 1fr) !important;
+            gap: 8px !important;
+          }
+          .pg-formula-scroll-wrapper {
+            padding: 8px 0 !important;
+          }
+          .pg-formula-row {
+            font-size: 14px !important;
+            justify-content: flex-start !important;
+            padding: 4px 28px 4px 16px !important;
+          }
+        }
+      `}</style>
+
+      {/* 1. 컴포넌트 헤더 영역 */}
+      <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', borderBottom: '1px solid #f1f5f9', paddingBottom: '14px' }}>
+        <div className="pg-header-row">
+          {/* 좌측 세로형 컬러 바 + 메인 타이틀 */}
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ width: '6px', height: '22px', borderRadius: '5px', background: 'linear-gradient(180deg, #10b981, #059669)', flexShrink: 0 }} />
+            <h3 className="gmarket-font" style={{ margin: 0, fontSize: '16.5px', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.02em' }}>
+              {ui.title}
+            </h3>
+          </div>
+
+          {/* 우측 컨트롤 버튼 그룹 [초기화] -> [자동 연속 학습] -> [1회 탐색] */}
+          <div className="pg-header-btns">
+            <button
+              onClick={resetTraining}
+              className="gmarket-font"
+              style={{
+                padding: '7px 12px',
+                fontSize: '12.5px',
+                fontWeight: '700',
+                borderRadius: '8px',
+                border: '1px solid #cbd5e1',
+                backgroundColor: '#ffffff',
+                color: '#64748b',
+                cursor: 'pointer'
+              }}
+            >
+              {ui.reset}
+            </button>
+            <button
+              onClick={() => {
+                if (episodeCount >= MAX_AUTO_EPISODES) {
+                  setEpisodeCount(0);
+                }
+                setIsAutoPlaying((prev) => !prev);
+              }}
+              className="gmarket-font"
+              style={{
+                padding: '7px 14px',
+                fontSize: '12.5px',
+                fontWeight: '700',
+                borderRadius: '8px',
+                border: isAutoPlaying ? '1.5px solid #ef4444' : '1.5px solid #10b981',
+                backgroundColor: isAutoPlaying ? '#fef2f2' : '#ecfdf5',
+                color: isAutoPlaying ? '#dc2626' : '#047857',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '5px'
+              }}
+            >
+              {isAutoPlaying ? ui.stopAuto : ui.startAuto}
+            </button>
+            <button
+              onClick={() => { setIsAutoPlaying(false); runPolicyGradientStep(); }}
+              className="gmarket-font"
+              style={{
+                padding: '7px 14px',
+                fontSize: '12.5px',
+                fontWeight: '700',
+                borderRadius: '8px',
+                border: 'none',
+                backgroundColor: '#2563eb',
+                color: '#ffffff',
+                cursor: 'pointer',
+                boxShadow: '0 2px 8px rgba(37, 99, 235, 0.25)'
+              }}
+            >
+              {ui.stepOnce}
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* 2. 2D 로봇 탐색 다이어그램 캔버스 */}
-      <div style={{
-        position: 'relative',
-        height: '240px',
-        width: '100%',
-        backgroundColor: '#f8fafc',
-        borderRadius: '14px',
-        border: '1px solid #e2e8f0',
-        overflow: 'hidden'
-      }}>
-        <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
-          <line x1="50%" y1="14%" x2="25%" y2="48%" stroke={probLeft > 0.5 ? '#3b82f6' : '#cbd5e1'} strokeWidth={probLeft * 6 + 1.5} />
-          <line x1="50%" y1="14%" x2="75%" y2="48%" stroke={probRight > 0.5 ? '#3b82f6' : '#cbd5e1'} strokeWidth={probRight * 6 + 1.5} />
-          
-          <line x1="25%" y1="48%" x2="12.5%" y2="84%" stroke="#cbd5e1" strokeWidth={probLeft * 4 + 1} />
-          <line x1="25%" y1="48%" x2="37.5%" y2="84%" stroke="#cbd5e1" strokeWidth={probRight * 4 + 1} />
+      {/* 2. 2D 로봇 탐색 다이어그램 캔버스 (가로 스크롤 보호 래퍼) */}
+      <div className="pg-canvas-scroll-wrapper">
+        <div className="pg-canvas-inner">
+          <svg style={{ position: 'absolute', top: 0, left: 0, width: '100%', height: '100%', pointerEvents: 'none' }}>
+            <line x1="50%" y1="14%" x2="25%" y2="48%" stroke={probLeft > 0.5 ? '#3b82f6' : '#cbd5e1'} strokeWidth={probLeft * 6 + 1.5} />
+            <line x1="50%" y1="14%" x2="75%" y2="48%" stroke={probRight > 0.5 ? '#3b82f6' : '#cbd5e1'} strokeWidth={probRight * 6 + 1.5} />
+            
+            <line x1="25%" y1="48%" x2="12.5%" y2="84%" stroke="#cbd5e1" strokeWidth={probLeft * 4 + 1} />
+            <line x1="25%" y1="48%" x2="37.5%" y2="84%" stroke="#cbd5e1" strokeWidth={probRight * 4 + 1} />
 
-          <line x1="75%" y1="48%" x2="62.5%" y2="84%" stroke="#cbd5e1" strokeWidth={probLeft * 4 + 1} />
-          <line x1="75%" y1="48%" x2="87.5%" y2="84%" stroke="#10b981" strokeWidth={probRight * 5 + 1.5} />
-        </svg>
+            <line x1="75%" y1="48%" x2="62.5%" y2="84%" stroke="#cbd5e1" strokeWidth={probLeft * 4 + 1} />
+            <line x1="75%" y1="48%" x2="87.5%" y2="84%" stroke="#10b981" strokeWidth={probRight * 5 + 1.5} />
+          </svg>
 
-        {/* 다이어그램 우측 상단 에피소드 카운터 */}
-        <div style={{
-          position: 'absolute',
-          top: '12px',
-          right: '14px',
-          fontSize: '12px',
-          fontWeight: '700',
-          color: '#6d28d9',
-          zIndex: 5
-        }}>
-          Episode <strong className="num-font" style={{ color: '#6d28d9', fontSize: '13px' }}>#{episodeCount}</strong>
-        </div>
+          {/* 다이어그램 우측 상단 에피소드 카운터 */}
+          <div style={{
+            position: 'absolute',
+            top: '12px',
+            right: '14px',
+            fontSize: '12px',
+            fontWeight: '700',
+            color: '#6d28d9',
+            zIndex: 5
+          }}>
+            Episode <strong style={{ color: '#6d28d9', fontSize: '13px', fontVariantNumeric: 'tabular-nums' }}>#{episodeCount}</strong>
+          </div>
 
-        {/* 1. START 노드 */}
-        <div style={{
-          position: 'absolute',
-          top: '14%',
-          left: '50%',
-          transform: 'translate(-50%, -50%)',
-          padding: '6px 14px',
-          borderRadius: '10px',
-          backgroundColor: activeStep === 'START' ? '#dbeafe' : '#ffffff',
-          border: activeStep === 'START' ? '2px solid #2563eb' : '1.5px solid #64748b',
-          fontSize: '12px',
-          fontWeight: '700',
-          color: '#1e293b',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-          transition: 'all 0.2s ease'
-        }}>
-          START
-        </div>
+          {/* 1. START 노드 */}
+          <div style={{
+            position: 'absolute',
+            top: '14%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            padding: '6px 14px',
+            borderRadius: '10px',
+            backgroundColor: activeStep === 'START' ? '#dbeafe' : '#ffffff',
+            border: activeStep === 'START' ? '2px solid #2563eb' : '1.5px solid #64748b',
+            fontSize: '12px',
+            fontWeight: '700',
+            color: '#1e293b',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+            transition: 'all 0.2s ease'
+          }}>
+            START
+          </div>
 
-        {/* 2. 1-Step 노드들 */}
-        <div style={{
-          position: 'absolute',
-          top: '48%',
-          left: '25%',
-          transform: 'translate(-50%, -50%)',
-          padding: '6px 14px',
-          borderRadius: '10px',
-          backgroundColor: activeStep === 'L' ? '#dbeafe' : '#ffffff',
-          border: activeStep === 'L' ? '2px solid #2563eb' : '1.5px solid #64748b',
-          fontSize: '12px',
-          fontWeight: '700',
-          color: '#1e293b',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-          transition: 'all 0.2s ease'
-        }}>
-          Left ({(probLeft*100).toFixed(0)}%)
-        </div>
-        <div style={{
-          position: 'absolute',
-          top: '48%',
-          left: '75%',
-          transform: 'translate(-50%, -50%)',
-          padding: '6px 14px',
-          borderRadius: '10px',
-          backgroundColor: activeStep === 'R' ? '#dbeafe' : '#ffffff',
-          border: activeStep === 'R' ? '2px solid #2563eb' : '1.5px solid #64748b',
-          fontSize: '12px',
-          fontWeight: '700',
-          color: '#1e293b',
-          boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
-          transition: 'all 0.2s ease'
-        }}>
-          Right ({(probRight*100).toFixed(0)}%)
-        </div>
+          {/* 2. 1-Step 노드들 */}
+          <div style={{
+            position: 'absolute',
+            top: '48%',
+            left: '25%',
+            transform: 'translate(-50%, -50%)',
+            padding: '6px 14px',
+            borderRadius: '10px',
+            backgroundColor: activeStep === 'L' ? '#dbeafe' : '#ffffff',
+            border: activeStep === 'L' ? '2px solid #2563eb' : '1.5px solid #64748b',
+            fontSize: '12px',
+            fontWeight: '700',
+            color: '#1e293b',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+            transition: 'all 0.2s ease'
+          }}>
+            Left ({(probLeft*100).toFixed(0)}%)
+          </div>
+          <div style={{
+            position: 'absolute',
+            top: '48%',
+            left: '75%',
+            transform: 'translate(-50%, -50%)',
+            padding: '6px 14px',
+            borderRadius: '10px',
+            backgroundColor: activeStep === 'R' ? '#dbeafe' : '#ffffff',
+            border: activeStep === 'R' ? '2px solid #2563eb' : '1.5px solid #64748b',
+            fontSize: '12px',
+            fontWeight: '700',
+            color: '#1e293b',
+            boxShadow: '0 2px 6px rgba(0,0,0,0.04)',
+            transition: 'all 0.2s ease'
+          }}>
+            Right ({(probRight*100).toFixed(0)}%)
+          </div>
 
         {/* 3. 2-Step 노드들 */}
         <div style={{
@@ -569,9 +804,13 @@ export const ProbabilityMassSimulator = () => {
           fontSize: '12px',
           textAlign: 'center',
           color: '#475569',
-          transition: 'all 0.2s ease'
+          transition: 'all 0.2s ease',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '3px'
         }}>
-          LL: <strong className="num-font">0점</strong>
+          <MathView math="\text{LL: } 0" style={{ fontSize: '12.5px' }} />
+          <span style={{ fontSize: '11px', color: '#64748b' }}>{ui.unit.trim()}</span>
         </div>
         <div style={{
           position: 'absolute',
@@ -585,9 +824,13 @@ export const ProbabilityMassSimulator = () => {
           fontSize: '12px',
           textAlign: 'center',
           color: '#1d4ed8',
-          transition: 'all 0.2s ease'
+          transition: 'all 0.2s ease',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '3px'
         }}>
-          LR: <strong className="num-font">1점</strong>
+          <MathView math="\text{LR: } 1" style={{ fontSize: '12.5px' }} />
+          <span style={{ fontSize: '11px', color: '#1d4ed8' }}>{ui.unit.trim()}</span>
         </div>
         <div style={{
           position: 'absolute',
@@ -601,9 +844,13 @@ export const ProbabilityMassSimulator = () => {
           fontSize: '12px',
           textAlign: 'center',
           color: '#1d4ed8',
-          transition: 'all 0.2s ease'
+          transition: 'all 0.2s ease',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '3px'
         }}>
-          RL: <strong className="num-font">1점</strong>
+          <MathView math="\text{RL: } 1" style={{ fontSize: '12.5px' }} />
+          <span style={{ fontSize: '11px', color: '#1d4ed8' }}>{ui.unit.trim()}</span>
         </div>
         <div style={{
           position: 'absolute',
@@ -617,19 +864,27 @@ export const ProbabilityMassSimulator = () => {
           fontSize: '12px',
           textAlign: 'center',
           boxShadow: activeStep === 'RR' ? '0 0 16px rgba(16, 185, 129, 0.6)' : '0 4px 12px rgba(16, 185, 129, 0.2)',
-          transition: 'all 0.2s ease'
+          transition: 'all 0.2s ease',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '3px'
         }}>
-          <strong style={{ color: '#047857' }}>RR: 5점</strong>
+          <MathView math="\text{RR: } 5" style={{ fontSize: '12.5px', color: '#047857' }} />
+          <span style={{ fontSize: '11px', color: '#047857', fontWeight: 'bold' }}>{ui.unit.trim()}</span>
         </div>
 
-        {/* 4. 애니메이션 로봇 아바타 (정밀 노드 위치 스냅 및 스프링 물리) */}
+        {/* 4. 애니메이션 치이카와 아바타 (정밀 노드 위치 스냅 및 강화학습 보상별 감정 반응) */}
         <motion.div
-          animate={{ left: `${robotPos.x}%`, top: `${robotPos.y}%` }}
+          animate={{ 
+            left: `${robotPos.x}%`, 
+            top: `${robotPos.y}%`,
+            scale: activeStep === 'RR' ? 1.15 : activeStep === 'LL' ? 0.95 : 1
+          }}
           transition={{ type: 'spring', stiffness: 350, damping: 24 }}
           style={{
             position: 'absolute',
-            width: '44px',
-            height: '44px',
+            width: '46px',
+            height: '46px',
             x: '-50%',
             y: '-50%',
             zIndex: 20,
@@ -637,31 +892,45 @@ export const ProbabilityMassSimulator = () => {
           }}
         >
           <img 
-            src={robotAvatarImg.src || robotAvatarImg} 
-            alt="Robot" 
+            src={getAvatarSrc()} 
+            alt="Chiikawa" 
             style={{ 
               width: '100%', 
               height: '100%', 
               borderRadius: '50%', 
-              border: '2.5px solid #3b82f6',
-              boxShadow: '0 4px 14px rgba(59, 130, 246, 0.5)',
-              objectFit: 'cover'
+              border: activeStep === 'RR' 
+                ? '2.5px solid #10b981' 
+                : activeStep === 'LL' 
+                ? '2.5px solid #ef4444' 
+                : '2px solid #3b82f6',
+              boxShadow: activeStep === 'RR' 
+                ? '0 4px 14px rgba(16, 185, 129, 0.45), 0 0 0 2px #ffffff' 
+                : activeStep === 'LL' 
+                ? '0 4px 14px rgba(239, 68, 68, 0.35), 0 0 0 2px #ffffff' 
+                : '0 4px 12px rgba(59, 130, 246, 0.3), 0 0 0 2px #ffffff',
+              objectFit: 'cover',
+              backgroundColor: '#ffffff',
+              transition: 'border 0.2s ease, box-shadow 0.2s ease'
             }} 
           />
         </motion.div>
       </div>
+    </div>
 
       {/* 3. 다이어그램 하단: 반응형 3-Column 슬라이더 그리드 (화면 너비에 따라 깔끔하게 자동 응답) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', backgroundColor: '#f8fafc', padding: '16px', borderRadius: '12px', border: '1px solid #e2e8f0' }}>
+      <div className="pg-sliders-grid">
         {/* 슬라이더 1: P(Right) 정책 확률 */}
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '12.5px', fontWeight: '700', color: '#334155' }}>
-              <MathView math="P(\text{Right})" />: <strong className="num-font" style={{ color: '#2563eb', fontSize: '14px' }}>{probRight.toFixed(2)}</strong>
+              <MathView math={`P(\\text{Right}) = ${probRight.toFixed(2)}`} style={{ color: '#2563eb', fontSize: '13px' }} />
             </span>
             {lastDelta !== null && (
-              <span className="num-font" style={{ fontSize: '11.5px', color: lastDelta >= 0 ? '#059669' : '#dc2626', fontWeight: 'bold' }}>
-                ({lastDelta >= 0 ? `+${lastDelta.toFixed(3)}` : lastDelta.toFixed(3)})
+              <span>
+                <MathView 
+                  math={`(${lastDelta >= 0 ? `+${lastDelta.toFixed(3)}` : lastDelta.toFixed(3)})`} 
+                  style={{ fontSize: '11.5px', color: lastDelta >= 0 ? '#059669' : '#dc2626' }} 
+                />
               </span>
             )}
           </div>
@@ -680,7 +949,8 @@ export const ProbabilityMassSimulator = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '12.5px', fontWeight: '700', color: '#334155' }}>
-              <MathView math="J(\theta)" /> (기대보상): <strong className="num-font" style={{ color: '#059669', fontSize: '14px' }}>{baseline.toFixed(2)}점</strong>
+              <MathView math={`J(\\theta) = ${baseline.toFixed(2)}`} style={{ color: '#059669', fontSize: '13px' }} />
+              <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '3px' }}>({ui.baselineLabel})</span>
             </span>
           </div>
           <input
@@ -698,7 +968,8 @@ export const ProbabilityMassSimulator = () => {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span style={{ fontSize: '12.5px', fontWeight: '700', color: '#334155' }}>
-              <MathView math="\text{KL Penalty } \beta" />: <strong className="num-font" style={{ color: '#7c3aed', fontSize: '14px' }}>{klCoef.toFixed(2)}</strong>
+              <MathView math={`\\beta = ${klCoef.toFixed(2)}`} style={{ color: '#7c3aed', fontSize: '13px' }} />
+              <span style={{ fontSize: '11px', color: '#64748b', marginLeft: '3px' }}>({ui.klLabel})</span>
             </span>
           </div>
           <input
@@ -714,7 +985,7 @@ export const ProbabilityMassSimulator = () => {
       </div>
 
       {/* 4. Trajectory 확률 및 보상 상태 바 (테두리 피로감 해소) */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '12px' }}>
+      <div className="pg-traj-grid">
         {[
           { traj: '\\text{LL}', p: pLL, r: rLL, color: '#475569' },
           { traj: '\\text{LR}', p: pLR, r: rLR, color: '#1d4ed8' },
@@ -727,16 +998,19 @@ export const ProbabilityMassSimulator = () => {
             backgroundColor: activeStep === ['LL', 'LR', 'RL', 'RR'][idx] ? '#fef3c7' : '#f8fafc',
             border: activeStep === ['LL', 'LR', 'RL', 'RR'][idx] ? '1.5px solid #f59e0b' : '1px solid #e2e8f0',
             textAlign: 'center',
-            transition: 'all 0.2s ease'
+            transition: 'all 0.2s ease',
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center'
           }}>
             <div style={{ fontSize: '13px', fontWeight: '700', color: item.color, marginBottom: '2px' }}>
-              <MathView math={item.traj} /> ({item.r}점)
+              <MathView math={item.traj} /> ({item.r}{ui.unit})
             </div>
-            <div style={{ fontSize: '14px', fontWeight: '800', color: item.color, marginTop: '2px' }} className="num-font">
-              {(item.p * 100).toFixed(1)}%
+            <div style={{ marginTop: '2px' }}>
+              <MathView math={`${(item.p * 100).toFixed(1)}\\%`} style={{ fontSize: '13.5px', fontWeight: 'bold', color: item.color }} />
             </div>
             <div style={{ height: '4px', width: '100%', backgroundColor: '#e2e8f0', borderRadius: '2px', marginTop: '6px', overflow: 'hidden' }}>
-              <div style={{ height: '100%', width: `${item.p * 100}%`, backgroundColor: item.r === 10 ? '#10b981' : '#3b82f6' }} />
+              <div style={{ height: '100%', width: `${item.p * 100}%`, backgroundColor: item.r === 5 ? '#10b981' : '#3b82f6' }} />
             </div>
           </div>
         ))}
@@ -744,168 +1018,169 @@ export const ProbabilityMassSimulator = () => {
 
       {/* 5. 여유롭고 깔끔해진 수식 항 터치 분석기 */}
       <div 
-        ref={containerRef}
         style={{
-          position: 'relative',
           marginTop: '6px',
           display: 'flex',
           flexDirection: 'column',
-          gap: '14px'
+          gap: '12px'
         }}
       >
-        <div style={{ fontSize: '14px', fontWeight: '700', color: '#0f172a' }}>
-          Policy Gradient 계산 프로세스
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          flexWrap: 'wrap', 
+          gap: '8px' 
+        }}>
+          <span style={{ fontSize: '13.5px', fontWeight: '700', color: '#0f172a' }}>
+            {ui.processTitle}
+          </span>
+
+          <button
+            onClick={() => setIsDetailOpen(prev => !prev)}
+            className="pg-term-details-btn"
+            style={{
+              padding: '2px 4px',
+              fontSize: '12px',
+              fontWeight: '600',
+              border: 'none',
+              backgroundColor: 'transparent',
+              color: isDetailOpen ? '#2563eb' : '#64748b',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '3px'
+            }}
+          >
+            {isDetailOpen ? ui.toggleClose : ui.toggleOpen}
+          </button>
         </div>
 
         {/* 수식 문자열 하이라이트 블록 */}
-        <div style={{
-          fontSize: '15.5px',
-          color: '#0f172a',
-          overflowX: 'auto',
-          width: '100%',
-          boxSizing: 'border-box',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          flexWrap: 'nowrap',
-          gap: '6px',
-          backgroundColor: '#f8fafc',
-          padding: '16px 14px',
-          borderRadius: '12px',
-          border: '1px solid #e2e8f0',
-          WebkitOverflowScrolling: 'touch'
-        }}>
-          {/* 항 1: \nabla_\theta J(\theta) */}
-          <div
-            ref={termRefs.grad_j}
-            onClick={() => setActiveMathTerm('grad_j')}
-            style={{
-              padding: '4px 8px',
-              borderRadius: '6px',
-              backgroundColor: activeMathTerm === 'grad_j' ? mathTerms.grad_j.highlightBg : 'transparent',
-              borderBottom: activeMathTerm === 'grad_j' ? `3px solid ${mathTerms.grad_j.themeColor}` : '3px solid transparent',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              display: 'inline-flex'
-            }}
-          >
-            <MathView math="\nabla_\theta J(\theta)" style={{ color: activeMathTerm === 'grad_j' ? mathTerms.grad_j.themeColor : 'inherit', fontWeight: 'bold' }} />
-          </div>
-
-          <span style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 2px' }}>=</span>
-
-          {/* 항 2: \mathbb{E}_{\tau \sim p_\theta(\tau)} */}
-          <div
-            ref={termRefs.expectation}
-            onClick={() => setActiveMathTerm('expectation')}
-            style={{
-              padding: '4px 8px',
-              borderRadius: '6px',
-              backgroundColor: activeMathTerm === 'expectation' ? mathTerms.expectation.highlightBg : 'transparent',
-              borderBottom: activeMathTerm === 'expectation' ? `3px solid ${mathTerms.expectation.themeColor}` : '3px solid transparent',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              display: 'inline-flex'
-            }}
-          >
-            <MathView math="\mathbb{E}_{\tau \sim p_\theta(\tau)}" style={{ color: activeMathTerm === 'expectation' ? mathTerms.expectation.themeColor : 'inherit', fontWeight: 'bold' }} />
-          </div>
-
-          <span style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 1px' }}>[</span>
-
-          {/* 항 3: \nabla_\theta \log \pi_\theta(a|s) */}
-          <div
-            ref={termRefs.log_prob}
-            onClick={() => setActiveMathTerm('log_prob')}
-            style={{
-              padding: '4px 8px',
-              borderRadius: '6px',
-              backgroundColor: activeMathTerm === 'log_prob' ? mathTerms.log_prob.highlightBg : 'transparent',
-              borderBottom: activeMathTerm === 'log_prob' ? `3px solid ${mathTerms.log_prob.themeColor}` : '3px solid transparent',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              display: 'inline-flex'
-            }}
-          >
-            <MathView math="\nabla_\theta \log \pi_\theta(a|s)" style={{ color: activeMathTerm === 'log_prob' ? mathTerms.log_prob.themeColor : 'inherit', fontWeight: 'bold' }} />
-          </div>
-
-          <span style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 2px' }}>·</span>
-
-          {/* 항 4: R(\tau) */}
-          <div
-            ref={termRefs.reward_weight}
-            onClick={() => setActiveMathTerm('reward_weight')}
-            style={{
-              padding: '4px 8px',
-              borderRadius: '6px',
-              backgroundColor: activeMathTerm === 'reward_weight' ? mathTerms.reward_weight.highlightBg : 'transparent',
-              borderBottom: activeMathTerm === 'reward_weight' ? `3px solid ${mathTerms.reward_weight.themeColor}` : '3px solid transparent',
-              cursor: 'pointer',
-              transition: 'all 0.2s ease',
-              display: 'inline-flex'
-            }}
-          >
-            <MathView math="R(\tau)" style={{ color: activeMathTerm === 'reward_weight' ? mathTerms.reward_weight.themeColor : 'inherit', fontWeight: 'bold' }} />
-          </div>
-
-          <span style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 1px' }}>]</span>
-        </div>
-
-        {/* 점선 연결 빔 */}
-        <div style={{ position: 'relative', width: '100%', height: '20px', marginTop: '-4px' }}>
-          <svg style={{ width: '100%', height: '100%', overflow: 'visible' }}>
-            <line
-              x1={lineCoords.x}
-              y1="0"
-              x2={lineCoords.x}
-              y2="20"
-              stroke={activeTermInfo.themeColor}
-              strokeWidth="2"
-              strokeDasharray="4 3"
-            />
-            <circle
-              cx={lineCoords.x}
-              cy="20"
-              r="3.5"
-              fill={activeTermInfo.themeColor}
-            />
-          </svg>
-        </div>
-
-        {/* 상세 설명 카드 */}
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeMathTerm}
-            initial={{ opacity: 0, y: 4 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -4 }}
-            transition={{ duration: 0.2 }}
-            style={{
-              padding: '16px',
-              backgroundColor: activeTermInfo.bgColor,
-              borderRadius: '12px',
-              border: `1.5px solid ${activeTermInfo.themeColor}40`,
-              display: 'flex',
-              flexDirection: 'column',
-              gap: '10px'
-            }}
-          >
-            <div style={{
-              fontSize: '13px',
-              fontWeight: '700',
-              color: activeTermInfo.themeColor,
-              display: 'flex',
-              alignItems: 'center',
-              overflowX: 'auto'
-            }}>
-              <span><MathView math={activeTermInfo.formula} /></span>
+        <div
+          ref={formulaScrollRef}
+          className="pg-formula-scroll-wrapper"
+        >
+          <div className="pg-formula-row">
+            {/* 항 1: \nabla_\theta J(\theta) */}
+            <div
+              ref={termRefs.grad_j}
+              onClick={() => selectMathTerm('grad_j')}
+              style={{
+                padding: '4px 8px',
+                borderRadius: '6px',
+                backgroundColor: activeMathTerm === 'grad_j' ? mathTerms.grad_j.highlightBg : 'transparent',
+                borderBottom: activeMathTerm === 'grad_j' ? `3px solid ${mathTerms.grad_j.themeColor}` : '3px solid transparent',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'inline-flex'
+              }}
+            >
+              <MathView math="\nabla_\theta J(\theta)" style={{ color: activeMathTerm === 'grad_j' ? mathTerms.grad_j.themeColor : 'inherit', fontWeight: 'bold' }} />
             </div>
 
-            <div style={{ fontSize: '13px', color: '#334155', lineHeight: '1.65' }}>
-              <strong>{activeTermInfo.name}</strong>: {activeTermInfo.descNode}
+            <span style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 2px' }}>=</span>
+
+            {/* 항 2: \mathbb{E}_{\tau \sim p_\theta(\tau)} */}
+            <div
+              ref={termRefs.expectation}
+              onClick={() => selectMathTerm('expectation')}
+              style={{
+                padding: '4px 8px',
+                borderRadius: '6px',
+                backgroundColor: activeMathTerm === 'expectation' ? mathTerms.expectation.highlightBg : 'transparent',
+                borderBottom: activeMathTerm === 'expectation' ? `3px solid ${mathTerms.expectation.themeColor}` : '3px solid transparent',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'inline-flex'
+              }}
+            >
+              <MathView math="\mathbb{E}_{\tau \sim p_\theta(\tau)}" style={{ color: activeMathTerm === 'expectation' ? mathTerms.expectation.themeColor : 'inherit', fontWeight: 'bold' }} />
             </div>
-          </motion.div>
+
+            <span style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 1px' }}>[</span>
+
+            {/* 항 3: \nabla_\theta \log \pi_\theta(a|s) */}
+            <div
+              ref={termRefs.log_prob}
+              onClick={() => selectMathTerm('log_prob')}
+              style={{
+                padding: '4px 8px',
+                borderRadius: '6px',
+                backgroundColor: activeMathTerm === 'log_prob' ? mathTerms.log_prob.highlightBg : 'transparent',
+                borderBottom: activeMathTerm === 'log_prob' ? `3px solid ${mathTerms.log_prob.themeColor}` : '3px solid transparent',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'inline-flex'
+              }}
+            >
+              <MathView math="\nabla_\theta \log \pi_\theta(a|s)" style={{ color: activeMathTerm === 'log_prob' ? mathTerms.log_prob.themeColor : 'inherit', fontWeight: 'bold' }} />
+            </div>
+
+            <span style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 2px' }}>·</span>
+
+            {/* 항 4: R(\tau) */}
+            <div
+              ref={termRefs.reward_weight}
+              onClick={() => selectMathTerm('reward_weight')}
+              style={{
+                padding: '4px 8px',
+                borderRadius: '6px',
+                backgroundColor: activeMathTerm === 'reward_weight' ? mathTerms.reward_weight.highlightBg : 'transparent',
+                borderBottom: activeMathTerm === 'reward_weight' ? `3px solid ${mathTerms.reward_weight.themeColor}` : '3px solid transparent',
+                cursor: 'pointer',
+                transition: 'all 0.2s ease',
+                display: 'inline-flex'
+              }}
+            >
+              <MathView math="R(\tau)" style={{ color: activeMathTerm === 'reward_weight' ? mathTerms.reward_weight.themeColor : 'inherit', fontWeight: 'bold' }} />
+            </div>
+
+            <span style={{ fontSize: '16px', fontWeight: 'bold', margin: '0 1px' }}>]</span>
+          </div>
+        </div>
+
+        {/* 접이식 상세 설명 영역 (설명 카드) */}
+        <AnimatePresence>
+          {isDetailOpen && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              transition={{ duration: 0.22, ease: 'easeInOut' }}
+              style={{ overflow: 'hidden' }}
+            >
+              {/* 상세 설명 카드 */}
+              <div
+                style={{
+                  padding: '14px 16px',
+                  backgroundColor: activeTermInfo.bgColor,
+                  borderRadius: '12px',
+                  border: `1.5px solid ${activeTermInfo.themeColor}50`,
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '8px',
+                  boxShadow: `0 2px 8px ${activeTermInfo.themeColor}15`,
+                  transition: 'all 0.2s ease'
+                }}
+              >
+                <div style={{
+                  fontSize: '13.5px',
+                  fontWeight: '700',
+                  color: activeTermInfo.themeColor,
+                  display: 'flex',
+                  alignItems: 'center',
+                  overflowX: 'auto'
+                }}>
+                  <span><MathView math={activeTermInfo.formula} /></span>
+                </div>
+
+                <div style={{ fontSize: '13px', color: '#334155', lineHeight: '1.65' }}>
+                  <strong>{activeTermInfo.name}</strong>: {activeTermInfo.descNode}
+                </div>
+              </div>
+            </motion.div>
+          )}
         </AnimatePresence>
       </div>
     </div>

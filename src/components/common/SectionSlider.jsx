@@ -97,11 +97,14 @@ export const SectionSlider = ({ children }) => {
     <div className="section-slider-root" style={{ width: '100%', position: 'relative', margin: '20px 0' }}>
       {/* 폰트 및 테마 변수 유틸리티 */}
       <style>{`
-        .gmarket-font {
-          font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
+        .gmarket-font,
+        .jakarta-font {
+          font-family: 'Plus Jakarta Sans', 'GmarketSans', 'Noto Sans KR', sans-serif !important;
         }
         .num-font {
-          font-family: 'JetBrains Mono', monospace !important;
+          font-family: 'Plus Jakarta Sans', sans-serif !important;
+          font-feature-settings: "tnum";
+          font-variant-numeric: tabular-nums;
         }
         
         .section-slider-card {
@@ -148,7 +151,7 @@ export const SectionSlider = ({ children }) => {
           alignItems: 'center', 
           marginBottom: '16px',
           padding: '12px 18px',
-          borderRadius: '16px'
+          borderRadius: '10px'
         }}
       >
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
@@ -192,7 +195,7 @@ export const SectionSlider = ({ children }) => {
             className="section-slider-card"
             style={{ 
               position: 'relative',
-              borderRadius: '20px',
+              borderRadius: '10px',
               padding: '24px 28px',
               overflow: 'hidden'
             }}

@@ -23,7 +23,7 @@ const ArrowRightIcon = () => (
   </svg>
 );
 
-export const BackpropSimulator = () => {
+export const BackpropSimulator = ({ lang = 'en' }) => {
   // 파라미터 상태
   const [x, setX] = useState(0.8);
   const [target, setTarget] = useState(1.0);
@@ -75,8 +75,84 @@ export const BackpropSimulator = () => {
   const w2_next = w2 - lr * dL_dw2;
   const b2_next = b2 - lr * dL_db2;
 
+  const ui = lang === 'ko' ? {
+    title: 'Backpropagation Simulator',
+    settingsBtn: '파라미터 조정',
+    resetBtn: '초기화',
+    runBtn: '⚡ 1회 학습 실행',
+    inputLabel: '입력',
+    targetLabel: '정답',
+    bias1Label: '편향',
+    bias2Label: '편향',
+    lrLabel: '학습률',
+    steps: [
+      { id: 1, label: '1. 순전파', activeBg: 'linear-gradient(135deg, #0284c7, #0369a1)', shadow: 'rgba(2, 132, 199, 0.3)' },
+      { id: 2, label: '2. 오차 산출', activeBg: 'linear-gradient(135deg, #e11d48, #be123c)', shadow: 'rgba(225, 29, 72, 0.3)' },
+      { id: 3, label: '3. 역전파', activeBg: 'linear-gradient(135deg, #d97706, #b45309)', shadow: 'rgba(217, 119, 6, 0.3)' },
+      { id: 4, label: '4. 가중치 갱신', activeBg: 'linear-gradient(135deg, #059669, #047857)', shadow: 'rgba(5, 150, 105, 0.3)' }
+    ],
+    inputLayer: '입력층',
+    hiddenLayer: '은닉층',
+    outputLayer: '출력층',
+    step1Title: '1. 순전파 (Forward Pass)',
+    step1Hidden: '은닉층 (h₁)',
+    step1Output: '출력층 (ŷ)',
+    step2Title: '2. 오차 산출 (Loss Calculation)',
+    step2Loss: '손실 함수 (MSE Loss)',
+    step2Sens: '출력 오차 민감도',
+    step3Title: '3. 역전파 (Backward Pass)',
+    step3Delta2: '1. 출력층 기울기 (δ₂)',
+    step3GradW2: '2. W₂ 기울기',
+    step3GradW1: '3. W₁ 기울기',
+    step4Title: '4. 가중치 갱신 (Gradient Descent)',
+    step4Formula: '공식:',
+    chainSectionTitle: '기울기 계산 과정의 연쇄 법칙 분석',
+    modalPrompt: '실행된 학습이 없습니다. 현재 파라미터로 1회 학습을 자동 실행합니다.',
+    modalConfirm: '확인',
+    modalCancel: '취소',
+    termMeaning: '항 의미',
+    mathDeriv: '수식 유도'
+  } : {
+    title: 'Backpropagation Simulator',
+    settingsBtn: 'Adjust Parameters',
+    resetBtn: 'Reset',
+    runBtn: '⚡ Run 1-Step Training',
+    inputLabel: 'Input',
+    targetLabel: 'Target',
+    bias1Label: 'Bias',
+    bias2Label: 'Bias',
+    lrLabel: 'Learning Rate',
+    steps: [
+      { id: 1, label: '1. Forward Pass', activeBg: 'linear-gradient(135deg, #0284c7, #0369a1)', shadow: 'rgba(2, 132, 199, 0.3)' },
+      { id: 2, label: '2. Loss Calc', activeBg: 'linear-gradient(135deg, #e11d48, #be123c)', shadow: 'rgba(225, 29, 72, 0.3)' },
+      { id: 3, label: '3. Backward Pass', activeBg: 'linear-gradient(135deg, #d97706, #b45309)', shadow: 'rgba(217, 119, 6, 0.3)' },
+      { id: 4, label: '4. Weight Update', activeBg: 'linear-gradient(135deg, #059669, #047857)', shadow: 'rgba(5, 150, 105, 0.3)' }
+    ],
+    inputLayer: 'Input Layer',
+    hiddenLayer: 'Hidden Layer',
+    outputLayer: 'Output Layer',
+    step1Title: '1. Forward Pass',
+    step1Hidden: 'Hidden Layer (h₁)',
+    step1Output: 'Output Layer (ŷ)',
+    step2Title: '2. Loss Calculation',
+    step2Loss: 'Loss Function (MSE)',
+    step2Sens: 'Output Error Sensitivity',
+    step3Title: '3. Backward Pass',
+    step3Delta2: '1. Output Delta (δ₂)',
+    step3GradW2: '2. W₂ Gradient',
+    step3GradW1: '3. W₁ Gradient',
+    step4Title: '4. Weight Update (Gradient Descent)',
+    step4Formula: 'Rule:',
+    chainSectionTitle: 'Chain Rule Breakdown for W₁ Gradient',
+    modalPrompt: 'No training pass has been run yet. Run 1-step training with current parameters to inspect gradients.',
+    modalConfirm: 'Confirm',
+    modalCancel: 'Cancel',
+    termMeaning: 'Term Meaning',
+    mathDeriv: 'Derivation'
+  };
+
   // 체인 룰 개별 미분 항 정보 맵
-  const chainRuleTerms = {
+  const chainRuleTerms = lang === 'ko' ? {
     dL_dyHat: {
       symbol: '\\frac{\\partial L}{\\partial \\hat{y}}',
       name: '출력 오차 민감도',
@@ -197,6 +273,127 @@ export const BackpropSimulator = () => {
       bgColor: '#ecfeff',
       accentGlow: 'rgba(8, 145, 178, 0.25)'
     }
+  } : {
+    dL_dyHat: {
+      symbol: '\\frac{\\partial L}{\\partial \\hat{y}}',
+      name: 'Output Error Sensitivity',
+      calcFormulaMath: `\\hat{y} - y = ${yHat.toFixed(4)} - ${target.toFixed(2)}`,
+      value: dL_dyHat,
+      mathReasonNode: (
+        <span>
+          Differentiating MSE loss <MathView math="L = \frac{1}{2}(\hat{y} - y)^2" /> with respect to <MathView math="\hat{y}" /> cancels the factor of <MathView math="\frac{1}{2}" />, yielding residual <MathView math="(\hat{y} - y)" />.
+        </span>
+      ),
+      descriptionNode: (
+        <span>
+          Difference between output prediction (<MathView math="\hat{y}" />) and target label (<MathView math="y" />). Starting point of backward error signal.
+        </span>
+      ),
+      highlight: 'loss',
+      themeColor: '#e11d48',
+      bgColor: '#fff1f2',
+      accentGlow: 'rgba(225, 29, 72, 0.25)'
+    },
+    dyHat_dz2: {
+      symbol: '\\frac{\\partial \\hat{y}}{\\partial z_2}',
+      name: 'Output Sigmoid Gradient',
+      calcFormulaMath: `\\sigma'(z_2) = ${dyHat_dz2.toFixed(4)}`,
+      value: dyHat_dz2,
+      mathReasonNode: (
+        <span>
+          The derivative of activation <MathView math="\hat{y} = \sigma(z_2)" /> is <MathView math="\sigma(z_2)(1 - \sigma(z_2))" />, giving the local gradient at pre-activation <MathView math="z_2" />.
+        </span>
+      ),
+      descriptionNode: (
+        <span>
+          Nonlinear slope of the output neuron. Scales the error magnitude as the signal passes back through the output Sigmoid.
+        </span>
+      ),
+      highlight: 'yHat',
+      themeColor: '#0284c7',
+      bgColor: '#f0f9ff',
+      accentGlow: 'rgba(2, 132, 199, 0.25)'
+    },
+    dz2_dw2: {
+      symbol: '\\frac{\\partial z_2}{\\partial W_2}',
+      name: 'W₂ Input Activation',
+      calcFormulaMath: `h_1 = ${h1.toFixed(4)}`,
+      value: h1,
+      mathReasonNode: (
+        <span>
+          Differentiating <MathView math="z_2 = W_2 h_1 + b_2" /> with respect to <MathView math="W_2" /> isolates the hidden activation <MathView math="h_1" /> (<MathView math="\frac{\partial z_2}{\partial W_2} = h_1" />).
+        </span>
+      ),
+      descriptionNode: (
+        <span>
+          Activation output from hidden neuron <MathView math="h_1" />. Larger forward activations give weight <MathView math="W_2" /> higher credit (larger gradient update).
+        </span>
+      ),
+      highlight: 'w2',
+      themeColor: '#d97706',
+      bgColor: '#fffbeb',
+      accentGlow: 'rgba(217, 119, 6, 0.25)'
+    },
+    dz2_dh1: {
+      symbol: '\\frac{\\partial z_2}{\\partial h_1}',
+      name: 'Backpropagated Synaptic Weight',
+      calcFormulaMath: `W_2 = ${w2.toFixed(4)}`,
+      value: w2,
+      mathReasonNode: (
+        <span>
+          Differentiating <MathView math="z_2 = W_2 h_1 + b_2" /> with respect to <MathView math="h_1" /> yields the transmission weight <MathView math="W_2" /> (<MathView math="\frac{\partial z_2}{\partial h_1} = W_2" />).
+        </span>
+      ),
+      descriptionNode: (
+        <span>
+          Downstream weight <MathView math="W_2" /> acting as an error transmission coefficient. Error scales directly with synaptic connection strength.
+        </span>
+      ),
+      highlight: 'w2',
+      themeColor: '#d97706',
+      bgColor: '#fffbeb',
+      accentGlow: 'rgba(217, 119, 6, 0.25)'
+    },
+    dh1_dz1: {
+      symbol: '\\frac{\\partial h_1}{\\partial z_1}',
+      name: 'Hidden Sigmoid Gradient',
+      calcFormulaMath: `\\sigma'(z_1) = ${dh1_dz1.toFixed(4)}`,
+      value: dh1_dz1,
+      mathReasonNode: (
+        <span>
+          Derivative of hidden activation <MathView math="h_1 = \sigma(z_1)" />, yielding <MathView math="\sigma(z_1)(1 - \sigma(z_1))" /> as the local rate of change.
+        </span>
+      ),
+      descriptionNode: (
+        <span>
+          Slope of the hidden Sigmoid activation. Dampens or scales the upstream error signal passing backwards through the hidden neuron.
+        </span>
+      ),
+      highlight: 'h1',
+      themeColor: '#7c3aed',
+      bgColor: '#f5f3ff',
+      accentGlow: 'rgba(124, 58, 237, 0.25)'
+    },
+    dz1_dw1: {
+      symbol: '\\frac{\\partial z_1}{\\partial W_1}',
+      name: 'W₁ Input Signal',
+      calcFormulaMath: `x = ${x.toFixed(2)}`,
+      value: x,
+      mathReasonNode: (
+        <span>
+          Differentiating <MathView math="z_1 = W_1 x + b_1" /> with respect to <MathView math="W_1" /> leaves the original input feature <MathView math="x" /> (<MathView math="\frac{\partial z_1}{\partial W_1} = x" />).
+        </span>
+      ),
+      descriptionNode: (
+        <span>
+          Initial input data (<MathView math="x" />). The magnitude of the input directly scales the gradient update magnitude for weight <MathView math="W_1" />.
+        </span>
+      ),
+      highlight: 'w1',
+      themeColor: '#0891b2',
+      bgColor: '#ecfeff',
+      accentGlow: 'rgba(8, 145, 178, 0.25)'
+    }
   };
 
   const activeTerm = chainRuleTerms[activeTermKey];
@@ -269,13 +466,6 @@ export const BackpropSimulator = () => {
     setPendingTermKey(null);
   };
 
-  const stepsList = [
-    { id: 1, label: '1. 순전파', activeBg: 'linear-gradient(135deg, #0284c7, #0369a1)', shadow: 'rgba(2, 132, 199, 0.3)' },
-    { id: 2, label: '2. 오차 산출', activeBg: 'linear-gradient(135deg, #e11d48, #be123c)', shadow: 'rgba(225, 29, 72, 0.3)' },
-    { id: 3, label: '3. 역전파', activeBg: 'linear-gradient(135deg, #d97706, #b45309)', shadow: 'rgba(217, 119, 6, 0.3)' },
-    { id: 4, label: '4. 가중치 갱신', activeBg: 'linear-gradient(135deg, #059669, #047857)', shadow: 'rgba(5, 150, 105, 0.3)' }
-  ];
-
   return (
     <motion.div 
       initial={{ opacity: 0, y: 15 }}
@@ -291,7 +481,7 @@ export const BackpropSimulator = () => {
         boxSizing: 'border-box',
         margin: '24px 0',
         padding: '28px',
-        borderRadius: '24px',
+        borderRadius: '10px',
         backgroundColor: '#fbf9f5',
         border: '1px solid #e8e4dc',
         boxShadow: '0 16px 36px -12px rgba(68, 64, 60, 0.08), 0 0 1px 1px rgba(68, 64, 60, 0.03)',
@@ -300,12 +490,13 @@ export const BackpropSimulator = () => {
     >
       {/* 폰트 및 커스텀 스타일 유틸리티 */}
       <style>{`
-        .gmarket-font {
-          font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
+        .gmarket-font,
+        .jakarta-font {
+          font-family: 'Plus Jakarta Sans', 'GmarketSans', 'Noto Sans KR', sans-serif !important;
         }
 
         .num-font {
-          font-family: 'JetBrains Mono', monospace !important;
+          font-family: 'Plus Jakarta Sans', sans-serif !important;
           font-feature-settings: "tnum";
           font-variant-numeric: tabular-nums;
         }
@@ -316,7 +507,7 @@ export const BackpropSimulator = () => {
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div style={{ width: '6px', height: '22px', borderRadius: '5px', background: 'linear-gradient(180deg, #093348, #113c2e)' }} />
           <h3 className="gmarket-font" style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#0f172a', letterSpacing: '-0.02em' }}>
-            Backpropagation Simulator
+            {ui.title}
           </h3>
         </div>
 
@@ -342,7 +533,7 @@ export const BackpropSimulator = () => {
               boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
             }}
           >
-            <span>파라미터 조정</span>
+            <span>{ui.settingsBtn}</span>
             <motion.span 
               animate={{ rotate: showSettings ? 180 : 0 }} 
               transition={{ duration: 0.2 }}
@@ -369,7 +560,7 @@ export const BackpropSimulator = () => {
               boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
             }}
           >
-            초기화
+            {ui.resetBtn}
           </motion.button>
 
           <motion.button 
@@ -389,7 +580,7 @@ export const BackpropSimulator = () => {
               boxShadow: '0 4px 14px rgba(5, 150, 105, 0.35)'
             }}
           >
-            ⚡ 1회 학습 실행
+            {ui.runBtn}
           </motion.button>
         </div>
       </div>
@@ -418,40 +609,40 @@ export const BackpropSimulator = () => {
               >
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: '800', color: '#1e293b' }}>
-                    <span>입력 (<MathView math="x" style={{ fontSize: '13px' }} />)</span>
-                    <span style={{ fontFamily: 'monospace', color: '#0284c7', fontWeight: '800' }}>{x.toFixed(2)}</span>
+                    <span>{ui.inputLabel} (<MathView math="x" style={{ fontSize: '13px' }} />)</span>
+                    <span style={{ fontVariantNumeric: 'tabular-nums', color: '#0284c7', fontWeight: '800' }}>{x.toFixed(2)}</span>
                   </div>
                   <input type="range" min="0.1" max="1.0" step="0.05" value={x} onChange={(e) => { setX(Number(e.target.value)); setStep(0); }} style={{ width: '100%', cursor: 'pointer', accentColor: '#0284c7' }} />
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: '800', color: '#1e293b' }}>
-                    <span>정답 (<MathView math="y" style={{ fontSize: '13px' }} />)</span>
-                    <span style={{ fontFamily: 'monospace', color: '#e11d48', fontWeight: '800' }}>{target.toFixed(2)}</span>
+                    <span>{ui.targetLabel} (<MathView math="y" style={{ fontSize: '13px' }} />)</span>
+                    <span style={{ fontVariantNumeric: 'tabular-nums', color: '#e11d48', fontWeight: '800' }}>{target.toFixed(2)}</span>
                   </div>
                   <input type="range" min="0.1" max="1.0" step="0.05" value={target} onChange={(e) => { setTarget(Number(e.target.value)); setStep(0); }} style={{ width: '100%', cursor: 'pointer', accentColor: '#e11d48' }} />
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: '800', color: '#1e293b' }}>
-                    <span>편향 (<MathView math="b_1" style={{ fontSize: '13px' }} />)</span>
-                    <span style={{ fontFamily: 'monospace', color: '#475569', fontWeight: '800' }}>{b1.toFixed(2)}</span>
+                    <span>{ui.bias1Label} (<MathView math="b_1" style={{ fontSize: '13px' }} />)</span>
+                    <span style={{ fontVariantNumeric: 'tabular-nums', color: '#475569', fontWeight: '800' }}>{b1.toFixed(2)}</span>
                   </div>
                   <input type="range" min="-1.0" max="1.0" step="0.05" value={b1} onChange={(e) => { setB1(Number(e.target.value)); setStep(0); }} style={{ width: '100%', cursor: 'pointer' }} />
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: '800', color: '#1e293b' }}>
-                    <span>편향 (<MathView math="b_2" style={{ fontSize: '13px' }} />)</span>
-                    <span className="num-font" style={{ color: '#475569', fontWeight: '800' }}>{b2.toFixed(2)}</span>
+                    <span>{ui.bias2Label} (<MathView math="b_2" style={{ fontSize: '13px' }} />)</span>
+                    <span style={{ fontVariantNumeric: 'tabular-nums', color: '#475569', fontWeight: '800' }}>{b2.toFixed(2)}</span>
                   </div>
                   <input type="range" min="-1.0" max="1.0" step="0.05" value={b2} onChange={(e) => { setB2(Number(e.target.value)); setStep(0); }} style={{ width: '100%', cursor: 'pointer' }} />
                 </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '13px', fontWeight: '800', color: '#1e293b' }}>
-                    <span>학습률 (<MathView math="\eta" style={{ fontSize: '13px' }} />)</span>
-                    <span className="num-font" style={{ color: '#059669', fontWeight: '800' }}>{lr.toFixed(1)}</span>
+                    <span>{ui.lrLabel} (<MathView math="\eta" style={{ fontSize: '13px' }} />)</span>
+                    <span style={{ fontVariantNumeric: 'tabular-nums', color: '#059669', fontWeight: '800' }}>{lr.toFixed(1)}</span>
                   </div>
                   <input type="range" min="0.1" max="1.5" step="0.1" value={lr} onChange={(e) => setLr(Number(e.target.value))} style={{ width: '100%', cursor: 'pointer', accentColor: '#059669' }} />
                 </div>
@@ -463,7 +654,7 @@ export const BackpropSimulator = () => {
       {/* 2. Step 탭 버튼 */}
       <div style={{ display: 'flex', justifyContent: 'center', width: '100%', overflowX: 'auto' }}>
         <div style={{ display: 'flex', gap: '8px', backgroundColor: '#f1f5f9', padding: '6px', borderRadius: '16px', flexWrap: 'nowrap', whiteSpace: 'nowrap', minWidth: 'max-content' }}>
-          {stepsList.map((t) => {
+          {ui.steps.map((t) => {
             const isActive = step === t.id;
             return (
               <button
@@ -514,7 +705,7 @@ export const BackpropSimulator = () => {
           alignItems: 'center', 
           backgroundColor: '#f8fafc', 
           padding: '24px 16px', 
-          borderRadius: '20px', 
+          borderRadius: '10px', 
           border: '1px solid #cbd5e1', 
           boxShadow: 'inset 0 2px 6px rgba(0,0,0,0.02)',
           position: 'relative',
@@ -706,14 +897,14 @@ export const BackpropSimulator = () => {
               </text>
               
               {/* 노드 상단 라벨 */}
-              <text className="gmarket-font" textAnchor="middle" x="90" y="60" fontSize="14" fontWeight="700" fill="#475569">입력층</text>
+              <text className="gmarket-font" textAnchor="middle" x="90" y="60" fontSize="14" fontWeight="700" fill="#475569">{ui.inputLayer}</text>
 
               {/* 하단 KaTeX 수학 폰트 수치 표식 */}
               <text 
                 x="90" y="188" 
                 textAnchor="middle" 
                 dominantBaseline="central"
-                style={{ fontFamily: 'KaTeX_Math, KaTeX_Main, "JetBrains Mono", monospace', fontSize: '13.5px', fill: '#0284c7', fontWeight: 'bold' }}
+                style={{ fontFamily: 'KaTeX_Math, KaTeX_Main, "Times New Roman", serif', fontSize: '13.5px', fill: '#0284c7', fontWeight: 'bold' }}
               >
                 = {x.toFixed(2)}
               </text>
@@ -750,14 +941,14 @@ export const BackpropSimulator = () => {
               </text>
 
               {/* 노드 상단 라벨 */}
-              <text className="gmarket-font" textAnchor="middle" x="300" y="60" fontSize="14" fontWeight="700" fill="#0284c7">은닉층</text>
+              <text className="gmarket-font" textAnchor="middle" x="300" y="60" fontSize="14" fontWeight="700" fill="#0284c7">{ui.hiddenLayer}</text>
 
               {/* 하단 KaTeX 수학 폰트 수치 표식 */}
               <text 
                 x="300" y="188" 
                 textAnchor="middle" 
                 dominantBaseline="central"
-                style={{ fontFamily: 'KaTeX_Math, KaTeX_Main, "JetBrains Mono", monospace', fontSize: '13.5px', fill: step === 1 ? '#0284c7' : '#334155', fontWeight: 'bold' }}
+                style={{ fontFamily: 'KaTeX_Math, KaTeX_Main, "Times New Roman", serif', fontSize: '13.5px', fill: step === 1 ? '#0284c7' : '#334155', fontWeight: 'bold' }}
               >
                 {hasLearned || step > 0 ? `= ${h1.toFixed(3)}` : '= ?'}
               </text>
@@ -794,14 +985,14 @@ export const BackpropSimulator = () => {
               </text>
 
               {/* 노드 상단 라벨 */}
-              <text className="gmarket-font" textAnchor="middle" x="510" y="60" fontSize="14" fontWeight="700" fill="#0284c7">출력층</text>
+              <text className="gmarket-font" textAnchor="middle" x="510" y="60" fontSize="14" fontWeight="700" fill="#0284c7">{ui.outputLayer}</text>
 
               {/* 하단 KaTeX 수학 폰트 수치 표식 */}
               <text 
                 x="510" y="188" 
                 textAnchor="middle" 
                 dominantBaseline="central"
-                style={{ fontFamily: 'KaTeX_Math, KaTeX_Main, "JetBrains Mono", monospace', fontSize: '13.5px', fill: step === 1 ? '#0284c7' : '#334155', fontWeight: 'bold' }}
+                style={{ fontFamily: 'KaTeX_Math, KaTeX_Main, "Times New Roman", serif', fontSize: '13.5px', fill: step === 1 ? '#0284c7' : '#334155', fontWeight: 'bold' }}
               >
                 {hasLearned || step > 0 ? `= ${yHat.toFixed(3)}` : '= ?'}
               </text>
@@ -832,7 +1023,7 @@ export const BackpropSimulator = () => {
                 x="670" y="60" 
                 textAnchor="middle" 
                 dominantBaseline="central"
-                style={{ fontFamily: 'KaTeX_Math, KaTeX_Main, "JetBrains Mono", monospace', fontSize: '13.5px', fill: '#be123c', fontWeight: 'bold' }}
+                style={{ fontFamily: 'KaTeX_Math, KaTeX_Main, "Times New Roman", serif', fontSize: '13.5px', fill: '#be123c', fontWeight: 'bold' }}
               >
                 y = {target.toFixed(2)}
               </text>
@@ -842,7 +1033,7 @@ export const BackpropSimulator = () => {
                 x="670" y="188" 
                 textAnchor="middle" 
                 dominantBaseline="central"
-                style={{ fontFamily: 'KaTeX_Math, KaTeX_Main, "JetBrains Mono", monospace', fontSize: '13px', fill: step >= 2 ? '#e11d48' : '#64748b', fontWeight: 'bold' }}
+                style={{ fontFamily: 'KaTeX_Math, KaTeX_Main, "Times New Roman", serif', fontSize: '13px', fill: step >= 2 ? '#e11d48' : '#64748b', fontWeight: 'bold' }}
               >
                 {hasLearned || step >= 2 ? `= ${loss.toFixed(4)}` : '= ?'}
               </text>
@@ -864,11 +1055,11 @@ export const BackpropSimulator = () => {
               style={{ backgroundColor: '#f0f9ff', padding: '20px', borderRadius: '16px', border: '1.5px solid #bae6fd', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 14px -2px rgba(2,132,199,0.08)' }}
             >
               <span className="gmarket-font" style={{ fontSize: '14.5px', fontWeight: '700', color: '#0369a1' }}>
-                1. 순전파 (Forward Pass)
+                {ui.step1Title}
               </span>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
                 <div style={{ backgroundColor: '#ffffff', padding: '14px 16px', borderRadius: '12px', border: '1px solid #bae6fd', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                  <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: '#0284c7', display: 'block', marginBottom: '6px' }}>은닉층 (h₁)</span>
+                  <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: '#0284c7', display: 'block', marginBottom: '6px' }}>{ui.step1Hidden}</span>
                   <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.7' }}>
                     <MathView math={`z_1 = W_1 x + b_1 = ${w1.toFixed(2)}\\times ${x.toFixed(2)} + ${b1.toFixed(2)} = \\mathbf{${z1.toFixed(3)}}`} /><br/>
                     <MathView math={`h_1 = \\sigma(z_1) = \\mathbf{${h1.toFixed(3)}}`} style={{ fontWeight: '800', color: '#0284c7' }} />
@@ -876,7 +1067,7 @@ export const BackpropSimulator = () => {
                 </div>
 
                 <div style={{ backgroundColor: '#ffffff', padding: '14px 16px', borderRadius: '12px', border: '1px solid #bae6fd', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                  <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: '#0284c7', display: 'block', marginBottom: '6px' }}>출력층 (ŷ)</span>
+                  <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: '#0284c7', display: 'block', marginBottom: '6px' }}>{ui.step1Output}</span>
                   <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.7' }}>
                     <MathView math={`z_2 = W_2 h_1 + b_2 = ${w2.toFixed(2)}\\times ${h1.toFixed(3)} + (${b2.toFixed(2)}) = \\mathbf{${z2.toFixed(3)}}`} /><br/>
                     <MathView math={`\\hat{y} = \\sigma(z_2) = \\mathbf{${yHat.toFixed(3)}}`} style={{ fontWeight: '800', color: '#0284c7' }} />
@@ -896,16 +1087,16 @@ export const BackpropSimulator = () => {
               style={{ backgroundColor: '#fff1f2', padding: '20px', borderRadius: '16px', border: '1.5px solid #fecdd3', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 14px -2px rgba(225,29,72,0.08)' }}
             >
               <span className="gmarket-font" style={{ fontSize: '14.5px', fontWeight: '700', color: '#be123c' }}>
-                2. 오차 산출 (Loss Calculation)
+                {ui.step2Title}
               </span>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '14px' }}>
                 <div style={{ backgroundColor: '#ffffff', padding: '14px 16px', borderRadius: '12px', border: '1px solid #fecdd3', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                  <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: '#e11d48', display: 'block', marginBottom: '6px' }}>손실 함수 (MSE Loss)</span>
+                  <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: '#e11d48', display: 'block', marginBottom: '6px' }}>{ui.step2Loss}</span>
                   <MathView math={`L = \\frac{1}{2}(\\hat{y} - y)^2 = \\frac{1}{2}(${yHat.toFixed(4)} - ${target.toFixed(2)})^2 = \\mathbf{${loss.toFixed(4)}}`} style={{ color: '#be123c', fontWeight: '800' }} />
                 </div>
 
                 <div style={{ backgroundColor: '#ffffff', padding: '14px 16px', borderRadius: '12px', border: '1px solid #fecdd3', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                  <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: '#e11d48', display: 'block', marginBottom: '6px' }}>출력 오차 민감도</span>
+                  <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: '#e11d48', display: 'block', marginBottom: '6px' }}>{ui.step2Sens}</span>
                   <MathView math={`\\frac{\\partial L}{\\partial \\hat{y}} = \\hat{y} - y = ${yHat.toFixed(4)} - ${target.toFixed(2)} = \\mathbf{${dL_dyHat.toFixed(4)}}`} style={{ color: '#be123c', fontWeight: '800' }} />
                 </div>
               </div>
@@ -922,21 +1113,21 @@ export const BackpropSimulator = () => {
               style={{ backgroundColor: '#fffbeb', padding: '20px', borderRadius: '16px', border: '1.5px solid #fde68a', display: 'flex', flexDirection: 'column', gap: '12px', boxShadow: '0 4px 14px -2px rgba(217,119,6,0.08)' }}
             >
               <span className="gmarket-font" style={{ fontSize: '14.5px', fontWeight: '700', color: '#b45309' }}>
-                3. 역전파 (Backward Pass)
+                {ui.step3Title}
               </span>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px' }}>
                 <div style={{ backgroundColor: '#ffffff', padding: '12px 14px', borderRadius: '12px', border: '1px solid #fde68a', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                  <span className="gmarket-font" style={{ fontSize: '12px', fontWeight: '700', color: '#d97706', display: 'block', marginBottom: '4px' }}>1. 출력층 기울기 (δ₂)</span>
+                  <span className="gmarket-font" style={{ fontSize: '12px', fontWeight: '700', color: '#d97706', display: 'block', marginBottom: '4px' }}>{ui.step3Delta2}</span>
                   <MathView math={`\\delta_2 = (\\hat{y}-y)\\sigma'(z_2) = \\mathbf{${delta2.toFixed(4)}}`} style={{ fontSize: '12.5px', color: '#92400e', fontWeight: '800' }} />
                 </div>
 
                 <div style={{ backgroundColor: '#ffffff', padding: '12px 14px', borderRadius: '12px', border: '1px solid #fde68a', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                  <span className="gmarket-font" style={{ fontSize: '12px', fontWeight: '700', color: '#d97706', display: 'block', marginBottom: '4px' }}>2. W₂ 기울기 (<MathView math="\frac{\partial L}{\partial W_2}" style={{ fontSize: '11px' }} />)</span>
+                  <span className="gmarket-font" style={{ fontSize: '12px', fontWeight: '700', color: '#d97706', display: 'block', marginBottom: '4px' }}>{ui.step3GradW2} (<MathView math="\frac{\partial L}{\partial W_2}" style={{ fontSize: '11px' }} />)</span>
                   <MathView math={`\\frac{\\partial L}{\\partial W_2} = \\delta_2 \\cdot h_1 = \\mathbf{${dL_dw2.toFixed(4)}}`} style={{ fontSize: '12.5px', color: '#92400e', fontWeight: '800' }} />
                 </div>
 
                 <div style={{ backgroundColor: '#ffffff', padding: '12px 14px', borderRadius: '12px', border: '1px solid #fde68a', textAlign: 'center', boxShadow: '0 2px 6px rgba(0,0,0,0.02)' }}>
-                  <span className="gmarket-font" style={{ fontSize: '12px', fontWeight: '700', color: '#d97706', display: 'block', marginBottom: '4px' }}>3. W₁ 기울기 (<MathView math="\frac{\partial L}{\partial W_1}" style={{ fontSize: '11px' }} />)</span>
+                  <span className="gmarket-font" style={{ fontSize: '12px', fontWeight: '700', color: '#d97706', display: 'block', marginBottom: '4px' }}>{ui.step3GradW1} (<MathView math="\frac{\partial L}{\partial W_1}" style={{ fontSize: '11px' }} />)</span>
                   <MathView math={`\\frac{\\partial L}{\\partial W_1} = (\\delta_2 W_2)\\sigma'(z_1)x = \\mathbf{${dL_dw1.toFixed(4)}}`} style={{ fontSize: '12.5px', color: '#92400e', fontWeight: '800' }} />
                 </div>
               </div>
@@ -954,10 +1145,10 @@ export const BackpropSimulator = () => {
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                 <span className="gmarket-font" style={{ fontSize: '14.5px', fontWeight: '700', color: '#047857' }}>
-                  4. 가중치 갱신 (Gradient Descent)
+                  {ui.step4Title}
                 </span>
-                <span style={{ fontFamily: 'monospace', fontSize: '12px', fontWeight: '700', color: '#059669', backgroundColor: '#ffffff', padding: '4px 10px', borderRadius: '8px', border: '1px solid #a7f3d0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
-                  공식: <MathView math="W^{(new)} = W^{(old)} - \eta \cdot \frac{\partial L}{\partial W}" />
+                <span style={{ fontVariantNumeric: 'tabular-nums', fontSize: '12px', fontWeight: '700', color: '#059669', backgroundColor: '#ffffff', padding: '4px 10px', borderRadius: '8px', border: '1px solid #a7f3d0', boxShadow: '0 1px 3px rgba(0,0,0,0.04)' }}>
+                  {ui.step4Formula} <MathView math="W^{(new)} = W^{(old)} - \eta \cdot \frac{\partial L}{\partial W}" />
                 </span>
               </div>
 
@@ -969,7 +1160,7 @@ export const BackpropSimulator = () => {
                   <div style={{ display: 'block', marginBottom: '6px' }}>
                     <MathView math={`${w1.toFixed(3)} - ${lr.toFixed(1)} \\times (${dL_dw1.toFixed(4)})`} style={{ fontSize: '11px', color: '#475569' }} />
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '13px', fontWeight: '700' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontVariantNumeric: 'tabular-nums', fontSize: '13px', fontWeight: '700' }}>
                     <span style={{ color: '#ef4444' }}>{w1.toFixed(3)}</span>
                     <ArrowRightIcon />
                     <motion.span 
@@ -991,7 +1182,7 @@ export const BackpropSimulator = () => {
                   <div style={{ display: 'block', marginBottom: '6px' }}>
                     <MathView math={`${b1.toFixed(3)} - ${lr.toFixed(1)} \\times (${dL_db1.toFixed(4)})`} style={{ fontSize: '11px', color: '#475569' }} />
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '13px', fontWeight: '700' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontVariantNumeric: 'tabular-nums', fontSize: '13px', fontWeight: '700' }}>
                     <span style={{ color: '#ef4444' }}>{b1.toFixed(3)}</span>
                     <ArrowRightIcon />
                     <motion.span 
@@ -1013,7 +1204,7 @@ export const BackpropSimulator = () => {
                   <div style={{ display: 'block', marginBottom: '6px' }}>
                     <MathView math={`${w2.toFixed(3)} - ${lr.toFixed(1)} \\times (${dL_dw2.toFixed(4)})`} style={{ fontSize: '11px', color: '#475569' }} />
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '13px', fontWeight: '700' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontVariantNumeric: 'tabular-nums', fontSize: '13px', fontWeight: '700' }}>
                     <span style={{ color: '#ef4444' }}>{w2.toFixed(3)}</span>
                     <ArrowRightIcon />
                     <motion.span 
@@ -1035,7 +1226,7 @@ export const BackpropSimulator = () => {
                   <div style={{ display: 'block', marginBottom: '6px' }}>
                     <MathView math={`${b2.toFixed(3)} - ${lr.toFixed(1)} \\times (${dL_db2.toFixed(4)})`} style={{ fontSize: '11px', color: '#475569' }} />
                   </div>
-                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontFamily: 'monospace', fontSize: '13px', fontWeight: '700' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', fontVariantNumeric: 'tabular-nums', fontSize: '13px', fontWeight: '700' }}>
                     <span style={{ color: '#ef4444' }}>{b2.toFixed(3)}</span>
                     <ArrowRightIcon />
                     <motion.span 
@@ -1059,7 +1250,7 @@ export const BackpropSimulator = () => {
       <div style={{ display: 'flex', flexDirection: 'column', gap: '16px', backgroundColor: '#ffffff', padding: '16px', borderRadius: '18px', border: '1px solid #cbd5e1', boxShadow: '0 4px 20px -2px rgba(0,0,0,0.04)', width: '100%', boxSizing: 'border-box', overflow: 'hidden' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '6px' }}>
           <span className="gmarket-font" style={{ fontSize: '14.5px', fontWeight: '700', color: '#0f172a' }}>
-            <MathView math="W_1" style={{ fontSize: '14px' }} /> 기울기 계산 과정의 연쇄 법칙 분석
+            <MathView math="W_1" style={{ fontSize: '14px' }} /> {ui.chainSectionTitle}
           </span>
         </div>
 
@@ -1087,7 +1278,7 @@ export const BackpropSimulator = () => {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
                 <span style={{ fontSize: '13px', fontWeight: '700', color: '#92400e', lineHeight: '1.5', textAlign: 'center' }}>
-                  실행된 학습이 없습니다. 현재 파라미터로 1회 학습을 자동 실행합니다.
+                  {ui.modalPrompt}
                 </span>
               </div>
               <div style={{ display: 'flex', gap: '10px' }}>
@@ -1108,7 +1299,7 @@ export const BackpropSimulator = () => {
                     boxShadow: '0 3px 10px rgba(217, 119, 6, 0.3)'
                   }}
                 >
-                확인
+                  {ui.modalConfirm}
                 </motion.button>
                 <motion.button
                   whileHover={{ scale: 1.04 }}
@@ -1127,7 +1318,7 @@ export const BackpropSimulator = () => {
                     boxShadow: '0 1px 2px rgba(0,0,0,0.05)'
                   }}
                 >
-                  취소
+                  {ui.modalCancel}
                 </motion.button>
               </div>
             </motion.div>
@@ -1196,7 +1387,7 @@ export const BackpropSimulator = () => {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '10px', width: '100%', boxSizing: 'border-box' }}>
               <div style={{ padding: '12px 14px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)', boxSizing: 'border-box' }}>
                 <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: activeTerm.themeColor, display: 'block', marginBottom: '4px' }}>
-                  항 의미 : {activeTerm.name}
+                  {ui.termMeaning} : {activeTerm.name}
                 </span>
                 <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6' }}>
                   {activeTerm.descriptionNode}
@@ -1205,7 +1396,7 @@ export const BackpropSimulator = () => {
 
               <div style={{ padding: '12px 14px', backgroundColor: '#ffffff', borderRadius: '12px', border: '1px solid #cbd5e1', boxShadow: '0 2px 6px rgba(0,0,0,0.02)', boxSizing: 'border-box' }}>
                 <span className="gmarket-font" style={{ fontSize: '12.5px', fontWeight: '700', color: '#059669', display: 'block', marginBottom: '4px' }}>
-                  수식 유도
+                  {ui.mathDeriv}
                 </span>
                 <div style={{ fontSize: '12.5px', color: '#334155', lineHeight: '1.6' }}>
                   {activeTerm.mathReasonNode}

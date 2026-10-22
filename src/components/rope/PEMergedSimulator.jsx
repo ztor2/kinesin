@@ -115,12 +115,13 @@ export const PEMergedSimulator = () => {
     >
       {/* 폰트 유틸리티 */}
       <style>{`
-        .gmarket-font {
-          font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
+        .gmarket-font,
+        .jakarta-font {
+          font-family: 'Plus Jakarta Sans', 'GmarketSans', 'Noto Sans KR', sans-serif !important;
         }
 
         .num-font {
-          font-family: 'JetBrains Mono', monospace !important;
+          font-family: 'Plus Jakarta Sans', sans-serif !important;
           font-feature-settings: "tnum";
           font-variant-numeric: tabular-nums;
         }

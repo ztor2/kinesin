@@ -1,6 +1,6 @@
 ---
 title: "Backpropagation"
-description: "Explaining of Backpropagation in Deep Neural Networks"
+description: "How does reverse-mode automatic differentiation turn an impossible O(N) search into a single backward pass?"
 ---
 
 import BackpropSimulator from '../../../components/backprop/BackpropSimulator.jsx';
@@ -8,176 +8,180 @@ import SectionSlider from '../../../components/common/SectionSlider.astro';
 
 <SectionSlider>
 
-### Intro
-
-> <i><strong>역전파(Backpropagation)</strong>는 연쇄 법칙(Chain Rule)을 활용해 신경망의 수많은 파라미터들에 대한 학습을 가능하게 함으로써 딥러닝의 시대를 열었다.</i>
-<br/>
-
-- 심층 신경망(Deep Neural Networks, DNN) 학습의 목표는 수많은 파라미터(가중치)를 갱신하여 예측값과 실제 정답 간의 오차를 최소화하는 것이다.
-- 파라미터의 업데이트 방향과 크기를 결정하기 위해서는 오차 함수(Loss Function)에 대한 각 개별 가중치의 기울기(Gradient), 의미적으로는 각 가중치의 기여도를 정확히 산출해야 한다.
-    - 각 기울기가 오차에 얼마나 기여했는지에 대한 민감도(Sensitivity)를 나타내는 값이 기울기(Gradient), 즉 편미분(Partial Derivative) 값이다.
-- 초기 신경망 연구에서는 가중치를 미세하게 변경하며 오차 변화를 측정하는 수치적 미분(Numerical Differentiation)을 시도했으나, 이는 파라미터 수에 비례하는 막대한 연산 비용을 요구하여 한계에 직면했다.
-- 이를 극복하기 위해 다층 합성함수의 미분 원리인 <strong>연쇄 법칙(Chain Rule)</strong>을 도입하여, 출력층에서 입력층 방향으로 오차 민감도를 역방향 전파하며 기울기를 산출하는 <strong>역전파(Backpropagation)</strong> 알고리즘이 제안되어 표준이 되었다.<br/>
-- 현재 대부분의 LLM들은 역전파 알고리즘을 기반으로 최적화와 학습이 이루어진다.<br/><br/>
-
-본 문서에서는 순전파(Forward Pass)와 손실 계산, 역전파를 통한 기울기 계산, 그리고 시각화를 통해 역전파를 직관적으로 이해해보고자 한다.
-
-<br/>
-
-### Forward Pass & Loss Function
-
-> <i>순전파(Forward Pass)는 입력 데이터가 다수의 은닉층을 차례로 통과하며 최종 예측값을 도출하는 일련의 합성함수 연산 과정을 말한다.</i> <br/>
-<br/>
-
-순전파 단계에서 특정 층(Layer) $l$의 출력 $\mathbf{h}_l$은 이전 층의 출력 $\mathbf{h}_{l-1}$에 가중치 행렬 $W_l$을 곱하고 편향 $b_l$을 더하는 선형 변환 후, 비선형 활성화 함수(예: <i>ReLU, Sigmoid, SwiGLU</i>) $h()$를 통과하여 계산된다. 
-
-<br/>
-$$
-\mathbf{z}_l = W_l \mathbf{h}_{l-1} + b_l
-$$
-$$
-\mathbf{h}_l = h(\mathbf{z}_l)
-$$
-<br/>
-
-입력 데이터 $\mathbf{x}$가 최종 출력층을 통과하여 도출된 예측값을 $\hat{\mathbf{y}}$라 할 때, 모델의 성능은 예측값과 실제 정답 $\mathbf{y}$ 간의 차이를 정량화하는 <strong>손실 함수(Loss Function, $L$)</strong>에 의해 평가된다.
-
-<br/>
-$$
-L = \text{Loss}(\hat{\mathbf{y}}, \mathbf{y})
-$$
-<br/>
-
-이 손실 $L$의 값을 최소화하는 최적의 가중치 행렬 $W$를 찾는 것이 딥러닝 학습의 최종 목표가 된다.
-
-<br/>
-
-### Backward Pass & Chain Rule
-<br/>
-
-역전파는 총 오차 $L$에 대해 특정 가중치 $W_l$이 얼마나 기여했는지, 즉 오차 민감도를 나타내는 편미분 $\frac{\partial L}{\partial W_l}$을 구하는 과정이다. 
-심층 신경망은 여러 함수가 중첩된 구조이므로, 미분을 위해 <strong>연쇄 법칙(Chain Rule)</strong>이 적용된다. 
-
-<br/>
-$$
-\frac{\partial L}{\partial W_l} = \frac{\partial L}{\partial \mathbf{h}_l} \frac{\partial \mathbf{h}_l}{\partial \mathbf{z}_l} \frac{\partial \mathbf{z}_l}{\partial W_l}
-$$
-<br/>
-
-위 수식에서 각 항은 다음과 같은 의미를 지닌다.
-- $\frac{\partial L}{\partial \mathbf{h}_l}$ : 상위 층(출력층 방향)에서 현재 층으로 누적되어 전달된 <strong>전역 오차 신호(Global Error Signal)</strong>.
-- $\frac{\partial \mathbf{h}_l}{\partial \mathbf{z}_l}$ : 현재 층 활성화 함수의 국소적 변화율(Local Gradient, $h'(\mathbf{z}_l)$).
-- $\frac{\partial \mathbf{z}_l}{\partial W_l}$ : 순전파 시 입력되었던 이전 층의 데이터 $\mathbf{h}_{l-1}$. 즉, 과거 입력값의 크기가 가중치의 책임 정도(기울기)를 결정하는 요인으로 작용한다.
-
-역전파 알고리즘은 출력층에서부터 시작하여 이 연쇄 곱셈을 수행한다. 이미 계산된 상위 층의 오차 신호를 하위 층이 <strong>재사용</strong>하기 때문에, 순방향 연산을 반복할 필요 없이 단 한 번의 역방향 패스만으로 모든 파라미터의 기울기를 효율적으로 동시에 산출할 수 있다. 
-
-산출된 기울기는 학습률(Learning Rate, $\eta$)과 결합되어 가중치 갱신 공식에 적용된다.
-
-<br/>
-$$
-W_l^{(new)} = W_l^{(old)} - \eta \frac{\partial L}{\partial W_l}
-$$
-<br/>
-
-
-### Backpropagation Simulator
-<br/>
-
-아래 역전파 시뮬레이터에서 입력값($x$)과 목표 정답($y$)을 설정한 뒤 <strong>Forward Pass</strong>를 통해 손실(Loss)을 확인하고, <strong>Backward Pass</strong>를 통해 오차 신호가 뒤에서부터 연쇄 법칙으로 곱해지며 가중치를 변경하는 과정을 관찰할 수 있다.
-연쇄 법칙의 항 단위로 계산하기 위해서는, <strong>손실함수</strong> 및 <strong>활성화 함수</strong>의 형태 그리고 그 미분 함수 형태를 파악해야 한다.
-
-<br/>
-<strong>손실 함수(Loss Function)</strong>
-- 실제 LLM에서는 Multi-class Cross-Entropy Loss가 손실 함수로 주로 사용되지만, 본 시뮬레이터에서는 이해를 돕기 위해 단순한 Mean Squared Error(MSE) Loss를 사용한다.
-<br/>
-
-$$
-L(\hat{y}, y) = \frac{1}{2} (\hat{y} - y)^2 \quad \implies \quad \frac{\partial L}{\partial \hat{y}} = \hat{y} - y
-$$
-
-<br/>
-<strong>활성화 함수(Activation Function)</strong>
-
-- 각 퍼셉트론(perceptron)에서 모델이 복잡한 작업을 분류할 수 있도록 비선형성을 부여하기 위해 사용되는 함수이다.
-- 본 문서에서는 입력값을 0과 1 사이로 변환하는 간단한 형태의 시그모이드 (Sigmoid) 함수를 시뮬레이터 예시로 사용한다.
-<br/>
-
-$$
-\sigma(z) = \frac{1}{1 + e^{-z}} \quad \implies \quad \sigma'(z) = \sigma(z)(1 - \sigma(z))
-$$
-
-<br/>
-<strong>가중치 갱신 (Weight Update Rule)</strong>
-
-- 연쇄 법칙으로 각 파라미터에 대한 손실 함수의 기울기(Gradient, $\frac{\partial L}{\partial W}$)를 산출한 후, 경사하강법(Gradient Descent)을 통해 손실 $L$을 최소화하는 방향으로 가중치와 편향을 업데이트한다.
-- $\eta$ (Learning Rate, 학습률)은 파라미터 조정의 보폭 크기를 결정하는 하이퍼파라미터이다.
-
-<br/>
-$$
-W^{(new)} = W^{(old)} - \eta \cdot \frac{\partial L}{\partial W}
-$$
-$$
-b^{(new)} = b^{(old)} - \eta \cdot \frac{\partial L}{\partial b}
-$$
-<br/>
-
-<div className="not-content my-8 w-full clear-both">
-  <BackpropSimulator client:visible />
+<div className="not-content my-3 w-full clear-both">
+  <BackpropSimulator client:load />
 </div>
 
+> *Training deep neural networks requires knowing how much every single weight contributed to the final prediction error. Instead of perturbing parameters one by one in $\mathcal{O}(N)$ forward passes, **Backpropagation** applies the multivariable **Chain Rule** in reverse—caching intermediate activations to compute exact gradients for millions of parameters in a single backward pass.*
+
+- **Click `1. Forward Pass`** to watch the input signal propagate through linear transforms and Sigmoid activations into the final prediction $\hat{y}$.
+- **Step through `2. Loss Calc` and `3. Backward Pass`** to trace the error signal cascading backwards, computing local gradient deltas ($\delta_2, \delta_1$).
+- **Click `4. Weight Update`** to see Gradient Descent adjust each parameter in real time, or explore individual terms in the interactive **Chain Rule breakdown** below the graph.
+
 <br/>
 
-### Implementation
+### The Core Puzzle: Credit Assignment at Scale
 
-PyTorch에서는 자동 미분 엔진(Autograd)을 제공하므로, 복잡한 연쇄 법칙 미분 연산이 `loss.backward()` 한 줄로 자동 수행된다.<br/>
-시뮬레이터에서 다룬 간단한 신경망 구조에서의 역전파를 코드로 구현하면 다음과 같다:
+Deep neural networks are composite functions with millions to trillions of parameters:
+
+$$
+\mathbf{x} \xrightarrow{W_1} \mathbf{h}_1 \xrightarrow{W_2} \mathbf{h}_2 \longrightarrow \cdots \xrightarrow{W_L} \hat{\mathbf{y}} \longrightarrow \mathcal{L}(\hat{\mathbf{y}}, \mathbf{y})
+$$
+
+To minimize the objective $\mathcal{L}$, gradient descent requires the exact partial derivative with respect to every weight parameter:
+
+$$
+\nabla_W \mathcal{L} = \left[ \frac{\partial \mathcal{L}}{\partial W_1}, \frac{\partial \mathcal{L}}{\partial W_2}, \dots, \frac{\partial \mathcal{L}}{\partial W_L} \right]
+$$
+
+#### The Catastrophe of Numerical Differentiation
+
+In early AI research, a natural instinct was to approximate gradients numerically via finite differences:
+
+$$
+\frac{\partial \mathcal{L}}{\partial W_{ij}} \approx \frac{\mathcal{L}(W_{ij} + \epsilon) - \mathcal{L}(W_{ij})}{\epsilon}
+$$
+
+For a network with $N$ parameters, this approach suffers from fatal bottlenecks:
+1. **$N + 1$ complete forward passes** across the entire dataset are required for a single parameter update step.
+2. For a modern 7-billion parameter language model, computing one gradient step via finite differences would demand over 7 billion forward evaluations—taking decades for a single optimization step.
+3. Numerical approximation errors from finite float precision ($\epsilon$) degrade gradient fidelity and lead to catastrophic numerical instability.
+
+#### The Breakthrough: Dynamic Programming via Memoization
+
+The breakthrough of backpropagation (Rumelhart et al., 1986) was recognizing that the computational graph has a tree-structured dependency. When we compute the derivative of the loss with respect to early layers, the downstream derivatives (from output back to layer $l$) are identical for all weights in layer $l$.
+
+By running the chain rule **in reverse** (from the scalar loss back to the inputs) and **memoizing intermediate error sensitivities ($\boldsymbol{\delta}$)**, we compute all $\nabla_W \mathcal{L}$ in $\mathcal{O}(1)$ backward passes with time complexity roughly equivalent to just $2\times$ the forward pass.
 
 <br/>
+
+### The Minimal Math: Forward Pass & The Chain Rule
+
+Consider the canonical 2-layer perceptron architecture shown in the simulator above:
+
+#### 1. Forward Propagation
+Given input vector $\mathbf{x} \in \mathbb{R}^{d_{\text{in}}}$ and target $\mathbf{y} \in \mathbb{R}^{d_{\text{out}}}$:
+
+$$
+\begin{aligned}
+\mathbf{z}_1 &= W_1 \mathbf{x} + \mathbf{b}_1, \quad &&\mathbf{h}_1 = \sigma(\mathbf{z}_1) \\
+\mathbf{z}_2 &= W_2 \mathbf{h}_1 + \mathbf{b}_2, \quad &&\hat{\mathbf{y}} = \sigma(\mathbf{z}_2)
+\end{aligned}
+$$
+
+Evaluated with Mean Squared Error (MSE) loss:
+
+$$
+\mathcal{L} = \frac{1}{2} \|\hat{\mathbf{y}} - \mathbf{y}\|^2 = \frac{1}{2} \sum_{k} (\hat{y}_k - y_k)^2
+$$
+
+#### 2. Output Layer Gradients ($\delta_2$)
+By the chain rule, the sensitivity of the loss with respect to pre-activation $\mathbf{z}_2$ is defined as the output error delta $\boldsymbol{\delta}_2$:
+
+$$
+\boldsymbol{\delta}_2 \triangleq \frac{\partial \mathcal{L}}{\partial \mathbf{z}_2} = \frac{\partial \mathcal{L}}{\partial \hat{\mathbf{y}}} \odot \sigma'(\mathbf{z}_2) = (\hat{\mathbf{y}} - \mathbf{y}) \odot \sigma(\mathbf{z}_2)(1 - \sigma(\mathbf{z}_2))
+$$
+
+Differentiating with respect to the output layer parameters:
+
+$$
+\frac{\partial \mathcal{L}}{\partial W_2} = \boldsymbol{\delta}_2 \mathbf{h}_1^\top, \qquad \frac{\partial \mathcal{L}}{\partial \mathbf{b}_2} = \boldsymbol{\delta}_2
+$$
+
+Notice that the gradient is an outer product between the downstream error signal $\boldsymbol{\delta}_2$ and the upstream forward activation $\mathbf{h}_1$.
+
+#### 3. Hidden Layer Gradients ($\delta_1$)
+To propagate the error backwards across weight matrix $W_2$ into the hidden layer pre-activation $\mathbf{z}_1$:
+
+$$
+\frac{\partial \mathcal{L}}{\partial \mathbf{h}_1} = W_2^\top \boldsymbol{\delta}_2
+$$
+
+Scaling by the local slope of the hidden activation gives $\boldsymbol{\delta}_1$:
+
+$$
+\boldsymbol{\delta}_1 \triangleq \frac{\partial \mathcal{L}}{\partial \mathbf{z}_1} = \left( W_2^\top \boldsymbol{\delta}_2 \right) \odot \sigma'(\mathbf{z}_1)
+$$
+
+Finally, the gradient for the input weight matrix $W_1$ and bias $\mathbf{b}_1$:
+
+$$
+\frac{\partial \mathcal{L}}{\partial W_1} = \boldsymbol{\delta}_1 \mathbf{x}^\top, \qquad \frac{\partial \mathcal{L}}{\partial \mathbf{b}_1} = \boldsymbol{\delta}_1
+$$
+
+#### 4. Gradient Descent Optimization
+Once all gradients are collected, parameters update along the steepest descent direction modulated by learning rate $\eta$:
+
+$$
+W_l^{(t+1)} = W_l^{(t)} - \eta \frac{\partial \mathcal{L}}{\partial W_l}, \qquad \mathbf{b}_l^{(t+1)} = \mathbf{b}_l^{(t)} - \eta \frac{\partial \mathcal{L}}{\partial \mathbf{b}_l}
+$$
+
+<br/>
+
+### PyTorch Implementation: Autograd Under the Hood
+
+Modern deep learning frameworks handle this bookkeeping automatically via dynamic Directed Acyclic Graphs (DAGs). Here is a standalone verification confirming that analytical chain-rule math matches PyTorch's `loss.backward()` to machine precision:
 
 ```python
 import torch
 
-# 1. 입력 데이터 및 목표 정답 정의
-x = torch.tensor([[0.8]])
-y = torch.tensor([[1.0]])
+# 1. Inputs and target
+x = torch.tensor([[0.8]], dtype=torch.float64)
+target = torch.tensor([[1.0]], dtype=torch.float64)
 
-# 2. 파라미터 초기화 : 학습이 필요한 파트는 requires_grad=True 설정하여 기울기 추적
-W1 = torch.tensor([[0.6]], requires_grad=True)
-b1 = torch.tensor([[0.1]], requires_grad=True)
-W2 = torch.tensor([[1.1]], requires_grad=True)
-b2 = torch.tensor([[-0.2]], requires_grad=True)
+# 2. Parameters (requires_grad enables dynamic graph tracking)
+W1 = torch.tensor([[0.6]], dtype=torch.float64, requires_grad=True)
+b1 = torch.tensor([[0.1]], dtype=torch.float64, requires_grad=True)
+W2 = torch.tensor([[1.1]], dtype=torch.float64, requires_grad=True)
+b2 = torch.tensor([[-0.2]], dtype=torch.float64, requires_grad=True)
 
-# 3. 순전파 (Forward Pass)
-z1 = torch.matmul(x, W1) + b1
+# 3. Forward Pass
+z1 = x @ W1 + b1
 h1 = torch.sigmoid(z1)
 
-z2 = torch.matmul(h1, W2) + b2
+z2 = h1 @ W2 + b2
 y_hat = torch.sigmoid(z2)
 
-# MSE 손실 함수 계산
-loss = 0.5 * torch.mean((y_hat - y) ** 2)
+loss = 0.5 * torch.sum((y_hat - target) ** 2)
 
-# 4. 역전파 (Backward Pass) : 연쇄 법칙이 내부적으로 자동 적용
+# 4. Backward Pass (Reverse-Mode Autodiff)
 loss.backward()
 
-# 5. 각 파라미터에 저장된 자동 미분 기울기 확인
-print(f"∂L/∂W1: {W1.grad.item():.4f}") 
-print(f"∂L/∂W2: {W2.grad.item():.4f}")
+# 5. Analytical Chain Rule Verification
+dL_dyhat = y_hat.detach() - target
+dyhat_dz2 = y_hat.detach() * (1.0 - y_hat.detach())
+delta2 = dL_dyhat * dyhat_dz2
+manual_grad_W2 = delta2 * h1.detach()
 
-# 6. 경사하강법 파라미터 갱신
-lr = 0.5
-with torch.no_grad():
-    W1 -= lr * W1.grad
-    b1 -= lr * b1.grad
-    W2 -= lr * W2.grad
-    b2 -= lr * b2.grad
+dL_dh1 = delta2 * W2.detach()
+dh1_dz1 = h1.detach() * (1.0 - h1.detach())
+delta1 = dL_dh1 * dh1_dz1
+manual_grad_W1 = delta1 * x
+
+print(f"PyTorch W1 grad: {W1.grad.item():.6f} | Analytical: {manual_grad_W1.item():.6f}")
+print(f"PyTorch W2 grad: {W2.grad.item():.6f} | Analytical: {manual_grad_W2.item():.6f}")
+assert torch.allclose(W1.grad, manual_grad_W1)
+assert torch.allclose(W2.grad, manual_grad_W2)
+print("Analytical chain rule and PyTorch autograd match perfectly!")
 ```
 
 <br/>
 
-### References
+### Key Takeaways & References
 
-- <strong>Learning representations by back-propagating errors</strong> - Rumelhart et al. (1986) [(Link)](https://www.nature.com/articles/323533a0)
-- <strong>Deep Learning</strong> - LeCun, Bengio, & Hinton (2015) [(Link)](https://www.nature.com/articles/nature14539)
+| Method | Complexity for $N$ Parameters | Stability & Precision | Practical Scalability |
+| :--- | :--- | :--- | :--- |
+| **Numerical (Finite Difference)** | $\mathcal{O}(N)$ forward passes | Sensitive to perturbation $\epsilon$ | Infeasible for $N > 10^3$ |
+| **Forward-Mode Autodiff** | $\mathcal{O}(N)$ evaluation sweeps | Machine-level exact precision | Ideal for $f: \mathbb{R} \to \mathbb{R}^M$ |
+| **Reverse-Mode Autodiff (Backprop)** | **$\mathcal{O}(1)$ backward pass** ($\approx 2\times$ forward compute) | Machine-level exact precision | **De-facto standard for all DNNs / LLMs** |
+
+#### Why LLMs Scale on Backpropagation
+- **Scalar Output Efficiency**: Neural network training optimizes a single scalar loss ($\mathcal{L} \in \mathbb{R}$). Reverse-mode autodiff evaluates gradients with respect to all billions of inputs/weights in exactly one reverse traversal.
+- **Activation Checkpointing**: Because backpropagation requires forward activations ($\mathbf{h}_{l-1}$) to compute $\frac{\partial \mathcal{L}}{\partial W_l} = \boldsymbol{\delta}_l \mathbf{h}_{l-1}^\top$, memory scales with model depth. Techniques like activation checkpointing trade a small amount of compute to recompute forward passes on the fly, unlocking trillion-parameter model training.
+
+#### Foundational Papers
+- **Learning representations by back-propagating errors** — Rumelhart, Hinton, & Williams (1986) [Nature 323, 533–536](https://www.nature.com/articles/323533a0)
+- **Deep Learning** — LeCun, Bengio, & Hinton (2015) [Nature 521, 436–444](https://www.nature.com/articles/nature14539)
+- **Automatic differentiation in machine learning: a survey** — Baydin et al. (2018) [JMLR 18(153):1−43](https://jmlr.org/papers/v18/17-468.html)
 
 </SectionSlider>
