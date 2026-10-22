@@ -68,13 +68,15 @@ const isPapers = pathname.startsWith('/papers');
 		</a>
 	</nav>
 
-	<!-- 우측 영역: 검색, 언어, 테마 (TOC 상단 정렬) -->
+	<!-- 우측 영역: 검색, 다크모드 테마, 언어 (돋보기 아이콘 바로 옆에 테마선택기 배치) -->
 	<div class="header-tools right-group sl-flex">
 		<div class="search-container">
 			<Search {...Astro.props} />
 		</div>
+		<div class="theme-select-container sl-flex">
+			<ThemeSelect {...Astro.props} />
+		</div>
 		<LanguageSelect {...Astro.props} />
-		<ThemeSelect {...Astro.props} />
 	</div>
 </div>
 
@@ -290,14 +292,32 @@ const isPapers = pathname.startsWith('/papers');
 		stroke-linejoin: round;
 	}
 
-	/* 모바일 (50rem 이하) 반응형 */
+	/* 모바일 (50rem 이하) 반응형: 상단바 잘림 방지 및 요소 수직 정렬 */
 	@media (max-width: 50rem) {
+		:global(:root) {
+			--sl-nav-height: 3.5rem;
+		}
+
 		.header-container {
-			padding-inline: 0.75rem;
+			padding-inline: 0.85rem;
+			height: 100%;
+			align-items: center;
 		}
 
 		.header-brand {
 			width: auto !important;
+			align-items: center;
+		}
+
+		.logo-link {
+			display: flex;
+			align-items: center;
+		}
+
+		.site-logo {
+			width: 28px !important;
+			height: 28px !important;
+			object-fit: contain;
 		}
 
 		.sidebar-toggle-btn {
@@ -308,8 +328,21 @@ const isPapers = pathname.startsWith('/papers');
 			display: none !important;
 		}
 
+		.header-tools {
+			display: flex;
+			align-items: center;
+			gap: 0.5rem;
+		}
+
+		.theme-select-container {
+			display: flex;
+			align-items: center;
+		}
+
 		.search-container {
 			min-width: auto;
+			display: flex;
+			align-items: center;
 		}
 	}
 </style>
