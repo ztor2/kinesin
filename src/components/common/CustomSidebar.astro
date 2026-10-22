@@ -1,0 +1,97 @@
+---
+import type { Props } from '@astrojs/starlight/props';
+import MobileMenuFooter from '@astrojs/starlight/components/MobileMenuFooter.astro';
+import SidebarPersister from '@astrojs/starlight/components/SidebarPersister.astro';
+import SidebarSublist from '@astrojs/starlight/components/SidebarSublist.astro';
+
+const { sidebar } = Astro.locals.starlightRoute;
+const pathname = Astro.url.pathname;
+
+// 1. URL 경로에서 현재 1depth 카테고리 식별
+const sectionMatch = pathname.match(/^\/(architecture|datasets|benchmark|papers)/i);
+const activeSection = sectionMatch ? sectionMatch[1].toLowerCase() : null;
+
+// 2. Starlight sidebar 내 매칭되는 그룹 찾기
+let activeGroup = null;
+if (activeSection) {
+	activeGroup = sidebar.find(
+		(entry) => entry.type === 'group' && entry.label.toLowerCase() === activeSection
+	);
+}
+
+// 3. 하이브리드 네비게이션: 카테고리 내부에서는 해당 카테고리의 하위 목록만 집중 노출 (초기 화면 등 미매칭 시 비움)
+const displaySublist = activeGroup ? activeGroup.entries : [];
+---
+
+<!-- 모바일 전용 카테고리 탭 네비게이션 (모바일 햄버거 메뉴 열었을 때 상단에 표시) -->
+<nav class="mobile-section-nav" aria-label="섹션 선택">
+	<div class="mobile-section-header">SECTIONS</div>
+	<div class="mobile-section-pills">
+		<a href="/architecture/rope/" class:list={['mobile-pill', { active: activeSection === 'architecture' }]}>Architecture</a>
+		<a href="/datasets/" class:list={['mobile-pill', { active: activeSection === 'datasets' }]}>Datasets</a>
+		<a href="/benchmark/" class:list={['mobile-pill', { active: activeSection === 'benchmark' }]}>Benchmark</a>
+		<a href="/papers/pixelrag/" class:list={['mobile-pill', { active: activeSection === 'papers' }]}>Papers</a>
+	</div>
+</nav>
+
+<SidebarPersister>
+	{/* 상단 메뉴바와 중복되는 사이드바 카테고리 이름 표기는 제거하고 세부 아티클 목록만 직관적으로 표시 */}
+	<SidebarSublist sublist={displaySublist} nested={Boolean(activeGroup)} />
+</SidebarPersister>
+
+<div class="md:sl-hidden">
+	<MobileMenuFooter />
+</div>
+
+<style>
+	/* 모바일 전용 섹션 선택 pills */
+	.mobile-section-nav {
+		display: none;
+		margin-bottom: 1.25rem;
+		padding-bottom: 1rem;
+		border-bottom: 1px solid var(--sl-color-hairline-light, #e2e8f0);
+	}
+	@media (max-width: 50rem) {
+		.mobile-section-nav {
+			display: block;
+		}
+	}
+	.mobile-section-header {
+		font-size: 0.7rem;
+		font-weight: 700;
+		color: var(--sl-color-gray-3, #78716c);
+		letter-spacing: 0.06em;
+		margin-bottom: 0.5rem;
+	}
+	.mobile-section-pills {
+		display: grid;
+		grid-template-columns: repeat(2, 1fr);
+		gap: 0.5rem;
+	}
+	.mobile-pill {
+		display: flex;
+		align-items: center;
+		justify-content: center;
+		padding: 0.5rem 0.6rem;
+		border-radius: 8px;
+		font-size: 0.8rem;
+		font-weight: 600;
+		text-decoration: none;
+		color: var(--sl-color-gray-2, #292524);
+		background-color: var(--sl-color-gray-6, #e4dfd2);
+		transition: all 0.15s ease;
+	}
+	.mobile-pill.active {
+		background-color: var(--sl-color-accent, #3b82f6);
+		color: #ffffff !important;
+		font-weight: 700;
+	}
+	:root[data-theme='dark'] .mobile-pill {
+		background-color: rgba(255, 255, 255, 0.08);
+		color: var(--sl-color-gray-2, #cbd5e1);
+	}
+	:root[data-theme='dark'] .mobile-pill.active {
+		background-color: var(--sl-color-accent, #3b82f6);
+		color: #ffffff !important;
+	}
+</style>

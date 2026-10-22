@@ -1,15 +1,23 @@
 ---
 // SectionSlider.astro - Card-Internal Integrated Frame & Smart Scroll-Ignored Touch Swipe Guard
+const { lang, lastUpdated } = Astro.locals.starlightRoute ?? {};
+const formattedDate = lastUpdated ? lastUpdated.toLocaleDateString(lang ?? 'en', { dateStyle: 'medium', timeZone: 'UTC' }) : null;
 ---
 
 <div class="section-slider-root" id="section-slider-root" style="width: 100%; position: relative; margin: 0;">
   <!-- 폰트 및 테마 스타일 -->
   <style>
-    .gmarket-font {
+    .gmarket-font,
+    .jakarta-font {
+      font-family: 'Plus Jakarta Sans', 'GmarketSans', 'Noto Sans KR', sans-serif !important;
+    }
+    .gmarket-strict {
       font-family: 'GmarketSans', 'Plus Jakarta Sans', 'Noto Sans KR', sans-serif !important;
     }
     .num-font {
-      font-family: 'JetBrains Mono', monospace !important;
+      font-family: 'Plus Jakarta Sans', sans-serif !important;
+      font-feature-settings: "tnum";
+      font-variant-numeric: tabular-nums;
     }
     
     .section-slider-card {
@@ -17,7 +25,7 @@
       color: var(--sl-color-text, #0f172a);
       border: 1px solid var(--sl-color-hairline, #e2e8f0);
       box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.08);
-      border-radius: 20px;
+      border-radius: 10px;
       padding: 20px 24px;
       position: relative;
       min-height: 280px;
@@ -25,25 +33,63 @@
       touch-action: pan-y;
     }
 
-    /* 카드 외부 독립 우측 상단 모드 전환 & 전체화면 조작 그룹 (우측 여백 패딩 안전구역 확보) */
+    /* 카드 외부 상단 조작 그룹: 좌측 Last Updated & 우측 조작 그룹 (Card Mode, Fullscreen) */
     .section-slider-top-bar {
       display: flex;
-      justify-content: flex-end;
+      justify-content: space-between;
       align-items: center;
-      gap: 18px;
+      margin-top: 0.25rem;
       margin-bottom: 0.625rem;
       width: 100%;
-      height: 22px;
+      height: 24px;
+      padding-left: 2px;
       padding-right: 6px;
       box-sizing: border-box;
     }
 
-    /* 동일 수평 높이(22px) 및 동일 베이스라인 래퍼 */
+    .top-bar-right-actions {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      height: 24px;
+      margin: 0 !important;
+      padding: 0 !important;
+    }
+
+    /* Last updated 날짜 텍스트 (좌측 정렬) */
+    .top-bar-last-updated {
+      display: inline-flex;
+      align-items: center;
+      height: 24px;
+      font-size: 11.5px;
+      color: var(--sl-color-gray-3, #78716c);
+      font-family: 'Plus Jakarta Sans', sans-serif;
+      margin: 0 !important;
+      padding: 0 !important;
+      line-height: 1;
+      user-select: none;
+    }
+
+    /* 스크롤 모드(카드 모드 off) 전용 스타일: 카드 배경 투명화 및 양옆 여백 확보 */
+    .is-scroll-mode .section-slider-card {
+      background-color: transparent !important;
+      border: none !important;
+      box-shadow: none !important;
+      padding: 0 4px !important;
+    }
+
+    .is-scroll-mode .section-slide-panel {
+      margin-bottom: 2.25rem;
+    }
+
+    /* 동일 수평 높이(24px) 및 동일 베이스라인 래퍼 */
     .top-bar-action-item {
       display: inline-flex;
       align-items: center;
       gap: 6px;
-      height: 22px;
+      height: 24px;
+      margin: 0 !important;
+      padding: 0 !important;
       font-size: 12px;
       font-weight: 700;
       line-height: 1;
@@ -229,14 +275,19 @@
 
     /* 📸 Instagram Story 스타일 분할 세그먼트 프로그레스 바 */
     .story-progress-container {
-      display: flex !important;
-      align-items: center !important;
-      justify-content: stretch !important;
-      gap: 6px !important;
-      width: 100% !important;
-      margin: 0 0 1.25rem 0 !important;
-      padding: 6px 0 !important;
-      box-sizing: border-box !important;
+      display: flex;
+      align-items: center;
+      justify-content: stretch;
+      gap: 6px;
+      width: 100%;
+      margin: 0 0 1.25rem 0;
+      padding: 6px 0;
+      box-sizing: border-box;
+    }
+
+    .story-progress-container.is-hidden,
+    .is-scroll-mode .story-progress-container {
+      display: none !important;
     }
 
     .story-progress-segment {
@@ -338,7 +389,7 @@
       }
       .section-slider-card {
         padding: 16px 14px !important;
-        border-radius: 14px !important;
+        border-radius: 8px !important;
         min-height: 220px;
       }
       .hdr-nav-btn, .slider-restart-btn {
@@ -377,23 +428,33 @@
     <slot />
   </div>
 
-  <!-- 카드 외부 우측 상단 조작 그룹: 위치 교체된 카드모드 토글 & 주황색 전체화면 버튼 -->
-  <div class="section-slider-top-bar">
-    {/* 1. 카드 모드 슬라이딩 토글 (좌측 배치) */}
-    <div class="top-bar-action-item gmarket-font">
-      <span>카드 모드</span>
-      <div id="mode-toggle-switch" class="toggle-switch-track card-mode" title="카드 모드 / 전체 스크롤 모드 전환">
-        <div class="toggle-switch-thumb"></div>
-      </div>
+  <!-- 카드 외부 상단 조작 그룹: 좌측 Last Updated & 우측 조작 그룹 (Card Mode, Fullscreen) -->
+  <div class="section-slider-top-bar not-content">
+    {/* 0. Last updated 날짜 (좌측 정렬) */}
+    <div class="top-bar-last-updated">
+      {formattedDate && (
+        <span>Last Updated : {formattedDate}</span>
+      )}
     </div>
 
-    {/* 2. 주황색 포인트 전체화면 텍스트 조작 (우측 배치) */}
-    <span id="fullscreen-toggle-btn" class="top-bar-action-item fullscreen-action-btn gmarket-font" title="전체화면 집중 독서 모드">
-      <span id="fullscreen-btn-label">전체화면</span>
-      <svg viewBox="0 0 24 24">
-        <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
-      </svg>
-    </span>
+    {/* 우측 조작 액션 그룹 */}
+    <div class="top-bar-right-actions">
+      {/* 1. Card Mode 슬라이딩 토글 */}
+      <div class="top-bar-action-item gmarket-font">
+        <span>Card Mode</span>
+        <div id="mode-toggle-switch" class="toggle-switch-track card-mode" title="Toggle Card Mode / Scroll Mode">
+          <div class="toggle-switch-thumb"></div>
+        </div>
+      </div>
+
+      {/* 2. 주황색 포인트 Fullscreen 텍스트 조작 */}
+      <span id="fullscreen-toggle-btn" class="top-bar-action-item fullscreen-action-btn gmarket-font" title="Fullscreen Reading Mode">
+        <span id="fullscreen-btn-label">Fullscreen</span>
+        <svg viewBox="0 0 24 24">
+          <path d="M15 3h6v6M9 21H3v-6M21 3l-7 7M3 21l7-7" />
+        </svg>
+      </span>
+    </div>
   </div>
 
   <!-- 슬라이드 메인 뷰포트 영역 (카드 모드) -->
@@ -476,11 +537,40 @@
 
       if (!rawContent || !renderedViewport) return;
 
-      // H2, H3 헤딩 탐색 및 파트별 실제 DOM 요소 슬라이드 구조화 (innerHTML 파괴 방지)
-      const headings = Array.from(rawContent.querySelectorAll('h3, h2'));
+      // H2, H3 헤딩 탐색 및 파트별 실제 DOM 요소 슬라이드 구조화 (.not-content 내부 컴포넌트 헤딩 제외)
+      const allHeadings = Array.from(rawContent.querySelectorAll('h3, h2'));
+      const headings = allHeadings.filter(h => !h.closest('.not-content'));
       const slides = [];
 
       if (headings.length > 0) {
+        // 첫 번째 헤딩 이전의 프리앰블(Preamble) 콘텐츠(예: 인용구, 시뮬레이터 등)가 있다면 첫 번째 섹션/슬라이드로 수집
+        let firstHeadingTopBlock = headings[0];
+        while (firstHeadingTopBlock.parentElement && firstHeadingTopBlock.parentElement !== rawContent && firstHeadingTopBlock.parentElement.id !== 'slider-raw-content') {
+          firstHeadingTopBlock = firstHeadingTopBlock.parentElement;
+        }
+
+        const preambleBlocks = [];
+        let cur = rawContent.firstElementChild;
+        while (cur && cur !== firstHeadingTopBlock) {
+          preambleBlocks.push(cur);
+          cur = cur.nextElementSibling;
+        }
+
+        if (preambleBlocks.length > 0) {
+          const preambleWrapper = document.createElement('div');
+          preambleWrapper.className = 'section-slide-panel';
+          preambleWrapper.style.display = 'none';
+          preambleBlocks.forEach(b => preambleWrapper.appendChild(b));
+          renderedViewport.appendChild(preambleWrapper);
+
+          const pageH1 = document.querySelector('h1')?.textContent?.replace('¶', '').trim();
+          slides.push({
+            id: 'simulation',
+            title: pageH1 || 'Simulation',
+            element: preambleWrapper
+          });
+        }
+
         headings.forEach((heading, idx) => {
           const titleText = heading.textContent ? heading.textContent.replace('¶', '').trim() : `Part ${idx + 1}`;
           const headingId = heading.getAttribute('id') || '';
@@ -497,8 +587,9 @@
           const blocksToMove = [topBlock];
           let nextBlock = topBlock.nextElementSibling;
           while (nextBlock) {
-            const hasNextHeading = nextBlock.tagName === 'H2' || nextBlock.tagName === 'H3' || nextBlock.querySelector('h2, h3');
-            if (hasNextHeading) break;
+            const isHeadingDirect = (nextBlock.tagName === 'H2' || nextBlock.tagName === 'H3') && !nextBlock.closest('.not-content');
+            const hasInnerHeading = Boolean(nextBlock.querySelector && Array.from(nextBlock.querySelectorAll('h2, h3')).some(h => !h.closest('.not-content')));
+            if (isHeadingDirect || hasInnerHeading) break;
             blocksToMove.push(nextBlock);
             nextBlock = nextBlock.nextElementSibling;
           }
@@ -774,17 +865,26 @@
         if (isSlideMode) {
           toggleSwitch.classList.add('card-mode');
           toggleSwitch.classList.remove('scroll-mode');
-          if (storyProgress) storyProgress.style.display = 'flex';
+          if (sliderRoot) sliderRoot.classList.remove('is-scroll-mode');
+          if (storyProgress) {
+            storyProgress.classList.remove('is-hidden');
+            storyProgress.style.setProperty('display', 'flex', 'important');
+          }
           navBars.forEach(bar => bar.style.display = 'flex');
           if (cardElement) {
             cardElement.style.border = '';
             cardElement.style.boxShadow = '';
             cardElement.style.padding = '';
+            cardElement.style.backgroundColor = '';
           }
         } else {
           toggleSwitch.classList.remove('card-mode');
           toggleSwitch.classList.add('scroll-mode');
-          if (storyProgress) storyProgress.style.display = 'none';
+          if (sliderRoot) sliderRoot.classList.add('is-scroll-mode');
+          if (storyProgress) {
+            storyProgress.classList.add('is-hidden');
+            storyProgress.style.setProperty('display', 'none', 'important');
+          }
           navBars.forEach(bar => bar.style.display = 'none');
           if (restartContainer) restartContainer.style.display = 'none';
           // 스크롤 모드: 모든 슬라이드 패널을 동시에 보여줌
@@ -794,7 +894,8 @@
           if (cardElement) {
             cardElement.style.border = 'none';
             cardElement.style.boxShadow = 'none';
-            cardElement.style.padding = '0';
+            cardElement.style.padding = '0 4px';
+            cardElement.style.backgroundColor = 'transparent';
           }
         }
         updateControls(false);
@@ -806,7 +907,7 @@
           isFullscreenMode = true;
           sliderRoot.classList.add('is-fullscreen');
           document.body.classList.add('is-zen-fullscreen');
-          if (fullscreenBtnLabel) fullscreenBtnLabel.textContent = '전체화면 종료';
+          if (fullscreenBtnLabel) fullscreenBtnLabel.textContent = 'Exit Fullscreen';
 
           try {
             history.pushState({ fullscreen: true }, '');
@@ -826,7 +927,7 @@
         isFullscreenMode = false;
         sliderRoot.classList.remove('is-fullscreen');
         document.body.classList.remove('is-zen-fullscreen');
-        if (fullscreenBtnLabel) fullscreenBtnLabel.textContent = '전체화면';
+        if (fullscreenBtnLabel) fullscreenBtnLabel.textContent = 'Fullscreen';
 
         try {
           if (document.exitFullscreen && document.fullscreenElement) {

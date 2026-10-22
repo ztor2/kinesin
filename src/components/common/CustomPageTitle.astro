@@ -1,13 +1,13 @@
 ---
 import type { Props } from '@astrojs/starlight/props';
 import Default from '@astrojs/starlight/components/PageTitle.astro';
-import LastUpdated from '@astrojs/starlight/components/LastUpdated.astro';
 ---
 
 <div class="custom-page-title-wrapper">
-	<Default {...Astro.props} />
-	<div class="page-title-meta">
-		<LastUpdated {...Astro.props} />
+	<div class="page-title-row">
+		<div class="title-heading-box">
+			<Default {...Astro.props} />
+		</div>
 	</div>
 </div>
 
@@ -15,23 +15,24 @@ import LastUpdated from '@astrojs/starlight/components/LastUpdated.astro';
 	.custom-page-title-wrapper {
 		display: flex;
 		flex-direction: column;
-		gap: 0.25rem;
-		margin-bottom: 0rem;
-	}
-	.page-title-meta {
-		font-size: var(--sl-text-xs);
-		color: var(--sl-color-gray-3);
-		display: flex;
-		align-items: center;
-		justify-content: flex-end;
-		gap: 0.5rem;
 		width: 100%;
-		text-align: right;
+		margin-bottom: 0.25rem;
 	}
-	.page-title-meta :global(p) {
-		margin: 0;
-		font-size: var(--sl-text-xs);
-		color: var(--sl-color-gray-3);
-		text-align: right;
+	.page-title-row {
+		display: flex;
+		align-items: baseline;
+		justify-content: space-between;
+		gap: 1rem;
+		width: 100%;
+	}
+	.title-heading-box {
+		flex: 1 1 auto;
+		min-width: 0;
+	}
+	.title-heading-box :global(h1) {
+		margin: 0 !important;
+		font-size: 1.5rem !important; /* 슬림하고 정돈된 타이틀 */
+		line-height: 1.25 !important;
+		letter-spacing: -0.02em !important;
 	}
 </style>
